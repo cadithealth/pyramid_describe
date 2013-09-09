@@ -1,0 +1,4 @@
+include *.txt *.ini *.cfg *.rst *.json *.yaml
+recursive-include pyramid_inspect *.ico *.png *.gif *.jpg
+recursive-include pyramid_inspect *.less *.css *.js *.html *.pt *.mak *.mako
+recursive-include pyramid_inspect *.json *.yaml *.xml
