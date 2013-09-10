@@ -26,13 +26,15 @@ test_dependencies = [
 
 dependencies = [
   'distribute           >= 0.6.24',
-  'iniherit             >= 0.1.6',
+  'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
+  'pyramid-controllers  >= 0.3.12',
+  'pyramid-iniherit     >= 0.1.7',
   ]
 
 entrypoints = {
   'console_scripts': [
-    'pinspect           = pyramid_inspect.cli:main',
+    'pdescribe          = pyramid_describe.cli:main',
     ],
   }
 
@@ -51,22 +53,22 @@ classifiers = [
   ]
 
 setup(
-  name                  = 'pyramid_inspect',
+  name                  = 'pyramid_describe',
   version               = '0.0.1',
-  description           = 'A pyramid plugin that inspects and renders a pyramid application URL hierarchy.',
+  description           = 'A pyramid plugin that describes a pyramid application URL hierarchy via inspection.',
   long_description      = read('README.rst'),
   classifiers           = classifiers,
   author                = 'Philip J Grabner, Cadit Health Inc',
   author_email          = 'oss@cadit.com',
-  url                   = 'http://github.com/cadithealth/pyramid_inspect',
-  keywords              = 'pyramid application url inspection reflection',
+  url                   = 'http://github.com/cadithealth/pyramid_describe',
+  keywords              = 'pyramid application url inspection reflection description describe',
   packages              = find_packages(),
   platforms             = ['any'],
   include_package_data  = True,
   zip_safe              = True,
   install_requires      = dependencies,
   tests_require         = test_dependencies,
-  test_suite            = 'pyramid_inspect',
+  test_suite            = 'pyramid_describe',
   entry_points          = entrypoints,
   license               = 'MIT (http://opensource.org/licenses/MIT)',
   )
