@@ -15,7 +15,9 @@ Pyramid Application Description Generation
 
 A pyramid plugin that describes a pyramid application URL hierarchy,
 either by responding to an HTTP request or on the command line, via
-application inspection and reflection.
+application inspection and reflection. It has built-in support for
+plain-text hierachies, reStructuredText, HTML, JSON, YAML, WADL, and
+XML, however other custom formats can be added easily.
 
 Exposing an application's structure via HTTP is useful to dynamically
 generate an API description (via WADL, JSON, or YAML) or to create
@@ -35,19 +37,20 @@ Install:
 
   $ pip install pyramid-describe
 
-On the command-line:
+Command-line example:
 
 .. code-block:: bash
 
-  $ pdescribe config.ini --tree
-  /
-  ├── contact/
-  │   ├── add
-  │   ├── delete
-  │   ├── list
-  │   └── update
-  ├── login
-  └── logout
+  $ pdescribe config.ini --format txt
+  /                       # The application root.
+  ├── contact/            # Contact manager.
+  │   ├── <POST>          # Creates a new 'contact' object.
+  │   └── {CONTACTID}     # RESTful access to a specific contact.
+  │       ├── <DELETE>    # Delete this contact.
+  │       ├── <GET>       # Get this contact's details.
+  │       └── <PUT>       # Update this contact's details.
+  ├── login               # Authenticate against the server.
+  └── logout              # Remove authentication tokens.
 
 
 Configuration
@@ -60,10 +63,7 @@ Configuration
 * describe.url : str, default: /
 * describe.include : list(str), default: None
 * describe.exclude : list(str), default: None
-* describe.parser : resolve-spec, default: pyramid_describe.parser.Parser
-* describe.parser.{OPTION}
-* describe.filter : resolve-spec, default: None
-* describe.filter.{OPTION}
+* describe.filters : list(resolve-spec), default: None
 * describe.formats : list(str), default: ['html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml']
 * describe.format.default : str, default: `describe.formats`[0]
 * describe.format.default.{OPTION}
