@@ -8,7 +8,7 @@
 
 from .isstr import isstr
 from .resolve import resolve
-from .adict import adict
+from .adict import adict, pick
 
 #------------------------------------------------------------------------------
 # end of $Id$
