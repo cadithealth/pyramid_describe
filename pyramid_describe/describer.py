@@ -16,7 +16,7 @@ from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_ME
 from pyramid_controllers.dispatcher import getDispatcherFromStack
 
 from .entry import Entry
-from .util import adict, isstr
+from .util import adict, isstr, resolve
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -31,8 +31,8 @@ except ImportError:
 def entcmp(e1, e2):
   if e1.parent is not e2.parent:
     return cmp(e1.path, e2.path)
-  r1 = bool(e1.isMethod and e1.isRest)
-  r2 = bool(e2.isMethod and e2.isRest)
+  r1 = bool(e1.isMethod)
+  r2 = bool(e2.isMethod)
   if r1 == r2:
     return cmp(e1.name, e2.name)
   if r1:
@@ -43,19 +43,21 @@ def entcmp(e1, e2):
 class DescriberData(adict):
   @property
   def tree_entries(self):
+    # todo: make this a bit more "rigorous"...
     '''
     Generates a "complete" set of entries that includes all branch
     entries. These branch entries, however, should not have their
     documentation shown. Also sorts the entries by name unless RESTful
-    - this is so that RESTful methods show up first (since they technically
-    don't exist in the URL path). The following Entry attributes are added:
+    - this is so that RESTful methods show up first (since they
+    technically don't exist in the URL path). The following Entry
+    attributes are added:
       * _dreal
       * _dlast
       * _dchildren
     '''
     fullset = []
-    last = None
-    for entry in sorted(list(self.endpoints), cmp=entcmp):
+    #for entry in sorted(list(self.endpoints), cmp=entcmp):
+    for entry in self.endpoints:
       entry._dreal = True
       if entry.parent and entry.parent not in fullset:
         toadd = []
@@ -65,8 +67,11 @@ class DescriberData(adict):
             continue
           break
         fullset.extend(reversed(toadd))
-      last = entry
-      fullset.append(last)
+      fullset.append(entry)
+      if entry.isRest and entry.isController and entry.methods:
+        for method in sorted(entry.methods, key=lambda e: e.name):
+          method._dreal = True
+          fullset.append(method)
     entries = fullset
     # decorate entries with '_dlast' attribute...
     for entry in entries:
@@ -163,7 +168,7 @@ class Describer(object):
 
   str_options = (
     ('stubFormat',    '{{{}}}'),     # /path/to/{NAME}/and/more
-    ('dynamicFormat', '*{}*'),       # /path/to/*NAME*
+    ('dynamicFormat', '{}/?'),       # /path/to/NAME/?
     ('restFormat',    '<{}>'),       # /path/to/<NAME>
     )
 
@@ -183,6 +188,16 @@ class Describer(object):
     for format in self.formats:
       setattr(self, 'options_' + format, extract(self.settings, 'format.' + format + '.default'))
       setattr(self, 'override_' + format, extract(self.settings, 'format.' + format + '.override'))
+    self.filters   = []
+    if self.settings.filters:
+      try:
+        self.filters = aslist(self.settings.filters)
+      except TypeError:
+        try:
+          self.filters = [filt for filt in self.settings.filters]
+        except TypeError:
+          self.filters = [self.settings.filters]
+      self.filters = [resolve(e) for e in self.filters]
 
   #----------------------------------------------------------------------------
   def describe(self, view, request, format=None, root=None):
@@ -240,7 +255,18 @@ class Describer(object):
     ret.request    = request
     ret.dispatcher = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs  = set([meth2action(e) for e in ret.restVerbs])
+    ret.filters    = self.filters
     return ret
+
+  #----------------------------------------------------------------------------
+  def _filter(self, options, entry):
+    if not entry:
+      return None
+    for efilter in options.filters:
+      entry = efilter(entry)
+      if not entry:
+        break
+    return entry
 
   #----------------------------------------------------------------------------
   def get_endpoints(self, options):
@@ -261,7 +287,12 @@ class Describer(object):
         log.exception('invalid target for pyramid-describe: %r', options.view)
         raise TypeError(_('the URL "{}" does not point to a pyramid_controllers.Controller', options.root))
 
-    return self._walkEntries(options, None)
+    for entry in self._walkEntries(options, None):
+      if entry.methods:
+        entry.methods = filter(None, [self._filter(options, e) for e in entry.methods])
+      entry = self._filter(options, entry)
+      if entry:
+        yield entry
 
   #----------------------------------------------------------------------------
   def _walkEntries(self, options, entry):
@@ -359,9 +390,10 @@ class Describer(object):
         and name in options.restVerbs:
       if not options.showRest:
         return None
-      ret.method   = action2meth(name)
-      ret.isRest   = True
-      ret.isMethod = True
+      ret.method     = action2meth(name)
+      ret.isRest     = True
+      ret.isMethod   = True
+      ret.isEndpoint = False
     return self.decorateEntry(options, ret)
 
   #----------------------------------------------------------------------------
@@ -451,7 +483,7 @@ class Describer(object):
       entry.dname = options.stubFormat.format(entry.name)
     elif entry.isDynamic:
       entry.dname = options.dynamicFormat.format(entry.name)
-    elif entry.isRest and entry.itype == 'method':
+    elif entry.isMethod:
       entry.dname = options.restFormat.format(entry.method)
     else:
       entry.dname = entry.name
@@ -463,7 +495,7 @@ class Describer(object):
     else:
       entry.path  = entry.parent.path
       entry.dpath = entry.parent.dpath
-    if entry.isRest and entry.itype == 'method':
+    if entry.isMethod:
       entry.path  = entry.path + '?_method=' + urllib.parse.quote(entry.method or entry.name)
       entry.dpath = entry.dpath + '?_method=' + urllib.parse.quote(entry.method or entry.name)
     else:
@@ -475,7 +507,7 @@ class Describer(object):
       entry.dpath += entry.dname
 
     # generate an ID
-    if entry.isRest and entry.itype == 'method':
+    if entry.isMethod:
       entry.id = 'method-{}-{}'.format(
         self._encodeIdComponent(entry.path[:entry.path.find('?_method=')]),
         self._encodeIdComponent(entry.method or entry.name))
