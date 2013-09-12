@@ -920,88 +920,88 @@ application:
     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
     self.assertResponse(res, 200, chk, xml=True)
 
-#   #----------------------------------------------------------------------------
-#   def test_format_wadl(self):
-#     'The Describer can emit WADL'
-#     root = SimpleRoot()
-#     root.desc = DescribeController(
-#        root, doc='URL tree description.',
-#        settings={'format.default': 'wadl', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
-#     res = self.send(root, '/desc')
-#     chk = '''
-# <application
-#  xmlns="http://research.sun.com/wadl/2006/10"
-#  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-#  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-#  xmlns:pd="http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc"
-#  xsi:schemaLocation="http://research.sun.com/wadl/2006/10 wadl.xsd"
-#  >
-#  <resources base="http://localhost">
-#   <resource id="endpoint-_2F" path="">
-#    <pd:doc>The default root.</pd:doc>
-#    <method id="method-_2F-GET" name="GET"/>
-#   </resource>
-#   <resource id="endpoint-_2Fdesc" path="desc">
-#    <pd:doc>URL tree description.</pd:doc>
-#    <method id="method-_2Fdesc-GET" name="GET"/>
-#   </resource>
-#   <resource id="endpoint-_2Frest" path="rest">
-#    <pd:doc>A RESTful entry.</pd:doc>
-#    <method id="method-_2Frest-DELETE" name="DELETE">
-#     <pd:doc>Deletes the entry.</pd:doc>
-#    </method>
-#    <method id="method-_2Frest-GET" name="GET">
-#     <pd:doc>Gets the current value.</pd:doc>
-#    </method>
-#    <method id="method-_2Frest-POST" name="POST">
-#     <pd:doc>Creates a new entry.</pd:doc>
-#     <request>
-#      <param id="param-_2Frest_3F_5Fmethod_3DPOST-size" name="size" type="xsd:int" required="false" default="4096">
-#       <pd:doc>The anticipated maximum size</pd:doc>
-#      </param>
-#      <param id="param-_2Frest_3F_5Fmethod_3DPOST-text" name="text" type="xsd:string" required="true">
-#       <pd:doc>The text content for the posting</pd:doc>
-#      </param>
-#     </request>
-#     <response>
-#      <representation id="return-_2Frest_3F_5Fmethod_3DPOST-0-str" element="xsd:string">
-#       <pd:doc>The ID of the new posting</pd:doc>
-#      </representation>
-#      <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized" element="HTTPUnauthorized">
-#       <pd:doc>Authenticated access is required</pd:doc>
-#      </fault>
-#      <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden" element="HTTPForbidden">
-#       <pd:doc>The user does not have posting privileges</pd:doc>
-#      </fault>
-#     </response>
-#    </method>
-#    <method id="method-_2Frest-PUT" name="PUT">
-#     <pd:doc>Updates the value.</pd:doc>
-#    </method>
-#   </resource>
-#   <resource id="endpoint-_2Fsub_2Fmethod" path="sub/method">
-#    <pd:doc>This method outputs a JSON list.</pd:doc>
-#    <method id="method-_2Fsub_2Fmethod-GET" name="GET"/>
-#   </resource>
-#   <resource id="endpoint-_2Fswi" path="swi">
-#    <pd:doc>A sub-controller providing only an index.</pd:doc>
-#    <method id="method-_2Fswi-GET" name="GET"/>
-#   </resource>
-#   <resource id="endpoint-_2Funknown" path="unknown">
-#    <pd:doc>A dynamically generated sub-controller.</pd:doc>
-#    <method id="method-_2Funknown-GET" name="GET"/>
-#   </resource>
-#  </resources>
-# </application>
-# '''
-#     # todo: what to do about mediaType, status, and namespaces?...
-#     # <representation mediaType="application/xml" element="yn:ResultSet"/>
-#     # <fault status="400" mediaType="application/xml" element="ya:Error"/>
-#     def roundtrip(xml):
-#       return ET.tostring(ET.fromstring(xml), 'UTF-8')
-#     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
-#     res.body = roundtrip(res.body)
-#     self.assertResponse(res, 200, chk, xml=True)
+  #----------------------------------------------------------------------------
+  def test_format_wadl(self):
+    'The Describer can emit WADL'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={'format.default': 'wadl', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+    res = self.send(root, '/desc')
+    chk = '''
+<application
+ xmlns="http://research.sun.com/wadl/2006/10"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:pd="http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc"
+ xsi:schemaLocation="http://research.sun.com/wadl/2006/10 wadl.xsd"
+ >
+ <resources base="http://localhost">
+  <resource id="endpoint-_2F" path="">
+   <pd:doc>The default root.</pd:doc>
+   <method id="method-_2F-GET" name="GET"/>
+  </resource>
+  <resource id="endpoint-_2Fdesc" path="desc">
+   <pd:doc>URL tree description.</pd:doc>
+   <method id="method-_2Fdesc-GET" name="GET"/>
+  </resource>
+  <resource id="endpoint-_2Frest" path="rest">
+   <pd:doc>A RESTful entry.</pd:doc>
+   <method id="method-_2Frest-DELETE" name="DELETE">
+    <pd:doc>Deletes the entry.</pd:doc>
+   </method>
+   <method id="method-_2Frest-GET" name="GET">
+    <pd:doc>Gets the current value.</pd:doc>
+   </method>
+   <method id="method-_2Frest-POST" name="POST">
+    <pd:doc>Creates a new entry.</pd:doc>
+    <request>
+     <param id="param-_2Frest_3F_5Fmethod_3DPOST-size" name="size" type="xsd:integer" required="false" default="4096">
+      <pd:doc>The anticipated maximum size</pd:doc>
+     </param>
+     <param id="param-_2Frest_3F_5Fmethod_3DPOST-text" name="text" type="xsd:string" required="true">
+      <pd:doc>The text content for the posting</pd:doc>
+     </param>
+    </request>
+    <response>
+     <representation id="return-_2Frest_3F_5Fmethod_3DPOST-0-str" element="xsd:string">
+      <pd:doc>The ID of the new posting</pd:doc>
+     </representation>
+     <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized" element="HTTPUnauthorized">
+      <pd:doc>Authenticated access is required</pd:doc>
+     </fault>
+     <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden" element="HTTPForbidden">
+      <pd:doc>The user does not have posting privileges</pd:doc>
+     </fault>
+    </response>
+   </method>
+   <method id="method-_2Frest-PUT" name="PUT">
+    <pd:doc>Updates the value.</pd:doc>
+   </method>
+  </resource>
+  <resource id="endpoint-_2Fsub_2Fmethod" path="sub/method">
+   <pd:doc>This method outputs a JSON list.</pd:doc>
+   <method id="method-_2Fsub_2Fmethod-GET" name="GET"/>
+  </resource>
+  <resource id="endpoint-_2Fswi" path="swi">
+   <pd:doc>A sub-controller providing only an index.</pd:doc>
+   <method id="method-_2Fswi-GET" name="GET"/>
+  </resource>
+  <resource id="endpoint-_2Funknown" path="unknown">
+   <pd:doc>A dynamically generated sub-controller.</pd:doc>
+   <method id="method-_2Funknown-GET" name="GET"/>
+  </resource>
+ </resources>
+</application>
+'''
+    # todo: what to do about mediaType, status, and namespaces?...
+    # <representation mediaType="application/xml" element="yn:ResultSet"/>
+    # <fault status="400" mediaType="application/xml" element="ya:Error"/>
+    def roundtrip(xml):
+      return ET.tostring(ET.fromstring(xml), 'UTF-8')
+    chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
+    res.body = roundtrip(res.body)
+    self.assertResponse(res, 200, chk, xml=True)
 
 #------------------------------------------------------------------------------
 # end of $Id$

@@ -698,6 +698,113 @@ class Describer(object):
     doc2list(data)
     return ET.tostring(dict2node(data), 'UTF-8')
 
+  #----------------------------------------------------------------------------
+  def et2wadl(self, options, root):
+    for ns, uri in self.xmlns.items():
+      if ns == 'wadl':
+        root.set('xmlns', uri)
+      else:
+        root.set('xmlns:' + ns, uri)
+    root.set('xsi:schemaLocation', self.xmlns['wadl'] + ' wadl.xsd')
+    rename = {
+      'doc':       'doc:doc',
+      'endpoint':  'resource',
+      'return':    'representation',
+      'raise':     'fault',
+      }
+    resources = ET.Element('resources')
+    for elem in list(root):
+      root.remove(elem)
+      resources.append(elem)
+    root.append(resources)
+    appUrl = None
+    for elem in root.iter():
+      if elem.tag in rename:
+        elem.tag = rename[elem.tag]
+      if elem.tag == 'application' and 'url' in elem.attrib:
+        appUrl = elem.attrib.pop('url')
+      if elem.tag == 'resources' and appUrl:
+        elem.set('base', appUrl)
+      elem.attrib.pop('decorated-name', None)
+      elem.attrib.pop('decorated-path', None)
+      if 'path' in elem.attrib and elem.attrib.get('path').startswith('/'):
+        elem.attrib['path'] = elem.attrib.get('path')[1:]
+      if elem.tag == 'resource':
+        elem.attrib.pop('name', None)
+      if elem.tag == 'method':
+        reqnodes = []
+        resnodes = []
+        for child in list(elem):
+          if child.tag in ('param',):
+            reqnodes.append(child)
+            elem.remove(child)
+          elif child.tag in ('return', 'raise'):
+            resnodes.append(child)
+            elem.remove(child)
+        if reqnodes:
+          req = ET.SubElement(elem, 'request')
+          req.extend(reqnodes)
+        if resnodes:
+          res = ET.SubElement(elem, 'response')
+          res.extend(resnodes)
+      if elem.tag == 'representation':
+        if 'type' in elem.attrib:
+          val = elem.attrib.pop('type')
+          elem.attrib['element'] = self.wadl_type_remap.get(val, val)
+        if 'doc' in elem.attrib:
+          doc = elem.attrib.pop('doc')
+          ET.SubElement(elem, 'doc:doc').text = doc
+      if elem.tag == 'param':
+        if 'optional' in elem.attrib:
+          opt = asbool(elem.attrib.pop('optional'))
+          elem.attrib['required'] = 'true' if not opt else 'false'
+        if 'type' in elem.attrib:
+          val = elem.attrib['type']
+          if val in self.wadl_type_remap:
+            elem.attrib['type'] = self.wadl_type_remap[val]
+        if 'doc' in elem.attrib:
+          doc = elem.attrib.pop('doc')
+          ET.SubElement(elem, 'doc:doc').text = doc
+      if elem.tag == 'fault':
+        doc = elem.attrib.pop('doc', None)
+        if doc:
+          ET.SubElement(elem, 'doc:doc').text = doc
+        if 'type' in elem.attrib:
+          val = elem.attrib.pop('type')
+          elem.attrib['element'] = self.wadl_type_remap.get(val, val)
+    return root
+
+  #----------------------------------------------------------------------------
+  def render_wadl(self, data):
+    options = data.options
+    resp = data.options.request.response
+    resp.content_type = 'text/xml'
+    resp.charset = 'UTF-8'
+    data = self.structure_render(data, dict=collections.OrderedDict)
+    # force 'doc' attribute into a list, which causes dict2node to
+    # make it into a node instead of an attribute
+    def doc2list(node):
+      if isscalar(node):
+        return
+      if islist(node):
+        for sub in node:
+          doc2list(sub)
+        return
+      if 'doc' in node:
+        node['doc'] = [node['doc']]
+      for value in node.values():
+        doc2list(value)
+    doc2list(data)
+    # force all endpoints to have at least a 'GET' method
+    for endpoint in data['application']['endpoints']:
+      if not endpoint.get('methods'):
+        endpoint['methods'] = [dict(
+          id='method-{}-GET'.format(self._encodeIdComponent(endpoint['path'])),
+          name='GET')]
+    data = dict2node(data)
+    data = self.et2wadl(options, data)
+    return ET.tostring(data, 'UTF-8')
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------
