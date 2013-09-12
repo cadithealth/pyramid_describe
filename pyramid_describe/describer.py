@@ -6,7 +6,8 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, logging, inspect, binascii, types, json
+import re, logging, inspect, binascii, types, json, six, collections
+import xml.etree.ElementTree as ET
 from six.moves import urllib
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, aslist
@@ -32,16 +33,60 @@ except ImportError:
   FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
 
 #------------------------------------------------------------------------------
-def entcmp(e1, e2):
-  if e1.parent is not e2.parent:
-    return cmp(e1.path, e2.path)
-  r1 = bool(e1.isMethod)
-  r2 = bool(e2.isMethod)
-  if r1 == r2:
-    return cmp(e1.name, e2.name)
-  if r1:
-    return -1
-  return 1
+def s2x(name):
+  'Converts camelCase to camel-case.'
+  def repl(match):
+    return match.group(1) + '-' + match.group(2).lower()
+  return re.sub('([a-z])([A-Z])', repl, name)
+def singular(name):
+  if name.endswith('s'):
+    return name[:-1]
+  return name
+def isscalar(obj):
+  return isinstance(obj, six.string_types + (bool, int, float))
+def islist(obj):
+  if isscalar(obj) or isinstance(obj, dict):
+    return False
+  try:
+    list(obj)
+    return True
+  except TypeError:
+    return False
+
+#------------------------------------------------------------------------------
+def add2node(obj, node):
+  if obj is None:
+    return
+  if isscalar(obj):
+    node.text = ( node.text or '' ) + str(obj)
+    return
+  if isinstance(obj, dict):
+    for k, v in obj.items():
+      if v is None:
+        continue
+      if isscalar(v):
+        node.set(s2x(k), str(v))
+        continue
+      if islist(v):
+        # todo: this 'singularization' should probably be in render_xml...
+        k = singular(k)
+        for el in v:
+          node.append(dict2node(dict([(k,el)])))
+        continue
+      node.append(dict2node(dict([(k,v)])))
+    return
+  raise NotImplementedError()
+
+#------------------------------------------------------------------------------
+def dict2node(d):
+  if len(d) != 1:
+    node = ET.Element('element')
+    for k, v in d.items():
+      node.append(dict2node(dict([(k, v)])))
+    return node
+  node = ET.Element(s2x(d.keys()[0]))
+  add2node(d.values()[0], node)
+  return node
 
 #------------------------------------------------------------------------------
 class DescriberData(adict):
@@ -60,7 +105,6 @@ class DescriberData(adict):
       * _dchildren
     '''
     fullset = []
-    #for entry in sorted(list(self.endpoints), cmp=entcmp):
     for entry in self.endpoints:
       entry._dreal = True
       if entry.parent and entry.parent not in fullset:
@@ -632,6 +676,27 @@ class Describer(object):
     resp.charset = 'UTF-8'
     return yaml.dump(self.structure_render(data))
 
+  #----------------------------------------------------------------------------
+  def render_xml(self, data):
+    resp = data.options.request.response
+    resp.content_type = 'text/xml'
+    resp.charset = 'UTF-8'
+    data = self.structure_render(data, dict=collections.OrderedDict)
+    # force 'doc' attribute into a list, which causes dict2node to
+    # make it into a node instead of an attribute
+    def doc2list(node):
+      if isscalar(node):
+        return
+      if islist(node):
+        for sub in node:
+          doc2list(sub)
+        return
+      if 'doc' in node:
+        node['doc'] = [node['doc']]
+      for value in node.values():
+        doc2list(value)
+    doc2list(data)
+    return ET.tostring(dict2node(data), 'UTF-8')
 
 #------------------------------------------------------------------------------
 # end of $Id$

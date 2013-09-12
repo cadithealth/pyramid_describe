@@ -865,6 +865,61 @@ application:
 '''
     self.assertEqual(yaml.load(res.body), yaml.load(chk))
 
+  #----------------------------------------------------------------------------
+  def test_format_xml(self):
+    'The Describer can emit XML'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'format.default': 'xml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+    res = self.send(root, '/desc')
+    chk = '''\
+<?xml version="1.0" encoding="UTF-8"?>
+<application url="http://localhost">
+ <endpoint name="" path="/" decorated-name="" decorated-path="/" id="endpoint-_2F">
+  <doc>The default root.</doc>
+ </endpoint>
+ <endpoint name="desc" path="/desc" decorated-name="desc" decorated-path="/desc" id="endpoint-_2Fdesc">
+  <doc>URL tree description.</doc>
+ </endpoint>
+ <endpoint name="rest" path="/rest" decorated-name="rest" decorated-path="/rest" id="endpoint-_2Frest">
+  <doc>A RESTful entry.</doc>
+  <method id="method-_2Frest-DELETE" name="DELETE"><doc>Deletes the entry.</doc></method>
+  <method id="method-_2Frest-GET" name="GET"><doc>Gets the current value.</doc></method>
+  <method id="method-_2Frest-POST" name="POST">
+   <doc>Creates a new entry.</doc>
+   <param default="4096" id="param-_2Frest_3F_5Fmethod_3DPOST-size" name="size" optional="True" type="int">
+    <doc>The anticipated maximum size</doc>
+   </param>
+   <param id="param-_2Frest_3F_5Fmethod_3DPOST-text" name="text" optional="False" type="str">
+    <doc>The text content for the posting</doc>
+   </param>
+   <return id="return-_2Frest_3F_5Fmethod_3DPOST-0-str" type="str">
+    <doc>The ID of the new posting</doc>
+   </return>
+   <raise id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized" type="HTTPUnauthorized">
+    <doc>Authenticated access is required</doc>
+   </raise>
+   <raise id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden" type="HTTPForbidden">
+    <doc>The user does not have posting privileges</doc>
+   </raise>
+  </method>
+  <method id="method-_2Frest-PUT" name="PUT"><doc>Updates the value.</doc></method>
+ </endpoint>
+ <endpoint name="method" path="/sub/method" decorated-name="method" decorated-path="/sub/method" id="endpoint-_2Fsub_2Fmethod">
+  <doc>This method outputs a JSON list.</doc>
+ </endpoint>
+ <endpoint name="swi" path="/swi" decorated-name="swi" decorated-path="/swi" id="endpoint-_2Fswi">
+  <doc>A sub-controller providing only an index.</doc>
+ </endpoint>
+ <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-_2Funknown">
+  <doc>A dynamically generated sub-controller.</doc>
+ </endpoint>
+</application>
+'''
+    chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
+    self.assertResponse(res, 200, chk, xml=True)
+
 #   #----------------------------------------------------------------------------
 #   def test_format_wadl(self):
 #     'The Describer can emit WADL'
@@ -946,50 +1001,6 @@ application:
 #       return ET.tostring(ET.fromstring(xml), 'UTF-8')
 #     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
 #     res.body = roundtrip(res.body)
-#     self.assertResponse(res, 200, chk, xml=True)
-
-#   #----------------------------------------------------------------------------
-#   def test_format_xml(self):
-#     'The Describer can emit XML'
-#     root = SimpleRoot()
-#     root.desc = DescribeController(root, doc='URL tree description.',
-#                                    override=adict(format='xml'))
-#     res = self.send(root, '/desc')
-#     chk = '''\
-# <?xml version="1.0" encoding="UTF-8"?>
-# <application url="http://localhost">
-#  <endpoints>
-#   <endpoint name="" path="/" decorated-name="" decorated-path="/" id="endpoint-_2F">
-#    <doc>The default root.</doc>
-#    <method id="method-_2F-GET" name="GET"/>
-#   </endpoint>
-#   <endpoint name="desc" path="/desc" decorated-name="desc" decorated-path="/desc" id="endpoint-_2Fdesc">
-#    <doc>URL tree description.</doc>
-#    <method id="method-_2Fdesc-GET" name="GET"/>
-#   </endpoint>
-#   <endpoint name="rest" path="/rest" decorated-name="rest" decorated-path="/rest" id="endpoint-_2Frest">
-#    <doc>A RESTful entry.</doc>
-#    <method id="method-_2Frest-DELETE" name="DELETE"><doc>Deletes the entry.</doc></method>
-#    <method id="method-_2Frest-GET" name="GET"><doc>Gets the current value.</doc></method>
-#    <method id="method-_2Frest-POST" name="POST"><doc>Creates a new entry.</doc></method>
-#    <method id="method-_2Frest-PUT" name="PUT"><doc>Updates the value.</doc></method>
-#   </endpoint>
-#   <endpoint name="method" path="/sub/method" decorated-name="method" decorated-path="/sub/method" id="endpoint-_2Fsub_2Fmethod">
-#    <doc>This method outputs a JSON list.</doc>
-#    <method id="method-_2Fsub_2Fmethod-GET" name="GET"/>
-#   </endpoint>
-#   <endpoint name="swi" path="/swi" decorated-name="swi" decorated-path="/swi" id="endpoint-_2Fswi">
-#    <doc>A sub-controller providing only an index.</doc>
-#    <method id="method-_2Fswi-GET" name="GET"/>
-#   </endpoint>
-#   <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-_2Funknown">
-#    <doc>A dynamically generated sub-controller.</doc>
-#    <method id="method-_2Funknown-GET" name="GET"/>
-#   </endpoint>
-#  </endpoints>
-# </application>
-# '''
-#     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
 #     self.assertResponse(res, 200, chk, xml=True)
 
 #------------------------------------------------------------------------------
