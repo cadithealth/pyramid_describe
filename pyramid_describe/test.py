@@ -93,8 +93,13 @@ def restEnhancer(entry):
     )
   return entry
 
-minRst = adict(format='rst', showSelf=False, showLegend=False,
-               showGenerator=False, showLocation=False)
+settings_minRst = {
+  'exclude': '^/desc(/.*)?$',
+  'format.default': 'rst',
+  'format.default.showLegend': 'false',
+  'format.default.showGenerator': 'false',
+  'format.default.showLocation': 'false',
+  }
 
 #------------------------------------------------------------------------------
 class DescribeTest(TestHelper):
@@ -243,191 +248,243 @@ class DescribeTest(TestHelper):
     └── groups    # Return the groups for this object
 ''')
 
+  #----------------------------------------------------------------------------
+  def test_format_rst_full(self):
+    'The Describer can emit a reStructuredText description'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'exclude': '^/desc/.*',
+                'format.default': 'rst',
+                'format.default.showImpl': 'true',
+                'filters': restEnhancer})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+Contents of "/"
+***************
+
+/
+=
+
+  Handler: pyramid_describe.test.SimpleRoot() [instance]
+
+  The default root.
+
+/desc
+=====
+
+  Handler: pyramid_describe.controller.DescribeController() [instance]
+
+  URL tree description.
+
+/rest
+=====
+
+  Handler: pyramid_describe.test.Rest() [instance]
+
+  A RESTful entry.
+
+  Supported Methods
+  -----------------
+
+  * **DELETE**:
+
+    Handler: pyramid_describe.test.Rest().delete [method]
+
+    Deletes the entry.
+
+  * **GET**:
+
+    Handler: pyramid_describe.test.Rest().get [method]
+
+    Gets the current value.
+
+  * **POST**:
+
+    Handler: pyramid_describe.test.Rest().post [method]
+
+    Creates a new entry.
+
+    :Parameters:
+
+    **size** : int, optional, default 4096
+
+      The anticipated maximum size
+
+    **text** : str
+
+      The text content for the posting
+
+    :Returns:
+
+    **str**
+
+      The ID of the new posting
+
+    :Raises:
+
+    **HTTPUnauthorized**
+
+      Authenticated access is required
+
+    **HTTPForbidden**
+
+      The user does not have posting privileges
+
+  * **PUT**:
+
+    Handler: pyramid_describe.test.Rest().put [method]
+
+    Updates the value.
+
+/sub/method
+===========
+
+  Handler: pyramid_describe.test.Sub().method [method]
+
+  This method outputs a JSON list.
+
+/swi
+====
+
+  Handler: pyramid_describe.test.SubIndex() [instance]
+
+  A sub-controller providing only an index.
+
+/unknown/?
+==========
+
+  Handler: pyramid_describe.test.Unknown [class]
+
+  A dynamically generated sub-controller.
+
+Legend
+******
+
+  * `{{NAME}}`:
+
+    Placeholder -- usually replaced with an ID or other identifier of a RESTful
+    object.
+
+  * `<NAME>`:
+
+    Not an actual endpoint, but the HTTP method to use.
+
+  * `NAME/?`:
+
+    Dynamically evaluated endpoint, so no further information can be determined
+    without specific contextual request details.
+
+  * `*`:
+
+    This endpoint is a `default` handler, and is therefore free to interpret
+    path arguments dynamically, so no further information can be determined
+    without specific contextual request details.
+
+  * `...`:
+
+    This endpoint is a `lookup` handler, and is therefore free to interpret
+    path arguments dynamically, so no further information can be determined
+    without specific contextual request details.
+
+.. generator: pyramid-describe/{version} [format=rst]
+.. location: http://localhost/desc
+'''.format(version=getVersion('pyramid_describe')))
+
+  #----------------------------------------------------------------------------
+  def test_mixed_restful_and_dispatch_rst(self):
+    'The Describer supports mixing RESTful and URL component methods'
+    class Access(Controller):
+      @index
+      def index(self, request):
+        'Access control'
+    class Rest(RestController):
+      'RESTful access, with sub-component'
+      access = Access()
+      @expose
+      def put(self, request):
+        'Modify this object'
+        pass
+      @expose
+      def groups(self, request):
+        'Return the groups for this object'
+    class Root(Controller):
+      rest = Rest()
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings=settings_minRst)
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+Contents of "/"
+***************
+
+/rest
+=====
+
+  RESTful access, with sub-component
+
+  Supported Methods
+  -----------------
+
+  * **PUT**:
+
+    Modify this object
+
+/rest/access
+============
+
+  Access control
+
+/rest/groups
+============
+
+  Return the groups for this object
+
+''')
+
+#   # TODO: enable this when txt is sensitive to forceSlash...
 #   #----------------------------------------------------------------------------
-#   def test_mixed_restful_and_dispatch_rst(self):
-#     'The Describer supports mixing RESTful and URL component methods'
-#     class Access(Controller):
+#   def test_format_txt_differentiates_forced_slash_index(self):
+#     'The Describer can differentiate a forced-slash index'
+#     class SubIndexForceSlash(Controller):
 #       @index
-#       def index(self, request):
-#         'Access control'
-#     class Rest(RestController):
-#       'RESTful access, with sub-component'
-#       access = Access()
-#       @expose
-#       def put(self, request):
-#         'Modify this object'
-#         pass
-#       @expose
-#       def groups(self, request):
-#         'Return the groups for this object'
-#     class Root(Controller):
-#       rest = Rest()
-#     root = Root()
-#     root.desc = DescribeController(root, doc='URL tree description.',
-#                                    override=minRst)
-#     self.assertResponse(self.send(root, '/desc'), 200, '''\
-# Contents of "/"
-# ***************
-
-# /rest/
-# ======
-
-#   RESTful access, with sub-component
-
-#   Supported Methods
-#   -----------------
-
-#   * **PUT**:
-
-#     Modify this object
-
-# /rest/access
-# ============
-
-#   Access control
-
-# /rest/groups
-# ============
-
-#   Return the groups for this object
-
-# ''')
-
-# #   # TODO: enable this when txt is sensitive to forceSlash...
-# #   #----------------------------------------------------------------------------
-# #   def test_format_txt_differentiates_forced_slash_index(self):
-# #     'The Describer can differentiate a forced-slash index'
-# #     class SubIndexForceSlash(Controller):
-# #       @index
-# #       def myindex(self, request):
-# #         'A sub-controller providing only a slash-index.'
-# #         return 'my.index'
-# #     root = SimpleRoot()
-# #     root.swfs = SubIndexForceSlash()
-# #     root.desc = DescribeController(root, doc='URL tree description.')
-# #     self.assertResponse(self.send(root, '/desc'), 200, '''\
-# # /
-# # ├── desc
-# # ├── sub/
-# # │   └── method
-# # ├── swfs/
-# # └── swi
-# # ''')
-
-#   #----------------------------------------------------------------------------
-#   def test_format_rst(self):
-#     'The Describer can emit a reStructuredText description'
+#       def myindex(self, request):
+#         'A sub-controller providing only a slash-index.'
+#         return 'my.index'
 #     root = SimpleRoot()
-#     root.desc = DescribeController(root, doc='URL tree description.',
-#                                    override=adict(format='rst'))
+#     root.swfs = SubIndexForceSlash()
+#     root.desc = DescribeController(root, doc='URL tree description.')
 #     self.assertResponse(self.send(root, '/desc'), 200, '''\
-# Contents of "/"
-# ***************
-
 # /
-# =
-
-#   The default root.
-
-# /desc
-# =====
-
-#   URL tree description.
-
-# /rest
-# =====
-
-#   A RESTful entry.
-
-#   Supported Methods
-#   -----------------
-
-#   * **DELETE**:
-
-#     Deletes the entry.
-
-#   * **GET**:
-
-#     Gets the current value.
-
-#   * **POST**:
-
-#     Creates a new entry.
-
-#   * **PUT**:
-
-#     Updates the value.
-
-# /sub/method
-# ===========
-
-#   This method outputs a JSON list.
-
-# /swi
-# ====
-
-#   A sub-controller providing only an index.
-
-# /unknown/?
-# ==========
-
-#   A dynamically generated sub-controller.
-
-# Legend
-# ******
-
-#   * `{{NAME}}`:
-
-#     Placeholder -- usually replaced with an ID or other identifier of a RESTful
-#     object.
-
-#   * `<NAME>`:
-
-#     Not an actual endpoint, but the HTTP method to use.
-
-#   * `¿NAME?`:
-
-#     Dynamically evaluated endpoint, so no further information can be determined
-#     without specific contextual request details.
-
-#   * `*`:
-
-#     This endpoint is a `default` handler, and is therefore free to interpret
-#     path arguments dynamically, so no further information can be determined
-#     without specific contextual request details.
-
-#   * `...`:
-
-#     This endpoint is a `lookup` handler, and is therefore free to interpret
-#     path arguments dynamically, so no further information can be determined
-#     without specific contextual request details.
-
-# .. generator: pyramid-controllers/{version} [format=rst]
-# .. location: http://localhost/desc
-# '''.format(version=getVersion('pyramid_describe')))
-
-#   #----------------------------------------------------------------------------
-#   def test_prune_index(self):
-#     'The Describer can collapse up index docs'
-#     class Root(Controller):
-#       'The Root'
-#       @index
-#       def method(self, request):
-#         'The index method'
-#         return 'ok.index'
-#     root = Root()
-#     root.desc = DescribeController(root, doc='URL tree description.',
-#                                    override=minRst.update())
-#     self.assertResponse(self.send(root, '/desc'), 200, '''\
-# Contents of "/"
-# ***************
-
-# /
-# =
-
-#   The index method
-
+# ├── desc
+# ├── sub/
+# │   └── method
+# ├── swfs/
+# └── swi
 # ''')
+
+  #----------------------------------------------------------------------------
+  def test_prune_index(self):
+    'The Describer can collapse up index docs'
+    class Root(Controller):
+      'The Root'
+      @index
+      def method(self, request):
+        'The index method'
+        return 'ok.index'
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+       settings=settings_minRst)
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+Contents of "/"
+***************
+
+/
+=
+
+  The index method
+
+''')
 
   #----------------------------------------------------------------------------
   def test_format_html(self):
