@@ -34,7 +34,7 @@ for entry in entries:
   else:
     cur += indent + data.root
   cur += entry.dname
-  folder = ( not entry.isEndpoint ) or \
+  folder = ( not entry.isEndpoint and not entry.isMethod ) or \
     len([c for c in entry._dchildren or []
          if not ( c.isRest and not c.isController )]) > 0
   if folder and not cur.endswith('/'):
