@@ -22,14 +22,19 @@ def read(*parts):
 test_dependencies = [
   'nose                 >= 1.3.0',
   'coverage             >= 3.6',
+  'WebTest              >= 1.4.0',
   ]
 
 dependencies = [
   'distribute           >= 0.6.24',
   'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
-  'pyramid-controllers  >= 0.3.12',
+  'pyramid-controllers  >= 0.3.17',
   'pyramid-iniherit     >= 0.1.7',
+  'six                  >= 1.4.1',
+
+  # todo: add optional dependency on PyYAML if support for yaml format is desired
+  # 'PyYAML               >= 3.10',
   ]
 
 entrypoints = {
