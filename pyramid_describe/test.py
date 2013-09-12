@@ -730,140 +730,140 @@ Contents of "/"
     res.body = json.dumps(json.loads(res.body), sort_keys=True, indent=4)
     self.assertResponse(res, 200, chk)
 
-#   #----------------------------------------------------------------------------
-#   def test_format_yaml(self):
-#     'The Describer can emit YAML'
-#     try:
-#       import yaml
-#     except ImportError:
-#       sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
-#       return
-#     root = SimpleRoot()
-#     root.desc = DescribeController(
-#        root, doc='URL tree description.',
-#        settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
-#     res = self.send(root, '/desc')
-#     chk = '''
-# application:
-#   url: 'http://localhost'
-#   endpoints:
-#     - name: ''
-#       id: 'endpoint-_2F'
-#       path: /
-#       decoratedName: ''
-#       decoratedPath: /
-#       doc: The default root.
-#     - name: desc
-#       id: 'endpoint-_2Fdesc'
-#       path: /desc
-#       decoratedName: desc
-#       decoratedPath: /desc
-#       doc: URL tree description.
-#     - name: rest
-#       id: 'endpoint-_2Frest'
-#       path: /rest
-#       decoratedName: rest
-#       decoratedPath: /rest
-#       doc: A RESTful entry.
-#       methods:
-#         - name: DELETE
-#           id: 'method-_2Frest-DELETE'
-#           doc: Deletes the entry.
-#         - name: GET
-#           id: 'method-_2Frest-GET'
-#           doc: Gets the current value.
-#         - name: POST
-#           id: 'method-_2Frest-POST'
-#           doc: Creates a new entry.
-#           params:
-#             - name: size
-#               id: 'param-_2Frest_3F_5Fmethod_3DPOST-size'
-#               type: int
-#               optional: true
-#               default: 4096
-#               doc: The anticipated maximum size
-#             - name: text
-#               id: 'param-_2Frest_3F_5Fmethod_3DPOST-text'
-#               type: str
-#               optional: false
-#               doc: The text content for the posting
-#           returns:
-#             - type: str
-#               id: 'return-_2Frest_3F_5Fmethod_3DPOST-0-str'
-#               doc: The ID of the new posting
-#           raises:
-#             - type: HTTPUnauthorized
-#               id: 'raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized'
-#               doc: Authenticated access is required
-#             - type: HTTPForbidden
-#               id: 'raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden'
-#               doc: The user does not have posting privileges
-#         - name: PUT
-#           id: 'method-_2Frest-PUT'
-#           doc: Updates the value.
-#     - name: method
-#       id: 'endpoint-_2Fsub_2Fmethod'
-#       path: /sub/method
-#       decoratedName: method
-#       decoratedPath: /sub/method
-#       doc: This method outputs a JSON list.
-#     - name: swi
-#       id: 'endpoint-_2Fswi'
-#       path: /swi
-#       decoratedName: swi
-#       decoratedPath: /swi
-#       doc: A sub-controller providing only an index.
-#     - name: unknown
-#       id: 'endpoint-_2Funknown'
-#       path: /unknown
-#       decoratedName: unknown/?
-#       decoratedPath: /unknown/?
-#       doc: A dynamically generated sub-controller.
-# '''
-#     import yaml
-#     chk = yaml.dump(yaml.load(chk), default_flow_style=False)
-#     res.body = yaml.dump(yaml.load(res.body), default_flow_style=False)
-#     self.assertResponse(res, 200, chk)
+  #----------------------------------------------------------------------------
+  def test_format_yaml(self):
+    'The Describer can emit YAML'
+    try:
+      import yaml
+    except ImportError:
+      sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
+      return
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+    res = self.send(root, '/desc')
+    chk = '''
+application:
+  url: 'http://localhost'
+  endpoints:
+    - name: ''
+      id: 'endpoint-_2F'
+      path: /
+      decoratedName: ''
+      decoratedPath: /
+      doc: The default root.
+    - name: desc
+      id: 'endpoint-_2Fdesc'
+      path: /desc
+      decoratedName: desc
+      decoratedPath: /desc
+      doc: URL tree description.
+    - name: rest
+      id: 'endpoint-_2Frest'
+      path: /rest
+      decoratedName: rest
+      decoratedPath: /rest
+      doc: A RESTful entry.
+      methods:
+        - name: DELETE
+          id: 'method-_2Frest-DELETE'
+          doc: Deletes the entry.
+        - name: GET
+          id: 'method-_2Frest-GET'
+          doc: Gets the current value.
+        - name: POST
+          id: 'method-_2Frest-POST'
+          doc: Creates a new entry.
+          params:
+            - name: size
+              id: 'param-_2Frest_3F_5Fmethod_3DPOST-size'
+              type: int
+              optional: true
+              default: 4096
+              doc: The anticipated maximum size
+            - name: text
+              id: 'param-_2Frest_3F_5Fmethod_3DPOST-text'
+              type: str
+              optional: false
+              doc: The text content for the posting
+          returns:
+            - type: str
+              id: 'return-_2Frest_3F_5Fmethod_3DPOST-0-str'
+              doc: The ID of the new posting
+          raises:
+            - type: HTTPUnauthorized
+              id: 'raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized'
+              doc: Authenticated access is required
+            - type: HTTPForbidden
+              id: 'raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden'
+              doc: The user does not have posting privileges
+        - name: PUT
+          id: 'method-_2Frest-PUT'
+          doc: Updates the value.
+    - name: method
+      id: 'endpoint-_2Fsub_2Fmethod'
+      path: /sub/method
+      decoratedName: method
+      decoratedPath: /sub/method
+      doc: This method outputs a JSON list.
+    - name: swi
+      id: 'endpoint-_2Fswi'
+      path: /swi
+      decoratedName: swi
+      decoratedPath: /swi
+      doc: A sub-controller providing only an index.
+    - name: unknown
+      id: 'endpoint-_2Funknown'
+      path: /unknown
+      decoratedName: unknown/?
+      decoratedPath: /unknown/?
+      doc: A dynamically generated sub-controller.
+'''
+    import yaml
+    chk = yaml.dump(yaml.load(chk), default_flow_style=False)
+    res.body = yaml.dump(yaml.load(res.body), default_flow_style=False)
+    self.assertResponse(res, 200, chk)
 
-#   #----------------------------------------------------------------------------
-#   def test_format_yaml_dedent(self):
-#     'The Describer emits YAML with dedented documentation'
-#     try:
-#       import yaml
-#     except ImportError:
-#       sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
-#       return
-#     class Root(Controller):
-#       @expose
-#       def describe(self, request):
-#         '''
-#         A multi-line
-#         comment.
-#         '''
-#         pass
-#     root = Root()
-#     root.desc = DescribeController(
-#        root, doc='URL tree description.',
-#        settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
-#     res = self.send(root, '/desc')
-#     chk = '''
-# application:
-#   url: http://localhost
-#   endpoints:
-#     - name: desc
-#       id: 'endpoint-_2Fdesc'
-#       path: /desc
-#       decoratedName: desc
-#       decoratedPath: /desc
-#       doc: URL tree description.
-#     - name: describe
-#       id: 'endpoint-_2Fdescribe'
-#       path: /describe
-#       decoratedName: describe
-#       decoratedPath: /describe
-#       doc: "A multi-line\\ncomment."
-# '''
-#     self.assertEqual(yaml.load(res.body), yaml.load(chk))
+  #----------------------------------------------------------------------------
+  def test_format_yaml_dedent(self):
+    'The Describer emits YAML with dedented documentation'
+    try:
+      import yaml
+    except ImportError:
+      sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
+      return
+    class Root(Controller):
+      @expose
+      def describe(self, request):
+        '''
+        A multi-line
+        comment.
+        '''
+        pass
+    root = Root()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+    res = self.send(root, '/desc')
+    chk = '''
+application:
+  url: http://localhost
+  endpoints:
+    - name: desc
+      id: 'endpoint-_2Fdesc'
+      path: /desc
+      decoratedName: desc
+      decoratedPath: /desc
+      doc: URL tree description.
+    - name: describe
+      id: 'endpoint-_2Fdescribe'
+      path: /describe
+      decoratedName: describe
+      decoratedPath: /describe
+      doc: "A multi-line\\ncomment."
+'''
+    self.assertEqual(yaml.load(res.body), yaml.load(chk))
 
 #   #----------------------------------------------------------------------------
 #   def test_format_wadl(self):

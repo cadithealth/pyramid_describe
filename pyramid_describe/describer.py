@@ -14,6 +14,10 @@ from pyramid.renderers import render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
+try:
+  import yaml
+except ImportError:
+  yaml = None
 
 from .entry import Entry
 from .util import adict, isstr, resolve, pick
@@ -618,6 +622,15 @@ class Describer(object):
     resp.content_type = 'application/json'
     resp.charset = 'UTF-8'
     return json.dumps(self.structure_render(data))
+
+  #----------------------------------------------------------------------------
+  def render_yaml(self, data):
+    if yaml is None:
+      raise ValueError('no yaml encoder library available')
+    resp = data.options.request.response
+    resp.content_type = 'application/yaml'
+    resp.charset = 'UTF-8'
+    return yaml.dump(self.structure_render(data))
 
 
 #------------------------------------------------------------------------------
