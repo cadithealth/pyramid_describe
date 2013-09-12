@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, logging, inspect, binascii, types
+import re, logging, inspect, binascii, types, json
 from six.moves import urllib
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, aslist
@@ -16,7 +16,7 @@ from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_ME
 from pyramid_controllers.dispatcher import getDispatcherFromStack
 
 from .entry import Entry
-from .util import adict, isstr, resolve
+from .util import adict, isstr, resolve, pick
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -223,8 +223,7 @@ class Describer(object):
       endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
       legend    = legend,
       )
-    renderer = getattr(self, 'render_' + format, self.template_render)
-    return renderer(request, data)
+    return getattr(self, 'render_' + format, self.template_render)(data)
 
   #----------------------------------------------------------------------------
   def _getOptions(self, request, format):
@@ -529,12 +528,97 @@ class Describer(object):
     return pseudoUrlEncode(text)
 
   #----------------------------------------------------------------------------
-  def template_render(self, request, data):
+  def _pick_param(self, options, value):
+    if options.showIds:
+      return pick(value, 'id', 'name', 'type', 'optional', 'default', 'doc')
+    return pick(value, 'name', 'type', 'optional', 'default', 'doc')
+
+  #----------------------------------------------------------------------------
+  def _pick_return(self, options, value):
+    if options.showIds:
+      return pick(value, 'id', 'type', 'doc')
+    return pick(value, 'type', 'doc')
+
+  #----------------------------------------------------------------------------
+  def _pick_raise(self, options, value):
+    if options.showIds:
+      return pick(value, 'id', 'type', 'doc')
+    return pick(value, 'type', 'doc')
+
+  #----------------------------------------------------------------------------
+  def structure_entry(self, options, entry, dentry, dict=dict):
+    if entry.params is not None:
+      dentry['params'] = [
+        dict(self._pick_param(options, e))
+        for e in entry.params]
+    if entry.returns is not None:
+      dentry['returns'] = [dict(self._pick_return(options, e)) for e in entry.returns]
+    if entry.raises is not None:
+      dentry['raises'] = [dict(self._pick_raise(options, e)) for e in entry.raises]
+    if options.showExtra and entry.extra:
+      try:
+        for k, v in entry.extra.items():
+          if v is None:
+            dentry.pop(k, None)
+          else:
+            dentry[k] = v
+      except AttributeError: pass
+    return dentry
+
+  #----------------------------------------------------------------------------
+  def structure_render(self, data, dict=dict, includeEntry=False):
+    root = dict(application=dict(url=data.options.request.host_url))
+    app = root['application']
+    app['endpoints'] = []
+    for entry in data.endpoints:
+      endpoint = dict(path=entry.path)
+      if data.options.showIds:
+        endpoint['id'] = entry.id
+      if data.options.showExtra:
+        endpoint['name']          = entry.name
+        endpoint['decoratedName'] = entry.dname
+        endpoint['decoratedPath'] = entry.dpath
+      if includeEntry:
+        endpoint['entry'] = entry
+      if entry.doc:
+        endpoint['doc'] = entry.doc
+      if data.options.showMethods and entry.methods:
+        endpoint['methods'] = []
+        for meth in entry.methods:
+          dmeth = dict(name=meth.method)
+          if data.options.showIds and meth.id:
+            dmeth['id'] = meth.id
+          if meth.doc:
+            dmeth['doc'] = meth.doc
+          if includeEntry:
+            dmeth['entry'] = meth
+          endpoint['methods'].append(self.structure_entry(data.options, meth, dmeth, dict=dict))
+      if data.options.showExtra and entry.extra:
+        try:
+          for k, v in entry.extra.items():
+            if v is None:
+              endpoint.pop(k, None)
+            else:
+              endpoint[k] = v
+        except AttributeError: pass
+      app['endpoints'].append(endpoint)
+    return root
+
+  #----------------------------------------------------------------------------
+  def template_render(self, data):
     return render('pyramid_describe:template/' + data.format + '.mako',
-                  dict(data=data), request=request)
+                  dict(data=data), request=data.options.request)
 
   render_html = template_render
   render_txt  = template_render
+
+  #----------------------------------------------------------------------------
+  def render_json(self, data):
+    resp = data.options.request.response
+    resp.content_type = 'application/json'
+    resp.charset = 'UTF-8'
+    return json.dumps(self.structure_render(data))
+
 
 #------------------------------------------------------------------------------
 # end of $Id$
