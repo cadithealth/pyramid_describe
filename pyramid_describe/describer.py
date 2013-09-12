@@ -33,8 +33,8 @@ except ImportError:
   FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
 
 #------------------------------------------------------------------------------
-def s2x(name):
-  'Converts camelCase to camel-case.'
+def ccc(name):
+  'Convert Camel Case (converts camelCase to camel-case).'
   def repl(match):
     return match.group(1) + '-' + match.group(2).lower()
   return re.sub('([a-z])([A-Z])', repl, name)
@@ -65,7 +65,7 @@ def add2node(obj, node):
       if v is None:
         continue
       if isscalar(v):
-        node.set(s2x(k), str(v))
+        node.set(ccc(k), str(v))
         continue
       if islist(v):
         # todo: this 'singularization' should probably be in render_xml...
@@ -84,7 +84,7 @@ def dict2node(d):
     for k, v in d.items():
       node.append(dict2node(dict([(k, v)])))
     return node
-  node = ET.Element(s2x(d.keys()[0]))
+  node = ET.Element(ccc(d.keys()[0]))
   add2node(d.values()[0], node)
   return node
 
