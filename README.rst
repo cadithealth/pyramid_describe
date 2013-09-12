@@ -40,24 +40,38 @@ On the command-line:
 .. code-block:: bash
 
   $ pdescribe config.ini --tree
-  / (root)
-  ├── static/*
+  /
+  ├── contact/
+  │   ├── add
+  │   ├── delete
+  │   ├── list
+  │   └── update
   ├── login
-  ├── logout
-  └── contact/
-      ├── add
-      ├── delete
-      ├── list
-      └── update
+  └── logout
 
 
 Configuration
 =============
 
-* describe.url
-* describe.target
-* describe.parser
-* describe.renderer
+* describe.prefixes : list(str), default: 'describe'
+* describe.name : str, default: application
+* describe.attach : str, default: /describe
+  ==> /describe/{describe.name}.{EXT}
+* describe.url : str, default: /
+* describe.include : list(str), default: None
+* describe.exclude : list(str), default: None
+* describe.parser : resolve-spec, default: pyramid_describe.parser.Parser
+* describe.parser.{OPTION}
+* describe.filter : resolve-spec, default: None
+* describe.filter.{OPTION}
+* describe.formats : list(str), default: ['html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml']
+* describe.format.default : str, default: `describe.formats`[0]
+* describe.format.default.{OPTION}
+* describe.format.override.{OPTION}
+* describe.format.{FORMAT}.default.{OPTION}
+* describe.format.{FORMAT}.override.{OPTION}
+*    .restVerbs : list(str), default: pyramid_controllers.restcontroller.HTTP_METHODS
+* describe.format.{FORMAT}.renderer : asset-spec, default: pyramid_describe:template/{FORMAT}.mako
 
 
 .. _pyramid-controllers: https://pypi.python.org/pypi/pyramid_controllers
