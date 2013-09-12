@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------
+# file: $Id$
+# auth: Philip J Grabner <grabner@cadit.com>
+# date: 2013/09/10
+# copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 class adict(dict):
@@ -38,6 +44,19 @@ class adict(dict):
     for key, val in ret.items():
       ret[key] = adict.__dict2adict__(val, True)
     return ret
+
+#------------------------------------------------------------------------------
+def pick(source, *keys):
+  '''
+  Given a dict and iterable of keys, return a dict containing only
+  those keys.
+  '''
+  if not source: # pragma: no cover
+    return dict()
+  try:
+    return {k: v for k, v in source.items() if k in keys}
+  except AttributeError:
+    return {k: getattr(source, k) for k in keys if hasattr(source, k)}
 
 #------------------------------------------------------------------------------
 # end of $Id$
