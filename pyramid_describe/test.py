@@ -20,6 +20,7 @@ from pyramid_controllers import \
     Controller, RestController, \
     expose, index, lookup, default, fiddle
 from pyramid_controllers.test_helpers import TestHelper
+from pyramid_controllers.util import getVersion
 
 from pyramid_describe.util import adict
 from pyramid_describe.controller import DescribeController
@@ -73,21 +74,24 @@ class SimpleRoot(Controller):
   swi  = SubIndex()
   unknown = Unknown
 
-# class StaticDescribeController(DescribeController):
-#   def decorateEntry(self, options, entry):
-#     entry = super(StaticDescribeController, self).decorateEntry(options, entry)
-#     if not entry or entry.path != '/rest?_method=POST':
-#       return entry
-#     entry.params = (
-#       adict(id='param-_2Frest_3F_5Fmethod_3DPOST-size', name='size', type='int', default=4096, optional=True, doc='The anticipated maximum size'),
-#       adict(id='param-_2Frest_3F_5Fmethod_3DPOST-text', name='text', type='str', optional=False, doc='The text content for the posting'),
-#       )
-#     entry.returns = (adict(id='return-_2Frest_3F_5Fmethod_3DPOST-0-str', type='str', doc='The ID of the new posting'),)
-#     entry.raises  = (
-#       adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized', type='HTTPUnauthorized', doc='Authenticated access is required'),
-#       adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden', type='HTTPForbidden', doc='The user does not have posting privileges'),
-#       )
-#     return entry
+def restEnhancer(entry):
+  if not entry or entry.path != '/rest?_method=POST':
+    return entry
+  entry.params = (
+    adict(id='param-_2Frest_3F_5Fmethod_3DPOST-size', name='size', type='int',
+          default=4096, optional=True, doc='The anticipated maximum size'),
+    adict(id='param-_2Frest_3F_5Fmethod_3DPOST-text', name='text', type='str',
+          optional=False, doc='The text content for the posting'),
+    )
+  entry.returns = (adict(id='return-_2Frest_3F_5Fmethod_3DPOST-0-str', type='str',
+                         doc='The ID of the new posting'),)
+  entry.raises  = (
+    adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized',
+          type='HTTPUnauthorized', doc='Authenticated access is required'),
+    adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden',
+          type='HTTPForbidden', doc='The user does not have posting privileges'),
+    )
+  return entry
 
 minRst = adict(format='rst', showSelf=False, showLegend=False,
                showGenerator=False, showLocation=False)
@@ -135,7 +139,7 @@ class DescribeTest(TestHelper):
 ├── sub/
 │   └── method              # This method outputs a JSON list.
 ├── swi                     # A sub-controller providing only an index.
-└── *unknown*               # A dynamically generated sub-controller.
+└── unknown/?               # A dynamically generated sub-controller.
 ''')
 
   #----------------------------------------------------------------------------
@@ -155,7 +159,7 @@ class DescribeTest(TestHelper):
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
-`-- *unknown*       # A dynamically generated sub-controller.
+`-- unknown/?       # A dynamically generated sub-controller.
 ''')
 
   #----------------------------------------------------------------------------
@@ -175,7 +179,7 @@ class DescribeTest(TestHelper):
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
-`-- *unknown*       # A dynamically generated sub-controller.
+`-- unknown/?       # A dynamically generated sub-controller.
 ''')
 
   #----------------------------------------------------------------------------
@@ -206,7 +210,7 @@ class DescribeTest(TestHelper):
 │   ├── <POST>      # Creates a new entry.
 │   └── <PUT>       # Updates the value.
 ├── swi             # A sub-controller providing only an index.
-└── *unknown*       # A dynamically generated sub-controller.
+└── unknown/?       # A dynamically generated sub-controller.
 ''')
 
   #----------------------------------------------------------------------------
@@ -364,7 +368,7 @@ class DescribeTest(TestHelper):
 
 #   A sub-controller providing only an index.
 
-# /*unknown*
+# /unknown/?
 # ==========
 
 #   A dynamically generated sub-controller.
@@ -400,7 +404,7 @@ class DescribeTest(TestHelper):
 
 # .. generator: pyramid-controllers/{version} [format=rst]
 # .. location: http://localhost/desc
-# '''.format(version=getVersion()))
+# '''.format(version=getVersion('pyramid_describe')))
 
 #   #----------------------------------------------------------------------------
 #   def test_prune_index(self):
@@ -425,135 +429,140 @@ class DescribeTest(TestHelper):
 
 # ''')
 
-#   #----------------------------------------------------------------------------
-#   def test_format_html(self):
-#     'The Describer can emit HTML'
-#     root = SimpleRoot()
-#     root.desc = StaticDescribeController(root, doc='URL tree description.',
-#                                          override=adict(format='html'))
-#     res = self.send(root, '/desc')
-#     chk = '''<!DOCTYPE html>
-# <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-#  <head>
-#   <title>Contents of "/"</title>
-#   <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-#   <meta name="generator" content="pyramid-controllers/{version}"/>
-#   <style type="text/css">
-#    dl{{margin-left: 2em;}}
-#    dt{{font-weight: bold;}}
-#    dd{{margin:0.5em 0 0.75em 2em;}}
-#   </style>
-#  </head>
-#  <body>
-#   <h1>Contents of "/"</h1>
-#   <dl class="endpoints">
-#    <dt id="endpoint-_2F">/</dt>
-#    <dd>
-#     <p>The default root.</p>
-#    </dd>
-#    <dt id="endpoint-_2Fdesc">/desc</dt>
-#    <dd>
-#     <p>URL tree description.</p>
-#    </dd>
-#    <dt id="endpoint-_2Frest">/rest</dt>
-#    <dd>
-#     <p>A RESTful entry.</p>
-#     <h3>Supported Methods</h3>
-#     <dl class="methods">
-#      <dt id="method-_2Frest-DELETE">DELETE</dt>
-#      <dd>
-#       <p>Deletes the entry.</p>
-#      </dd>
-#      <dt id="method-_2Frest-GET">GET</dt>
-#      <dd>
-#       <p>Gets the current value.</p>
-#      </dd>
-#      <dt id="method-_2Frest-POST">POST</dt>
-#      <dd>
-#       <p>Creates a new entry.</p>
-#       <h4>Parameters</h4>
-#       <dl class="params">
-#        <dt id="param-_2Frest_3F_5Fmethod_3DPOST-size">size</dt>
-#        <dd>
-#         <em>int, optional, default 4096</em>
-#         <br/>
-#         <p>The anticipated maximum size</p>
-#        </dd>
-#        <dt id="param-_2Frest_3F_5Fmethod_3DPOST-text">text</dt>
-#        <dd>
-#         <em>str</em>
-#         <br/>
-#         <p>The text content for the posting</p>
-#        </dd>
-#       </dl>
-#       <h4>Returns</h4>
-#       <dl class="returns">
-#        <dt id="return-_2Frest_3F_5Fmethod_3DPOST-0-str">str</dt>
-#        <dd>
-#         <p>The ID of the new posting</p>
-#        </dd>
-#       </dl>
-#       <h4>Raises</h4>
-#       <dl class="raises">
-#        <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized">HTTPUnauthorized</dt>
-#        <dd>
-#         <p>Authenticated access is required</p>
-#        </dd>
-#        <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden">HTTPForbidden</dt>
-#        <dd>
-#         <p>The user does not have posting privileges</p>
-#        </dd>
-#       </dl>
-#      </dd>
-#      <dt id="method-_2Frest-PUT">PUT</dt>
-#      <dd>
-#       <p>Updates the value.</p>
-#      </dd>
-#     </dl>
-#    </dd>
-#    <dt id="endpoint-_2Fsub_2Fmethod">/sub/method</dt>
-#    <dd>
-#     <p>This method outputs a JSON list.</p>
-#    </dd>
-#    <dt id="endpoint-_2Fswi">/swi</dt>
-#    <dd>
-#     <p>A sub-controller providing only an index.</p>
-#    </dd>
-#    <dt id="endpoint-_2Funknown">/*unknown*</dt>
-#    <dd>
-#     <p>A dynamically generated sub-controller.</p>
-#    </dd>
-#   </dl>
-#   <h3>Legend</h3>
-#   <dl>
-#    <dt>{{NAME}}</dt>
-#    <dd>
-#     <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful object.</p>
-#    </dd>
-#    <dt>&lt;NAME&gt;</dt>
-#    <dd>
-#     <p>Not an actual endpoint, but the HTTP method to use.</p>
-#    </dd>
-#    <dt>¿NAME?</dt>
-#    <dd>
-#     <p>Dynamically evaluated endpoint, so no further information can be determined without specific contextual request details.</p>
-#    </dd>
-#    <dt>*</dt>
-#    <dd>
-#     <p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
-#    </dd>
-#    <dt>...</dt>
-#    <dd>
-#     <p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
-#    </dd>
-#   </dl>
-#  </body>
-# </html>
-# '''.format(version=getVersion())
+  #----------------------------------------------------------------------------
+  def test_format_html(self):
+    'The Describer can emit HTML'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'filters': restEnhancer, 'exclude': '^/desc/.*$'})
+    res = self.send(root, '/desc')
+    chk = '''\
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+ <head>
+  <title>Contents of "/"</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <meta name="generator" content="pyramid-describe/{version}"/>
+  <style type="text/css">
+    
+     dl{{margin-left: 2em;}}
+     dt{{font-weight: bold;}}
+     dd{{margin:0.5em 0 0.75em 2em;}}
+     .params .param-spec{{font-style: italic;}}
+    
+   </style>
+ </head>
+ <body>
+  <h1>Contents of "/"</h1>
+  <dl class="endpoints">
+   <dt id="endpoint-_2F">/</dt>
+   <dd>
+    <p>The default root.</p>
+   </dd>
+   <dt id="endpoint-_2Fdesc">/desc</dt>
+   <dd>
+    <p>URL tree description.</p>
+   </dd>
+   <dt id="endpoint-_2Frest">/rest</dt>
+   <dd>
+    <p>A RESTful entry.</p>
+    <h3>Supported Methods</h3>
+    <dl class="methods">
+     <dt id="method-_2Frest-DELETE">DELETE</dt>
+     <dd>
+      <p>Deletes the entry.</p>
+     </dd>
+     <dt id="method-_2Frest-GET">GET</dt>
+     <dd>
+      <p>Gets the current value.</p>
+     </dd>
+     <dt id="method-_2Frest-POST">POST</dt>
+     <dd>
+      <p>Creates a new entry.</p>
+      <h4>Parameters</h4>
+      <dl class="params">
+       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-size">size</dt>
+       <dd>
+        <div class="param-spec">int, optional, default 4096</div>
+        <p>The anticipated maximum size</p>
+       </dd>
+       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-text">text</dt>
+       <dd>
+        <div class="param-spec">str</div>
+        <p>The text content for the posting</p>
+       </dd>
+      </dl>
+      <h4>Returns</h4>
+      <dl class="returns">
+       <dt id="return-_2Frest_3F_5Fmethod_3DPOST-0-str">str</dt>
+       <dd>
+        <p>The ID of the new posting</p>
+       </dd>
+      </dl>
+      <h4>Raises</h4>
+      <dl class="raises">
+       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized">HTTPUnauthorized</dt>
+       <dd>
+        <p>Authenticated access is required</p>
+       </dd>
+       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden">HTTPForbidden</dt>
+       <dd>
+        <p>The user does not have posting privileges</p>
+       </dd>
+      </dl>
+     </dd>
+     <dt id="method-_2Frest-PUT">PUT</dt>
+     <dd>
+      <p>Updates the value.</p>
+     </dd>
+    </dl>
+   </dd>
+   <dt id="endpoint-_2Fsub_2Fmethod">/sub/method</dt>
+   <dd>
+    <p>This method outputs a JSON list.</p>
+   </dd>
+   <dt id="endpoint-_2Fswi">/swi</dt>
+   <dd>
+    <p>A sub-controller providing only an index.</p>
+   </dd>
+   <dt id="endpoint-_2Funknown">/unknown/?</dt>
+   <dd>
+    <p>A dynamically generated sub-controller.</p>
+   </dd>
+  </dl>
+  <h3>Legend</h3>
+  <dl class="legend">
+   <dt>{{NAME}}</dt>
+   <dd>
+    <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful object.</p>
+   </dd>
+   <dt>&lt;NAME&gt;</dt>
+   <dd>
+    <p>Not an actual endpoint, but the HTTP method to use.</p>
+   </dd>
+   <dt>NAME/?</dt>
+   <dd>
+    <p>Dynamically evaluated endpoint, so no further information can be determined without specific contextual request details.</p>
+   </dd>
+   <dt>*</dt>
+   <dd>
+    <p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
+   </dd>
+   <dt>...</dt>
+   <dd>
+    <p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
+   </dd>
+  </dl>
+ </body>
+</html>
+'''.format(version=getVersion('pyramid_describe'))
 
-#     chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
-#     res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
-#     self.assertResponse(res, 200, chk, xml=True)
+    # print res.body
+
+    chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
+    res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
+    self.assertResponse(res, 200, chk, xml=True)
 
 #   #----------------------------------------------------------------------------
 #   def test_format_xml(self):
@@ -589,7 +598,7 @@ class DescribeTest(TestHelper):
 #    <doc>A sub-controller providing only an index.</doc>
 #    <method id="method-_2Fswi-GET" name="GET"/>
 #   </endpoint>
-#   <endpoint name="unknown" path="/unknown" decorated-name="*unknown*" decorated-path="/*unknown*" id="endpoint-_2Funknown">
+#   <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-_2Funknown">
 #    <doc>A dynamically generated sub-controller.</doc>
 #    <method id="method-_2Funknown-GET" name="GET"/>
 #   </endpoint>
@@ -684,8 +693,8 @@ class DescribeTest(TestHelper):
 #     - name: unknown
 #       id: 'endpoint-_2Funknown'
 #       path: /unknown
-#       decoratedName: *unknown*
-#       decoratedPath: /*unknown*
+#       decoratedName: unknown/?
+#       decoratedPath: /unknown/?
 #       doc: A dynamically generated sub-controller.
 # '''
 #     import yaml
@@ -830,8 +839,8 @@ class DescribeTest(TestHelper):
 #       { "name": "unknown",
 #         "id": "endpoint-_2Funknown",
 #         "path": "/unknown",
-#         "decoratedName": "*unknown*",
-#         "decoratedPath": "/*unknown*",
+#         "decoratedName": "unknown/?",
+#         "decoratedPath": "/unknown/?",
 #         "doc": "A dynamically generated sub-controller."
 #       }
 #     ]
