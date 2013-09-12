@@ -106,20 +106,30 @@ class DescribeTest(TestHelper):
 
   maxDiff = None
 
-  # #----------------------------------------------------------------------------
-  # def setUp(self):
-  #   self.app     = main({})
-  #   self.testapp = TestApp(self.app)
-
-  # #----------------------------------------------------------------------------
-  # def setUp_manual(self):
-  #   self.app     = main_manual({})
-  #   self.testapp = TestApp(self.app)
-
-  # #----------------------------------------------------------------------------
-  # def test_testapp(self):
-  #   # trivial test to make sure that the TestApp works...
-  #   self.assertEqual(self.testapp.get('/login').body, 'login.ok')
+  #----------------------------------------------------------------------------
+  def test_example(self):
+    from .test_example import RootController, main
+    # TODO: this is ridiculous...
+    def ridiculous_init_override(self):
+      super(RootController, self).__init__()
+      self.desc = DescribeController(
+        view=self, root='/', settings={'exclude': '^/desc(/.*)?$'})
+    RootController.__init__ = ridiculous_init_override
+    # /TODO
+    self.app = main({})
+    self.testapp = TestApp(self.app)
+    res = self.testapp.get('/desc?format=txt')
+    self.assertMultiLineEqual(res.body, '''\
+/                       # The application root.
+├── contact/            # Contact manager.
+│   ├── <POST>          # Creates a new 'contact' object.
+│   └── {CONTACTID}     # RESTful access to a specific contact.
+│       ├── <DELETE>    # Delete this contact.
+│       ├── <GET>       # Get this contact's details.
+│       └── <PUT>       # Update this contact's details.
+├── login               # Authenticate against the server.
+└── logout              # Remove authentication tokens.
+''')
 
   #----------------------------------------------------------------------------
   def test_autodescribe_format_txt(self):
