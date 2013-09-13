@@ -12,6 +12,7 @@ from six.moves import urllib
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, aslist
 from pyramid.renderers import render
+from pyramid.request import Request
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
@@ -251,6 +252,8 @@ class Describer(object):
   def describe(self, view, request, format=None, root=None):
     if request is None:
       request = adict(params=adict())
+      #request = Request.blank('/')
+      #request.registry = adict()
     if format is None:
       format = request.params.get('format', None)
     if format is None:
@@ -653,39 +656,48 @@ class Describer(object):
     return root
 
   #----------------------------------------------------------------------------
-  def template_render(self, data):
+  def set_ctype(self, response, ctype=None, cset=None):
+    if not response:
+      return
+    if ctype is not None:
+      response.content_type = ctype
+    if cset is not None:
+      response.charset = cset
+
+  #----------------------------------------------------------------------------
+  def template_render(self, data, ctype=None, cset=None):
+    self.set_ctype(data.options.request.response, ctype, cset)
     return render('pyramid_describe:template/' + data.format + '.mako',
                   dict(data=data), request=data.options.request)
 
-  render_html = template_render
-  render_txt  = template_render
+  #----------------------------------------------------------------------------
+  def render_html(self, data):
+    return self.template_render(data, 'text/html', 'UTF-8')
+
+  #----------------------------------------------------------------------------
+  def render_txt(self, data):
+    return self.template_render(data, 'text/plain', 'UTF-8')
 
   #----------------------------------------------------------------------------
   def render_json(self, data):
-    resp = data.options.request.response
-    resp.content_type = 'application/json'
-    resp.charset = 'UTF-8'
+    self.set_ctype(data.options.request.response, 'application/json', 'UTF-8')
     return json.dumps(self.structure_render(data))
 
   #----------------------------------------------------------------------------
   def render_yaml(self, data):
     if yaml is None:
       raise ValueError('no yaml encoder library available')
-    resp = data.options.request.response
-    resp.content_type = 'application/yaml'
-    resp.charset = 'UTF-8'
+    self.set_ctype(data.options.request.response, 'application/yaml', 'UTF-8')
     return yaml.dump(self.structure_render(data))
 
   #----------------------------------------------------------------------------
   def render_xml(self, data):
-    resp = data.options.request.response
-    resp.content_type = 'text/xml'
-    resp.charset = 'UTF-8'
+    self.set_ctype(data.options.request.response, 'text/xml', 'UTF-8')
     data = self.structure_render(data, dict=collections.OrderedDict)
     # force 'doc' attribute into a list, which causes dict2node to
     # make it into a node instead of an attribute
     def doc2list(node):
-      if isscalar(node):
+      if isscalar(node) or node is None:
         return
       if islist(node):
         for sub in node:
@@ -776,15 +788,13 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def render_wadl(self, data):
+    self.set_ctype(data.options.request.response, 'text/xml', 'UTF-8')
     options = data.options
-    resp = data.options.request.response
-    resp.content_type = 'text/xml'
-    resp.charset = 'UTF-8'
     data = self.structure_render(data, dict=collections.OrderedDict)
     # force 'doc' attribute into a list, which causes dict2node to
     # make it into a node instead of an attribute
     def doc2list(node):
-      if isscalar(node):
+      if isscalar(node) or node is None:
         return
       if islist(node):
         for sub in node:
