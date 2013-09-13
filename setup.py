@@ -60,7 +60,7 @@ classifiers = [
 
 setup(
   name                  = 'pyramid_describe',
-  version               = '0.0.1',
+  version               = '0.0.2',
   description           = 'A pyramid plugin that describes a pyramid application URL hierarchy via inspection.',
   long_description      = read('README.rst'),
   classifiers           = classifiers,
