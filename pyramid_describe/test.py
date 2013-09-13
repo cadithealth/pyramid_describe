@@ -218,6 +218,35 @@ class DescribeTest(TestHelper):
 ''')
 
   #----------------------------------------------------------------------------
+  def test_other_paths_404(self):
+    'The DescribeController responds with 404 for unknown path requests'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL \t  tree\n    description.',
+      settings={'exclude': '^/desc(/.*)?$'})
+    self.assertResponse(self.send(root, '/desc/app.txt'), 404)
+
+  #----------------------------------------------------------------------------
+  def test_option_redirect(self):
+    'The DescribeController can expose a persistent path that redirects to the "real" location'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL \t  tree\n    description.',
+      settings={'exclude': '^/desc(/.*)?$',
+                'formats': 'txt yaml wadl',
+                'filename': 'app-v0.3',
+                'redirect': 'app'})
+    self.assertResponse(self.send(root, '/desc/app.txt'),  302,
+                        location='http://localhost/desc/app-v0.3.txt')
+    self.assertResponse(self.send(root, '/desc/app.yaml'), 302,
+                        location='http://localhost/desc/app-v0.3.yaml')
+    self.assertResponse(self.send(root, '/desc/app.wadl'), 302,
+                        location='http://localhost/desc/app-v0.3.wadl')
+    self.assertResponse(self.send(root, '/desc/app.json'), 404)
+    self.assertResponse(self.send(root, '/desc/app.html'), 404)
+    self.assertResponse(self.send(root, '/desc/app.xml'),  404)
+
+  #----------------------------------------------------------------------------
   def test_include(self):
     'Setting the Describer `include` parameter is exclusive'
     root = SimpleRoot()

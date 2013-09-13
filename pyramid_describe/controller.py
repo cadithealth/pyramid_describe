@@ -6,7 +6,9 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import os
+import os, six
+from six.moves import urllib
+from pyramid.httpexceptions import HTTPFound
 from pyramid_controllers import Controller, index, ExposeDecorator, expose
 from .describer import Describer
 from .util import adict
@@ -22,10 +24,13 @@ class DescribeController(Controller):
     self.describer = Describer(settings=settings)
     self.settings  = adict(settings or {})
     self.params    = adict(view=view, root=root or '/')
+    self.filename  = self.settings.get('filename', 'application')
     self.handle    = expose(
-      name = self.settings.get('filename', 'application'),
-      ext  = self.describer.formats,
-      )(self.handle)
+      name=self.filename, ext=self.describer.formats)(self.handle)
+    redir = self.settings.get('redirect', None)
+    if redir is not None:
+      self.redirect = expose(
+        name=redir, ext=self.describer.formats)(self.redirect)
 
   #----------------------------------------------------------------------------
   def describe(self, request, format):
@@ -44,6 +49,13 @@ class DescribeController(Controller):
     if ext and ext.startswith('.'):
       ext = ext[1:]
     return self.describe(request, ext)
+
+  #----------------------------------------------------------------------------
+  # NOTE: this method is OPTIONALLY exposed dynamically at run-time in __init__
+  def redirect(self, request):
+    path, ext = os.path.splitext(request.path)
+    url = urllib.parse.urljoin(request.url, self.filename + ext)
+    raise HTTPFound(location=url)
 
 #------------------------------------------------------------------------------
 # end of $Id$
