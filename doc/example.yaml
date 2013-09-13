@@ -1,0 +1,28 @@
+application:
+  endpoints:
+  - {decoratedName: '', decoratedPath: /, doc: The application root., id: endpoint-_2F,
+    name: '', path: /}
+  - decoratedName: contact
+    decoratedPath: /contact
+    doc: Contact manager.
+    id: endpoint-_2Fcontact
+    methods:
+    - {doc: Creates a new 'contact' object., id: method-_2Fcontact-POST, name: POST}
+    name: contact
+    path: /contact
+  - decoratedName: '{CONTACTID}'
+    decoratedPath: /contact/{CONTACTID}
+    doc: RESTful access to a specific contact.
+    id: endpoint-_2Fcontact_2FCONTACTID
+    methods:
+    - {doc: Delete this contact., id: method-_2Fcontact_2FCONTACTID-DELETE, name: DELETE}
+    - {doc: Get this contact's details., id: method-_2Fcontact_2FCONTACTID-GET, name: GET}
+    - {doc: Update this contact's details., id: method-_2Fcontact_2FCONTACTID-PUT,
+      name: PUT}
+    name: CONTACTID
+    path: /contact/CONTACTID
+  - {decoratedName: login, decoratedPath: /login, doc: Authenticate against the server.,
+    id: endpoint-_2Flogin, name: login, path: /login}
+  - {decoratedName: logout, decoratedPath: /logout, doc: Remove authentication tokens.,
+    id: endpoint-_2Flogout, name: logout, path: /logout}
+  url: null

@@ -1,0 +1,9 @@
+/                       # The application root.
+├── contact/            # Contact manager.
+│   ├── <POST>          # Creates a new 'contact' object.
+│   └── {CONTACTID}     # RESTful access to a specific contact.
+│       ├── <DELETE>    # Delete this contact.
+│       ├── <GET>       # Get this contact's details.
+│       └── <PUT>       # Update this contact's details.
+├── login               # Authenticate against the server.
+└── logout              # Remove authentication tokens.
