@@ -23,7 +23,7 @@ class DescribeController(Controller):
     self.settings  = adict(settings or {})
     self.params    = adict(view=view, root=root or '/')
     self.handle    = expose(
-      name = self.settings.get('name', 'application'),
+      name = self.settings.get('filename', 'application'),
       ext  = self.describer.formats,
       )(self.handle)
 

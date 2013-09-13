@@ -198,12 +198,12 @@ class DescribeTest(TestHelper):
 ''')
 
   #----------------------------------------------------------------------------
-  def test_option_name(self):
+  def test_option_filename(self):
     'The DescribeController can use a URL path other than "application.{EXT}"'
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$', 'format.default.ascii': 'true', 'name': 'app'})
+      settings={'exclude': '^/desc(/.*)?$', 'format.default.ascii': 'true', 'filename': 'app'})
     self.assertResponse(self.send(root, '/desc/app.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
