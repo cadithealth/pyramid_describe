@@ -1,6 +1,6 @@
-===========================================
-Self-Documentation for Pyramid Applications
-===========================================
+===================================
+Self-Documentation for Pyramid Apps
+===================================
 
 .. warning::
 
@@ -26,7 +26,7 @@ and maintained.
 
   Although pyramid-describe is intended to be able to describe any
   kind of pyramid application, currently it only supports
-  pyramid-controllers_ based hierarchies.
+  pyramid-controllers_ based dispatch.
 
 
 TL;DR
@@ -55,13 +55,13 @@ Command-line example:
 
 Examples of the above application in all other formats with built-in
 support are available at:
-`Text (ASCII-only) <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
+`text (pure-ASCII) <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
 `reStructuredText <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.rst>`_,
 `HTML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.html>`_,
 `JSON <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.json>`_,
 `YAML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.yaml>`_,
 `WADL <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
-`XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
+and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
 
 Configuration
