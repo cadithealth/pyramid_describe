@@ -107,7 +107,7 @@ if data.options.showGenVersion:
 .. generator: pyramid-describe${ver|n} [format=rst]
 </%block>\
 % endif
-% if data.options.showLocation:
+% if data.options.showLocation and data.options.request.url:
 <%block name="rst_location">\
 .. location: ${data.options.request.url|n}
 </%block>\
