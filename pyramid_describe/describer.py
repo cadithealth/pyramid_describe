@@ -317,7 +317,7 @@ class Describer(object):
     if not entry:
       return None
     for efilter in options.filters:
-      entry = efilter(entry)
+      entry = efilter(entry, options)
       if not entry:
         break
     return entry

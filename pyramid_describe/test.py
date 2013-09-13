@@ -74,7 +74,7 @@ class SimpleRoot(Controller):
   swi  = SubIndex()
   unknown = Unknown
 
-def restEnhancer(entry):
+def restEnhancer(entry, options):
   if not entry or entry.path != '/rest?_method=POST':
     return entry
   entry.params = (
