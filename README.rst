@@ -137,5 +137,119 @@ that the first one controls the prefix set on the others):
 
   The converse of the `include` option.
 
+* ``{PREFIX}.filters`` : list(resolve-spec), default: None
+
+  This option specifies a callable (or string in python dot syntax) or
+  list of callables (or strings) that filter and modify the endpoints
+  before they are rendered to the requested format. Each endpoint that
+  is selected for inclusion for rendering is first passed through each
+  filter and replaced by the return value from the call. This is done
+  for each filter in turn. If any filter returns ``None``, the endpoint
+  is removed from the selection list.
+
+  These filters are intended to allow two primary features:
+
+  * Access control: a filter can inspect the endpoint and the
+    requesting user and determine if the endpoint should be made
+    visible. If not, it should return ``None``.
+
+  * Custom documentation parsing: a filter can parse the endpoints'
+    `doc` attribute (which gets auto-populated with the endpoint's
+    python documentation string), and extract other information such
+    as expected parameters, return values, and exceptions thrown.
+    Typically, this is done with something like numpydoc_.
+
+  Filters are passed two parameters: an `entry` object (see
+  pyramid_describe.entry.Entry for detailed attributes) and an
+  `options` dictionary. The latter has many interesting attributes,
+  including a reference to the current `request`.
+
+  TODO: add documentation about `entry` and `options`.
+
+* ``{PREFIX}.formats`` : list(str), default: ['html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml']
+
+  Specifies the list of formats that can be generated. The default
+  list includes all supported built-in formats, but this can be
+  extended by adding a format to this list and then specifying a
+  template to render the format. For example:
+
+  .. code-block:: ini
+
+    # declare support for HTML, JSON and SWF
+    describe.formats = html json swf
+
+    # HTML and JSON are built-in, but SWF needs a custom template
+    describe.format.swf.renderer = mypackage:templates/describe-swf.mako
+
+* ``{PREFIX}.format.default`` : str, default: `describe.formats`[0]
+
+  Set the default format if not specified in the request.
+
+* ``{PREFIX}.format.default.{OPTION}
+
+  Set a default rendering option for all formats. Note that this can
+  be overridden by request parameters. See the `Options`_ section for
+  a list of all supported options.
+
+* ``{PREFIX}.format.override.{OPTION}
+
+  Set a rendering option for all formats that overrides any request
+  parameters. See the `Options`_ section for a list of all supported
+  options.
+
+* ``{PREFIX}.format.{FORMAT}.default.{OPTION}
+
+  Set a default rendering option for the specified format, which
+  overrides any default value set for all formats. Note that this can
+  be overridden by request parameters. See the `Options`_ section for
+  a list of all supported options.
+
+* ``{PREFIX}.format.{FORMAT}.override.{OPTION}
+
+  Set a rendering option for the specified format that overrides any
+  request parameters and any generic format override options. See the
+  `Options`_ section for a list of all supported options.
+
+* ``{PREFIX}.format.{FORMAT}.renderer`` : asset-spec, default: pyramid_describe:template/{FORMAT}.mako
+
+  Override the default renderer for the specified format using a
+  pyramid-style asset specification. The default is to use the
+  pyramid-describe template with the exception of the structured
+  data formats (JSON, YAML, XML, and WADL), which do not use a
+  template.
+
+
+Options
+=======
+
+* ``showUnderscore`` : bool, default: false
+* ``showUndoc`` : bool, default: true
+* ``showLegend`` : bool, default: true
+* ``showBranches`` : bool, default: false
+* ``pruneIndex`` : bool, default: true
+* ``showRest`` : bool, default: true
+* ``showImpl`` : bool, default: false
+* ``showInfo`` : bool, default: true
+* ``showExtra`` : bool, default: true
+* ``showMethods`` : bool, default: true
+* ``showIds`` : bool, default: true
+* ``showDynamic`` : bool, default: true
+* ``showGenerator`` : bool, default: true
+* ``showGenVersion`` : bool, default: true
+* ``showLocation`` : bool, default: true
+* ``ascii`` : bool, default: false
+* ``maxdepth`` : int, default: 1024
+* ``width`` : int, default: 79
+* ``maxDocColumn`` : int, default: none
+* ``minDocLength`` : int, default: 20
+* ``stubFormat`` : str, default: '{{{}}}'
+* ``dynamicFormat`` : str, default: '{}/?'
+* ``restFormat`` : str, default: '<{}>'
+* ``restVerbs`` : list(str), default: pyramid_controllers.restcontroller.HTTP_METHODS
+
+  Sets the list of known HTTP methods. This is used during inspection
+  to determine whether a given exposed method on a RestController can
+  be accessed via an HTTP method.
 
 .. _pyramid-controllers: https://pypi.python.org/pypi/pyramid_controllers
+.. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
