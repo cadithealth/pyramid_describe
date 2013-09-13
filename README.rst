@@ -41,7 +41,7 @@ Command-line example:
 
 .. code-block:: bash
 
-  $ pdescribe config.ini --format txt
+  $ pdescribe example.ini --format txt
   /                       # The application root.
   ├── contact/            # Contact manager.
   │   ├── <POST>          # Creates a new 'contact' object.
