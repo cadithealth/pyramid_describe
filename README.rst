@@ -1,17 +1,12 @@
-==========================================
-Pyramid Application Description Generation
-==========================================
+===========================================
+Self-Documentation for Pyramid Applications
+===========================================
 
 .. warning::
 
-  2013/09/10: this package is brand new and not ready to be used. Come
-  back in a couple of weeks.
-
-.. important::
-
-  Although pyramid-describe is intended to be able to describe any
-  kind of pyramid dispatch approach, currently it only supports
-  pyramid-controllers_ based hierarchies.
+  2013/09/13: though functional, this package is pretty new... Come
+  back in a couple of weeks if you don't like living on the
+  alpha-edge!
 
 A pyramid plugin that describes a pyramid application URL hierarchy,
 either by responding to an HTTP request or on the command line, via
@@ -26,6 +21,12 @@ documentation directly from source code.
 On the command-line it is useful to get visibility into an
 application's URL structure and hierarchy so that it can be understood
 and maintained.
+
+.. note::
+
+  Although pyramid-describe is intended to be able to describe any
+  kind of pyramid application, currently it only supports
+  pyramid-controllers_ based hierarchies.
 
 
 TL;DR
@@ -51,6 +52,16 @@ Command-line example:
   │       └── <PUT>       # Update this contact's details.
   ├── login               # Authenticate against the server.
   └── logout              # Remove authentication tokens.
+
+Examples of the above application in all other formats with built-in
+support are available at:
+`Text (ASCII-only) <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
+`reStructuredText <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.rst>`_,
+`HTML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.html>`_,
+`JSON <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.json>`_,
+`YAML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.yaml>`_,
+`WADL <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
+`XML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
 
 Configuration
