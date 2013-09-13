@@ -29,13 +29,14 @@ dependencies = [
   'distribute           >= 0.6.24',
   'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
-  'pyramid-controllers  >= 0.3.17',
+  'pyramid-controllers  >= 0.3.18',
   'pyramid-iniherit     >= 0.1.7',
   'six                  >= 1.4.1',
-
-  # todo: add optional dependency on PyYAML if support for yaml format is desired
-  # 'PyYAML               >= 3.10',
   ]
+
+extras_dependencies = {
+  'yaml': 'PyYAML       >= 3.10',
+  }
 
 entrypoints = {
   'console_scripts': [
@@ -72,6 +73,7 @@ setup(
   include_package_data  = True,
   zip_safe              = True,
   install_requires      = dependencies,
+  extras_require        = extras_dependencies,
   tests_require         = test_dependencies,
   test_suite            = 'pyramid_describe',
   entry_points          = entrypoints,
