@@ -198,6 +198,26 @@ class DescribeTest(TestHelper):
 ''')
 
   #----------------------------------------------------------------------------
+  def test_option_name(self):
+    'The DescribeController can use a URL path other than "application.{EXT}"'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL \t  tree\n    description.',
+      settings={'exclude': '^/desc(/.*)?$', 'format.default.ascii': 'true', 'name': 'app'})
+    self.assertResponse(self.send(root, '/desc/app.txt'), 200, '''\
+/                   # The default root.
+|-- rest            # A RESTful entry.
+|   |-- <DELETE>    # Deletes the entry.
+|   |-- <GET>       # Gets the current value.
+|   |-- <POST>      # Creates a new entry.
+|   `-- <PUT>       # Updates the value.
+|-- sub/
+|   `-- method      # This method outputs a JSON list.
+|-- swi             # A sub-controller providing only an index.
+`-- unknown/?       # A dynamically generated sub-controller.
+''')
+
+  #----------------------------------------------------------------------------
   def test_include(self):
     'Setting the Describer `include` parameter is exclusive'
     root = SimpleRoot()
@@ -230,7 +250,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_mixed_restful_and_dispatch_txt(self):
-    'The Describer supports mixing RESTful and URL component methods'
+    'The Describer supports mixing RESTful and URL component methods in "txt" format'
     class Access(Controller):
       @index
       def index(self, request):
@@ -402,7 +422,7 @@ Legend
 
   #----------------------------------------------------------------------------
   def test_mixed_restful_and_dispatch_rst(self):
-    'The Describer supports mixing RESTful and URL component methods'
+    'The Describer supports mixing RESTful and URL component methods in "rst" format'
     class Access(Controller):
       @index
       def index(self, request):
