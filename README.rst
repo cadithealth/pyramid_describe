@@ -67,22 +67,75 @@ and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example
 Configuration
 =============
 
-* describe.prefixes : list(str), default: 'describe'
-* describe.name : str, default: application
-* describe.attach : str, default: /describe
-  ==> /describe/{describe.name}.{EXT}
-* describe.url : str, default: /
-* describe.include : list(str), default: None
-* describe.exclude : list(str), default: None
-* describe.filters : list(resolve-spec), default: None
-* describe.formats : list(str), default: ['html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml']
-* describe.format.default : str, default: `describe.formats`[0]
-* describe.format.default.{OPTION}
-* describe.format.override.{OPTION}
-* describe.format.{FORMAT}.default.{OPTION}
-* describe.format.{FORMAT}.override.{OPTION}
-*    .restVerbs : list(str), default: pyramid_controllers.restcontroller.HTTP_METHODS
-* describe.format.{FORMAT}.renderer : asset-spec, default: pyramid_describe:template/{FORMAT}.mako
+When pyramid-describe is integrated via inclusion
+(e.g. ``config.include('pyramid_describe')``), the module will
+auto-create DescribeController's as defined in the application's
+settings. The following configurations can be specified there (note
+that the first one controls the prefix set on the others):
+
+* ``describe.prefixes`` : list(str), default: 'describe'
+
+  Defines the prefix or the list of prefixes that pyramid-describe
+  settings will be searched for in the configuration. For each prefix,
+  a separate DescribeController will be created and attached to the
+  application router. The following example attaches two controllers
+  at ``/desc-one`` and ``/desc-two``:
+
+  .. code-block:: ini
+
+    [app:main]
+    describe.prefixes = describe-one describe-two
+    describe-one.attach  = /desc-one
+    # other `describe-one` options...
+    describe-two.attach  = /desc-two
+    # other `describe-two` options...
+
+* ``{PREFIX}.attach`` : str, default: /describe
+
+  Specifies the path to attach the controller to the current
+  application's router. Note that this uses the `add_controller`
+  directive, and ensures that pyramid-controllers has already been
+  added via an explicit call to ``config.include()``. This path will
+  serve the default format: to request alternate formats, use
+  "PATH/FILENAME.EXT" (where FILENAME is controlled by the
+  ``{PREFIX}.filename`` configuration and EXT specifies the format)
+  or use the "format=EXT" query-string. Examples using the default
+  settings:
+
+  .. code-block:: text
+
+    http://localhost:8080/describe/application.txt
+    http://localhost:8080/describe/application.json
+    http://localhost:8080/describe?format=json
+
+* ``{PREFIX}.filename`` : str, default: application
+
+  Sets the filename base component. Typically, this is set to the
+  application's name and should probably include the application
+  version.
+
+* ``{PREFIX}.redirect`` : str, default: None
+
+  Similar to the `filename` option, this option sets a filename base
+  component that will redirect (with a 302) to the current `filename`.
+  This allows there to be a persistent known location that can be used
+  if the `filename` option is dynamic or changes with revisions.
+
+* ``{PREFIX}.inspect`` : str, default: /
+
+  Specifies the top-level URL to start the application inspection at.
+
+* ``{PREFIX}.include`` : list(str), default: None
+
+  The `include` option lists regular expressions that an endpoint must
+  match at least one of in order to be included in the output.  This
+  option can be used with the `exclude` option, in which case
+  endpoints are first matched for inclusion, then matched for
+  exclusion (i.e. the order is "allow,deny" in apache terminology).
+
+* ``{PREFIX}.exclude`` : list(str), default: None
+
+  The converse of the `include` option.
 
 
 .. _pyramid-controllers: https://pypi.python.org/pypi/pyramid_controllers
