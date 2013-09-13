@@ -55,13 +55,13 @@ Command-line example:
 
 Examples of the above application in all other formats with built-in
 support are available at:
-`Text (ASCII-only) <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
-`reStructuredText <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.rst>`_,
+`Text (ASCII-only) <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
+`reStructuredText <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.rst>`_,
 `HTML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.html>`_,
-`JSON <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.json>`_,
-`YAML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.yaml>`_,
-`WADL <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
-`XML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
+`JSON <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.json>`_,
+`YAML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.yaml>`_,
+`WADL <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
+`XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
 
 Configuration
