@@ -114,7 +114,7 @@ that the first one controls the prefix set on the others):
   application's name and should probably include the application
   version.
 
-* ``{PREFIX}.redirect`` : str, default: None
+* ``{PREFIX}.redirect`` : str, default: null
 
   Similar to the `filename` option, this option sets a filename base
   component that will redirect (with a 302) to the current `filename`.
@@ -125,7 +125,7 @@ that the first one controls the prefix set on the others):
 
   Specifies the top-level URL to start the application inspection at.
 
-* ``{PREFIX}.include`` : list(str), default: None
+* ``{PREFIX}.include`` : list(str), default: null
 
   The `include` option lists regular expressions that an endpoint must
   match at least one of in order to be included in the output.  This
@@ -133,11 +133,11 @@ that the first one controls the prefix set on the others):
   endpoints are first matched for inclusion, then matched for
   exclusion (i.e. the order is "allow,deny" in apache terminology).
 
-* ``{PREFIX}.exclude`` : list(str), default: None
+* ``{PREFIX}.exclude`` : list(str), default: null
 
   The converse of the `include` option.
 
-* ``{PREFIX}.filters`` : list(resolve-spec), default: None
+* ``{PREFIX}.filters`` : list(resolve-spec), default: null
 
   This option specifies a callable (or string in python dot syntax) or
   list of callables (or strings) that filter and modify the endpoints
@@ -241,7 +241,7 @@ Options
 * ``ascii`` : bool, default: false
 * ``maxdepth`` : int, default: 1024
 * ``width`` : int, default: 79
-* ``maxDocColumn`` : int, default: none
+* ``maxDocColumn`` : int, default: null
 * ``minDocLength`` : int, default: 20
 * ``stubFormat`` : str, default: '{{{}}}'
 * ``dynamicFormat`` : str, default: '{}/?'
