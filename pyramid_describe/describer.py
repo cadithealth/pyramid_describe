@@ -89,6 +89,12 @@ def dict2node(d):
   return node
 
 #------------------------------------------------------------------------------
+def et2str(data):
+  return ET.tostring(data, 'UTF-8').replace(
+    '<?xml version=\'1.0\' encoding=\'UTF-8\'?>',
+    '<?xml version="1.0" encoding="UTF-8"?>')
+
+#------------------------------------------------------------------------------
 class DescriberData(adict):
   @property
   def tree_entries(self):
@@ -705,7 +711,7 @@ class Describer(object):
       for value in node.values():
         doc2list(value)
     doc2list(data)
-    return ET.tostring(dict2node(data), 'UTF-8')
+    return et2str(dict2node(data))
 
   #----------------------------------------------------------------------------
   def et2wadl(self, options, root):
@@ -810,7 +816,7 @@ class Describer(object):
           name='GET')]
     data = dict2node(data)
     data = self.et2wadl(options, data)
-    return ET.tostring(data, 'UTF-8')
+    return et2str(data)
 
 #------------------------------------------------------------------------------
 # end of $Id$
