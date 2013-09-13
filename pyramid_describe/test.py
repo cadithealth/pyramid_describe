@@ -930,6 +930,7 @@ application:
     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
     chk = '<?xml version="1.0" encoding="UTF-8"?>\n' + chk[chk.find('<application'):]
     self.assertResponse(res, 200, chk, xml=True)
+    self.assertTrue(res.body.startswith('<?xml version="1.0" encoding="UTF-8"?>'))
 
   #----------------------------------------------------------------------------
   def test_format_wadl(self):
