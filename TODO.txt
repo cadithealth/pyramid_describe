@@ -1,0 +1,18 @@
+* tree hierarchy: when rendering non-"/" tree, it should start at that
+  point, not from "/". eg. `pdescribe config.ini -T /path/to/foo` should
+  result in:
+
+    /path/to/foo/
+    |-- sub-controller/
+    |-- ...
+    `-- ...
+
+  instead of:
+
+    /
+    `-- path/
+        `-- to/
+            `-- foo/
+                |-- sub-controller/
+                |-- ...
+                `-- ...
