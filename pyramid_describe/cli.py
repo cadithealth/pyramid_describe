@@ -8,6 +8,7 @@
 
 import sys, argparse
 import pyramid_iniherit.install
+from pyramid.request import Request
 from pyramid.paster import bootstrap
 
 from .i18n import _
@@ -16,10 +17,11 @@ from .i18n import _
 def describe_from_config(config, output, root=None, format=None, settings=None):
   env = bootstrap(config)
   return describe_from_app(
-    env['app'], output, root=root, format=format, settings=settings)
+    env['app'], output,
+    request=env['request'], root=root, format=format, settings=settings)
 
 #------------------------------------------------------------------------------
-def describe_from_app(app, output, root=None, format=None, settings=None):
+def describe_from_app(app, output, root=None, format=None, settings=None, request=None):
 
   # todo: is this necessary?
   root = root or '/'
@@ -29,7 +31,7 @@ def describe_from_app(app, output, root=None, format=None, settings=None):
   view = pvcomm._find_view(root, app.registry)
   from .describer import Describer
   desc = Describer(settings=settings)
-  res = desc.describe(view, request=None, format=format, root=root)
+  res = desc.describe(view, request=request, format=format, root=root)
   output.write(res.encode('UTF-8'))
 
 #------------------------------------------------------------------------------
