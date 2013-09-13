@@ -1,4 +1,4 @@
-* tree hierarchy: when rendering non-"/" tree, it should start at that
+- tree hierarchy: when rendering non-"/" tree, it should start at that
   point, not from "/". eg. `pdescribe config.ini -T /path/to/foo` should
   result in:
 
@@ -17,4 +17,10 @@
                 |-- ...
                 `-- ...
 
-* force 'format' to lower case?... prolly - but where?
+- force 'format' to lower case?... prolly - but where?
+
+- make `DescriberController.formattext_html` try to load docutils, and
+  if successful, do rST formatting with that. otherwise fallback to the
+  pseudo-stuff...
+
+- update DescribeController to inspect decorator `method` parameters
