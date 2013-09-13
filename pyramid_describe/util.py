@@ -8,7 +8,7 @@
 
 from .isstr import isstr
 from .resolve import resolve
-from .adict import adict, pick
+from pyramid_controllers.util import adict, pick
 
 #------------------------------------------------------------------------------
 # end of $Id$
