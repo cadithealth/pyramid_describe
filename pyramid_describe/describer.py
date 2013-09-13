@@ -687,6 +687,10 @@ class Describer(object):
     return self.template_render(data, 'text/html', 'UTF-8')
 
   #----------------------------------------------------------------------------
+  def render_rst(self, data):
+    return self.template_render(data, 'text/x-rst', 'UTF-8')
+
+  #----------------------------------------------------------------------------
   def render_txt(self, data):
     return self.template_render(data, 'text/plain', 'UTF-8')
 
