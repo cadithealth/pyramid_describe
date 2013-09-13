@@ -100,12 +100,13 @@ class Entry(adict):
         yield parent
       yield self.parent
 
-  # def __eq__(self, other):
-  #   # note: not quite sure exactly why, but the line Dispatcher.format_txt:
-  #   #         "if entry.parent and entry.parent not in fullset:"
-  #   #       causes a 'RuntimeError: maximum recursion' error if this
-  #   #       is not here...
-  #   return self is other
+  def __eq__(self, other):
+    # note: not quite sure exactly why, but the line
+    #       describer.DescriberData.tree_entries:
+    #         "if entry.parent and entry.parent not in fullset:"
+    #       causes a 'RuntimeError: maximum recursion' error if this
+    #       is not here...
+    return self is other
 
 #------------------------------------------------------------------------------
 # end of $Id$
