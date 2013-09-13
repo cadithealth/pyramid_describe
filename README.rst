@@ -6,7 +6,7 @@ Self-Documentation for Pyramid Apps
 
   2013/09/13: though functional, this package is pretty new... Come
   back in a couple of weeks if you don't like living on the
-  alpha-edge!
+  beta-edge!
 
 A pyramid plugin that describes a pyramid application URL hierarchy,
 either by responding to an HTTP request or on the command line, via
