@@ -185,38 +185,39 @@ that the first one controls the prefix set on the others):
 
   Set the default format if not specified in the request.
 
-* ``{PREFIX}.format.default.{OPTION}
-
-  Set a default rendering option for all formats. Note that this can
-  be overridden by request parameters. See the `Options`_ section for
-  a list of all supported options.
-
-* ``{PREFIX}.format.override.{OPTION}
-
-  Set a rendering option for all formats that overrides any request
-  parameters. See the `Options`_ section for a list of all supported
-  options.
-
-* ``{PREFIX}.format.{FORMAT}.default.{OPTION}
-
-  Set a default rendering option for the specified format, which
-  overrides any default value set for all formats. Note that this can
-  be overridden by request parameters. See the `Options`_ section for
-  a list of all supported options.
-
-* ``{PREFIX}.format.{FORMAT}.override.{OPTION}
-
-  Set a rendering option for the specified format that overrides any
-  request parameters and any generic format override options. See the
-  `Options`_ section for a list of all supported options.
-
-* ``{PREFIX}.format.{FORMAT}.renderer`` : asset-spec, default: pyramid_describe:template/{FORMAT}.mako
+* ``{PREFIX}.format.{FORMAT}.renderer`` : asset-spec, default: 'pyramid_describe:template/{FORMAT}.mako'
 
   Override the default renderer for the specified format using a
   pyramid-style asset specification. The default is to use the
   pyramid-describe template with the exception of the structured
   data formats (JSON, YAML, XML, and WADL), which do not use a
   template.
+
+* ``{PREFIX}.format.default.{OPTION}``
+
+  Set a default rendering option for all formats. Note that this can
+  be overridden by request parameters. See the `Options`_ section for
+  a list of all supported options.
+
+* ``{PREFIX}.format.override.{OPTION}``
+
+  Set a rendering option for all formats that overrides any request
+  parameters. See the `Options`_ section for a list of all supported
+  options.
+
+* ``{PREFIX}.format.{FORMAT}.default.{OPTION}``
+
+  Set a default rendering option for the specified format, which
+  overrides any default value set for all formats. Note that this can
+  be overridden by request parameters. See the `Options`_ section for
+  a list of all supported options.
+
+* ``{PREFIX}.format.{FORMAT}.override.{OPTION}``
+
+  Set a rendering option for the specified format that overrides any
+  request parameters and any generic format override options. See the
+  `Options`_ section for a list of all supported options.
+
 
 
 Options
