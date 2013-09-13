@@ -325,6 +325,13 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def get_endpoints(self, options):
 
+    if isstr(options.view) and self.settings.config:
+      # TODO: is this the "right" way?...
+      # TODO: DRY... see cli.py!
+      from pyramid.scripts.pviews import PViewsCommand
+      pvcomm = PViewsCommand([])
+      options.view = pvcomm._find_view(options.view, self.settings.config.registry)
+
     # todo: remove requirement on a single view...
     if IMultiView.providedBy(options.view):
       options.view = options.view.views[0][1]

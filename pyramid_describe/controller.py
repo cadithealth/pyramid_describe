@@ -23,7 +23,11 @@ class DescribeController(Controller):
       self.__doc__ = doc
     self.describer = Describer(settings=settings)
     self.settings  = adict(settings or {})
-    self.params    = adict(view=view, root=root or '/')
+    self.params    = adict(
+      view = view or self.settings.get('inspect') or '/',
+      # todo: enforce that `root` be a str...
+      root = root or self.settings.get('inspect') or '/',
+      )
     self.filename  = self.settings.get('filename', 'application')
     self.handle    = expose(
       name=self.filename, ext=self.describer.formats)(self.handle)
