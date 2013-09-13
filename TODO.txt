@@ -24,3 +24,5 @@
   pseudo-stuff...
 
 - update DescribeController to inspect decorator `method` parameters
+
+- add PDF support
