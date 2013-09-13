@@ -256,7 +256,8 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def describe(self, view, request, format=None, root=None):
     if request is None:
-      request = adict(params=adict())
+      # todo: this is NOT the right way to setup a fake request...
+      request = adict(params=adict(), registry=adict(settings=dict()))
     if format is None:
       format = request.params.get('format', None)
     if format is None:
@@ -334,6 +335,7 @@ class Describer(object):
         # TODO: this is *ridiculous*... it is extracting the controller from
         #       the closure... ugh. *obviously* not the right way...
         options.view = options.view.__closure__[1].cell_contents.__wraps__.__closure__[0].cell_contents
+        # TODO: handle case where options.view is a subclass (but not instance) of Controller...
         if not isinstance(options.view, Controller):
           raise TypeError('not a controller: %r', options.view)
       except Exception:
