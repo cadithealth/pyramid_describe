@@ -12,7 +12,6 @@ from six.moves import urllib
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, aslist
 from pyramid.renderers import render
-from pyramid.request import Request
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
@@ -252,8 +251,6 @@ class Describer(object):
   def describe(self, view, request, format=None, root=None):
     if request is None:
       request = adict(params=adict())
-      #request = Request.blank('/')
-      #request.registry = adict()
     if format is None:
       format = request.params.get('format', None)
     if format is None:
