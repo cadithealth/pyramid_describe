@@ -181,7 +181,7 @@ that the first one controls the prefix set on the others):
     # HTML and JSON are built-in, but SWF needs a custom template
     describe.format.swf.renderer = mypackage:templates/describe-swf.mako
 
-* ``{PREFIX}.format.default`` : str, default: `describe.formats`[0]
+* ``{PREFIX}.format.default`` : str, default: first format listed in `{PREFIX}.formats`
 
   Set the default format if not specified in the request.
 
