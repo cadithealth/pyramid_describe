@@ -26,11 +26,17 @@ from .i18n import _
 
 log = logging.getLogger(__name__)
 
+FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
+
 try:
   import yaml
-  FORMATS = ('html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml')
-except ImportError:
-  FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
+  FORMATS += ('yaml',)
+except ImportError: pass
+
+try:
+  import pdfkit
+  FORMATS += ('pdf',)
+except ImportError: pass
 
 #------------------------------------------------------------------------------
 def ccc(name):
@@ -178,16 +184,16 @@ class Describer(object):
     ('REST',
      _('Not an actual endpoint, but the HTTP method to use.')),
     ('DYNAMIC',
-     _('Dynamically evaluated endpoint, so no further information can be'
-       ' determined without specific contextual request details.')),
+     _('Dynamically evaluated endpoint; no further information can be'
+       ' determined without request-specific details.')),
     (Dispatcher.NAME_DEFAULT,
      _('This endpoint is a `default` handler, and is therefore free to interpret'
-       ' path arguments dynamically, so no further information can be determined'
-       ' without specific contextual request details.')),
+       ' path arguments dynamically; no further information can be determined'
+       ' without request-specific details.')),
     (Dispatcher.NAME_LOOKUP,
      _('This endpoint is a `lookup` handler, and is therefore free to interpret'
-       ' path arguments dynamically, so no further information can be determined'
-       ' without specific contextual request details.')),
+       ' path arguments dynamically; no further information can be determined'
+       ' without request-specific details.')),
     )
 
   bool_options = (
@@ -207,6 +213,8 @@ class Describer(object):
     ('showGenVersion', True),
     ('showLocation',   True),
     ('ascii',          False),
+    ('showOutline',    True),
+    ('pageGrayscale',  False),
     )
 
   int_options = (
@@ -221,9 +229,15 @@ class Describer(object):
     )
 
   str_options = (
-    ('stubFormat',    '{{{}}}'),     # /path/to/{NAME}/and/more
-    ('dynamicFormat', '{}/?'),       # /path/to/NAME/?
-    ('restFormat',    '<{}>'),       # /path/to/<NAME>
+    ('stubFormat',       '{{{}}}'),     # /path/to/{NAME}/and/more
+    ('dynamicFormat',    '{}/?'),       # /path/to/NAME/?
+    ('restFormat',       '<{}>'),       # /path/to/<NAME>
+    ('pageSize',         'A4'),
+    ('pageOrientation',  'Portrait'),
+    ('pageMarginTop',    '10mm'),
+    ('pageMarginRight',  '10mm'),
+    ('pageMarginBottom', '10mm'),
+    ('pageMarginLeft',   '10mm'),
     )
 
   #----------------------------------------------------------------------------
@@ -278,7 +292,7 @@ class Describer(object):
       endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
       legend    = legend,
       )
-    return getattr(self, 'render_' + format, self.template_render)(data)
+    return self.render(data)
 
   #----------------------------------------------------------------------------
   def _getOptions(self, request, format):
@@ -693,6 +707,22 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_txt(self, data):
     return self.template_render(data, 'text/plain', 'UTF-8')
+
+  #----------------------------------------------------------------------------
+  def render(self, data, format=None):
+    if format is None:
+      return getattr(self, 'render_' + data.format, self.template_render)(data)
+    tmpfmt = data.format
+    data.format = format
+    ret = self.render(data)
+    data.format = tmpfmt
+    return ret
+
+  #----------------------------------------------------------------------------
+  def render_pdf(self, data):
+    html = self.render(data, format='html')
+    self.set_ctype(data.options.request.response, 'application/pdf')
+    return pdfkit.from_string(html, False, options={'quiet': ''})
 
   #----------------------------------------------------------------------------
   def render_json(self, data):
