@@ -6,11 +6,12 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, argparse
+import sys, argparse, six
 import pyramid_iniherit.install
 from pyramid.request import Request
 from pyramid.paster import bootstrap
 
+from .describer import FORMATS
 from .i18n import _
 
 #------------------------------------------------------------------------------
@@ -32,7 +33,15 @@ def describe_from_app(app, output, root=None, format=None, settings=None, reques
   from .describer import Describer
   desc = Describer(settings=settings)
   res = desc.describe(view, request=request, format=format, root=root)
-  output.write(res.encode('UTF-8'))
+  if isinstance(res, six.string_types):
+    # todo: encoding the PDF output to UTF-8 is generating the follow error:
+    #         UnicodeDecodeError: 'ascii' codec can't decode byte 0xfe in
+    #           position 28: ordinal not in range(128)
+    #       that makes no sense... right? i mean, it says *ENcode*!...
+    try:
+      res = res.encode('UTF-8')
+    except UnicodeDecodeError: pass
+  output.write(res)
 
 #------------------------------------------------------------------------------
 def main(argv=None):
@@ -54,14 +63,19 @@ def main(argv=None):
 
   cli.add_argument(
     _('-f'), _('--format'), metavar=_('FORMAT'),
-    dest='format', action='store',
-    choices=['txt', 'rst', 'html', 'yaml', 'json', 'wadl', 'xml'],
+    dest='format', action='store', choices=FORMATS,
     help=_('specify the output format to be generated'))
 
   cli.add_argument(
     _('-T'), _('--txt'),
     dest='format', action='store_const', const='txt',
     help=_('output a text-based tree hierarchy ("--format txt")'))
+
+  if 'pdf' in FORMATS:
+    cli.add_argument(
+      _('-P'), _('--pdf'),
+      dest='format', action='store_const', const='pdf',
+      help=_('output a PDF document ("--format pdf")'))
 
   cli.add_argument(
     _('-R'), _('--rst'),
@@ -73,10 +87,11 @@ def main(argv=None):
     dest='format', action='store_const', const='html',
     help=_('output an HTML document ("--format html")'))
 
-  cli.add_argument(
-    _('-Y'), _('--yaml'),
-    dest='format', action='store_const', const='yaml',
-    help=_('output a YAML document ("--format yaml")'))
+  if 'yaml' in FORMATS:
+    cli.add_argument(
+      _('-Y'), _('--yaml'),
+      dest='format', action='store_const', const='yaml',
+      help=_('output a YAML document ("--format yaml")'))
 
   cli.add_argument(
     _('-J'), _('--json'),
