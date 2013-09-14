@@ -23,6 +23,8 @@ test_dependencies = [
   'nose                 >= 1.3.0',
   'coverage             >= 3.6',
   'WebTest              >= 1.4.0',
+  'PyYAML               >= 3.10',
+  'pdfkit               >= 0.4.1',
   ]
 
 dependencies = [
@@ -36,6 +38,7 @@ dependencies = [
 
 extras_dependencies = {
   'yaml': 'PyYAML       >= 3.10',
+  'pdf':  'pdfkit       >= 0.4.1',
   }
 
 entrypoints = {
