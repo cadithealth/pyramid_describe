@@ -11,8 +11,8 @@ Self-Documentation for Pyramid Apps
 A pyramid plugin that describes a pyramid application URL hierarchy,
 either by responding to an HTTP request or on the command line, via
 application inspection and reflection. It has built-in support for
-plain-text hierachies, reStructuredText, HTML, JSON, YAML, WADL, and
-XML, however other custom formats can be added easily.
+plain-text hierachies, reStructuredText, HTML, PDF, JSON, YAML, WADL,
+and XML, however other custom formats can be added easily.
 
 Exposing an application's structure via HTTP is useful to dynamically
 generate an API description (via WADL, JSON, or YAML) or to create
@@ -58,6 +58,7 @@ support are available at:
 `text (pure-ASCII) <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.txt.asc>`_,
 `reStructuredText <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.rst>`_,
 `HTML <http://htmlpreview.github.io/?https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.html>`_,
+`PDF <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.pdf>`_,
 `JSON <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.json>`_,
 `YAML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.yaml>`_,
 `WADL <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
@@ -166,7 +167,7 @@ that the first one controls the prefix set on the others):
 
   TODO: add documentation about `entry` and `options`.
 
-* ``{PREFIX}.formats`` : list(str), default: ['html', 'txt', 'rst', 'json', 'yaml', 'wadl', 'xml']
+* ``{PREFIX}.formats`` : list(str), default: ['html', 'txt', 'pdf', 'rst', 'json', 'yaml', 'wadl', 'xml']
 
   Specifies the list of formats that can be generated. The default
   list includes all supported built-in formats, but this can be
@@ -180,6 +181,11 @@ that the first one controls the prefix set on the others):
 
     # HTML and JSON are built-in, but SWF needs a custom template
     describe.format.swf.renderer = mypackage:templates/describe-swf.mako
+
+  Note that the "pdf" and "yaml" formats require that optional python
+  package dependencies be installed (respectively `pdfkit` and
+  `PyYAML`), and that pdfkit_ furthermore requires that the
+  wkhtmltopdf_ program be available.
 
 * ``{PREFIX}.format.default`` : str, default: first format listed in `{PREFIX}.formats`
 
@@ -243,9 +249,20 @@ Options
 * ``width`` : int, default: 79
 * ``maxDocColumn`` : int, default: null
 * ``minDocLength`` : int, default: 20
+
 * ``stubFormat`` : str, default: '{{{}}}'
 * ``dynamicFormat`` : str, default: '{}/?'
 * ``restFormat`` : str, default: '<{}>'
+
+* ``showOutline`` : bool, default: true
+* ``pageGrayscale`` : bool, default: false
+* ``pageSize`` : str, default: 'A4'
+* ``pageOrientation`` : str, default: 'Portrait'
+* ``pageMarginTop`` : str, default: '10mm'
+* ``pageMarginRight`` : str, default: '10mm'
+* ``pageMarginBottom`` : str, default: '10mm'
+* ``pageMarginLeft`` : str, default: '10mm'
+
 * ``restVerbs`` : list(str), default: pyramid_controllers.restcontroller.HTTP_METHODS
 
   Sets the list of known HTTP methods. This is used during inspection
@@ -254,3 +271,5 @@ Options
 
 .. _pyramid-controllers: https://pypi.python.org/pypi/pyramid_controllers
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _pdfkit: https://pypi.python.org/pypi/pdfkit
+.. _wkhtmltopdf: http://code.google.com/p/wkhtmltopdf/
