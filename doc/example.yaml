@@ -25,4 +25,4 @@ application:
     id: endpoint-_2Flogin, name: login, path: /login}
   - {decoratedName: logout, decoratedPath: /logout, doc: Remove authentication tokens.,
     id: endpoint-_2Flogout, name: logout, path: /logout}
-  url: null
+  url: http://localhost

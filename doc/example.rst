@@ -62,19 +62,20 @@ Legend
 
   * `NAME/?`:
 
-    Dynamically evaluated endpoint, so no further information can be determined
-    without specific contextual request details.
+    Dynamically evaluated endpoint; no further information can be determined
+    without request-specific details.
 
   * `*`:
 
     This endpoint is a `default` handler, and is therefore free to interpret
-    path arguments dynamically, so no further information can be determined
-    without specific contextual request details.
+    path arguments dynamically; no further information can be determined
+    without request-specific details.
 
   * `...`:
 
     This endpoint is a `lookup` handler, and is therefore free to interpret
-    path arguments dynamically, so no further information can be determined
-    without specific contextual request details.
+    path arguments dynamically; no further information can be determined
+    without request-specific details.
 
-.. generator: pyramid-describe/0.0.1 [format=rst]
+.. generator: pyramid-describe/0.1.10 [format=rst]
+.. location: http://localhost/
