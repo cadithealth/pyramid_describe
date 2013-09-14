@@ -5,7 +5,8 @@ upload:
 	python setup.py sdist upload
 
 examples:
-	for fmt in html json rst txt wadl xml yaml ; do \
+	rm -f doc/example.*
+	for fmt in html json pdf rst txt wadl xml yaml ; do \
 	  echo "creating '$$fmt' example..." ; \
 	  pdescribe example.ini --format "$$fmt" > doc/example."$$fmt" ; \
 	done
