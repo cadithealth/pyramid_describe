@@ -133,14 +133,16 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_autodescribe_format_txt(self):
-    'The Describer can emit a plain-text hierarchy'
+    'The Describer can render a plain-text hierarchy'
     root = SimpleRoot()
+    # todo: yaml and pdf are not always there...
     root.desc = DescribeController(root, doc='URL \t  tree\n    description.')
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                           # The default root.
 ├── desc/                   # URL tree description.
 │   ├── application.html
 │   ├── application.json
+│   ├── application.pdf
 │   ├── application.rst
 │   ├── application.txt
 │   ├── application.wadl
@@ -309,7 +311,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_format_rst_full(self):
-    'The Describer can emit a reStructuredText description'
+    'The Describer can render a reStructuredText description'
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -430,20 +432,20 @@ Legend
 
   * `NAME/?`:
 
-    Dynamically evaluated endpoint, so no further information can be determined
-    without specific contextual request details.
+    Dynamically evaluated endpoint; no further information can be determined
+    without request-specific details.
 
   * `*`:
 
     This endpoint is a `default` handler, and is therefore free to interpret
-    path arguments dynamically, so no further information can be determined
-    without specific contextual request details.
+    path arguments dynamically; no further information can be determined
+    without request-specific details.
 
   * `...`:
 
     This endpoint is a `lookup` handler, and is therefore free to interpret
-    path arguments dynamically, so no further information can be determined
-    without specific contextual request details.
+    path arguments dynamically; no further information can be determined
+    without request-specific details.
 
 .. generator: pyramid-describe/{version} [format=rst]
 .. location: http://localhost/desc
@@ -547,7 +549,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_format_html(self):
-    'The Describer can emit HTML'
+    'The Describer can render HTML'
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -560,6 +562,12 @@ Contents of "/"
   <title>Contents of "/"</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
   <meta name="generator" content="pyramid-describe/{version}"/>
+  <meta name="pdfkit-page-size" content="A4"/>
+  <meta name="pdfkit-orientation" content="Portrait"/>
+  <meta name="pdfkit-margin-top" content="10mm"/>
+  <meta name="pdfkit-margin-right" content="10mm"/>
+  <meta name="pdfkit-margin-bottom" content="10mm"/>
+  <meta name="pdfkit-margin-left" content="10mm"/>
   <style type="text/css">
     
      dl{{margin-left: 2em;}}
@@ -572,102 +580,102 @@ Contents of "/"
  <body>
   <h1>Contents of "/"</h1>
   <dl class="endpoints">
-   <dt id="endpoint-_2F">/</dt>
+   <dt id="endpoint-_2F"><h2>/</h2></dt>
    <dd>
     <p>The default root.</p>
    </dd>
-   <dt id="endpoint-_2Fdesc">/desc</dt>
+   <dt id="endpoint-_2Fdesc"><h2>/desc</h2></dt>
    <dd>
     <p>URL tree description.</p>
    </dd>
-   <dt id="endpoint-_2Frest">/rest</dt>
+   <dt id="endpoint-_2Frest"><h2>/rest</h2></dt>
    <dd>
     <p>A RESTful entry.</p>
     <h3>Supported Methods</h3>
     <dl class="methods">
-     <dt id="method-_2Frest-DELETE">DELETE</dt>
+     <dt id="method-_2Frest-DELETE"><h4>DELETE</h4></dt>
      <dd>
       <p>Deletes the entry.</p>
      </dd>
-     <dt id="method-_2Frest-GET">GET</dt>
+     <dt id="method-_2Frest-GET"><h4>GET</h4></dt>
      <dd>
       <p>Gets the current value.</p>
      </dd>
-     <dt id="method-_2Frest-POST">POST</dt>
+     <dt id="method-_2Frest-POST"><h4>POST</h4></dt>
      <dd>
       <p>Creates a new entry.</p>
-      <h4>Parameters</h4>
+      <h5>Parameters</h5>
       <dl class="params">
-       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-size">size</dt>
+       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-size"><h6>size</h6></dt>
        <dd>
         <div class="param-spec">int, optional, default 4096</div>
         <p>The anticipated maximum size</p>
        </dd>
-       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-text">text</dt>
+       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-text"><h6>text</h6></dt>
        <dd>
         <div class="param-spec">str</div>
         <p>The text content for the posting</p>
        </dd>
       </dl>
-      <h4>Returns</h4>
+      <h5>Returns</h5>
       <dl class="returns">
-       <dt id="return-_2Frest_3F_5Fmethod_3DPOST-0-str">str</dt>
+       <dt id="return-_2Frest_3F_5Fmethod_3DPOST-0-str"><h6>str</h6></dt>
        <dd>
         <p>The ID of the new posting</p>
        </dd>
       </dl>
-      <h4>Raises</h4>
+      <h5>Raises</h5>
       <dl class="raises">
-       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized">HTTPUnauthorized</dt>
+       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized"><h6>HTTPUnauthorized</h6></dt>
        <dd>
         <p>Authenticated access is required</p>
        </dd>
-       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden">HTTPForbidden</dt>
+       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden"><h6>HTTPForbidden</h6></dt>
        <dd>
         <p>The user does not have posting privileges</p>
        </dd>
       </dl>
      </dd>
-     <dt id="method-_2Frest-PUT">PUT</dt>
+     <dt id="method-_2Frest-PUT"><h4>PUT</h4></dt>
      <dd>
       <p>Updates the value.</p>
      </dd>
     </dl>
    </dd>
-   <dt id="endpoint-_2Fsub_2Fmethod">/sub/method</dt>
+   <dt id="endpoint-_2Fsub_2Fmethod"><h2>/sub/method</h2></dt>
    <dd>
     <p>This method outputs a JSON list.</p>
    </dd>
-   <dt id="endpoint-_2Fswi">/swi</dt>
+   <dt id="endpoint-_2Fswi"><h2>/swi</h2></dt>
    <dd>
     <p>A sub-controller providing only an index.</p>
    </dd>
-   <dt id="endpoint-_2Funknown">/unknown/?</dt>
+   <dt id="endpoint-_2Funknown"><h2>/unknown/?</h2></dt>
    <dd>
     <p>A dynamically generated sub-controller.</p>
    </dd>
   </dl>
-  <h3>Legend</h3>
+  <h1 class="legend">Legend</h1>
   <dl class="legend">
-   <dt>{{NAME}}</dt>
+   <dt><h2>{{NAME}}</h2></dt>
    <dd>
     <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful object.</p>
    </dd>
-   <dt>&lt;NAME&gt;</dt>
+   <dt><h2>&lt;NAME&gt;</h2></dt>
    <dd>
     <p>Not an actual endpoint, but the HTTP method to use.</p>
    </dd>
-   <dt>NAME/?</dt>
+   <dt><h2>NAME/?</h2></dt>
    <dd>
-    <p>Dynamically evaluated endpoint, so no further information can be determined without specific contextual request details.</p>
+    <p>Dynamically evaluated endpoint; no further information can be determined without request-specific details.</p>
    </dd>
-   <dt>*</dt>
+   <dt><h2>*</h2></dt>
    <dd>
-    <p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
+    <p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p>
    </dd>
-   <dt>...</dt>
+   <dt><h2>...</h2></dt>
    <dd>
-    <p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically, so no further information can be determined without specific contextual request details.</p>
+    <p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p>
    </dd>
   </dl>
  </body>
@@ -680,7 +688,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_format_json(self):
-    'The Describer can emit JSON'
+    'The Describer can render JSON'
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -791,7 +799,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_format_yaml(self):
-    'The Describer can emit YAML'
+    'The Describer can render YAML'
     try:
       import yaml
     except ImportError:
@@ -886,7 +894,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_yaml_dedent(self):
-    'The Describer emits YAML with dedented documentation'
+    'The Describer renders YAML with dedented documentation'
     try:
       import yaml
     except ImportError:
@@ -926,7 +934,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_xml(self):
-    'The Describer can emit XML'
+    'The Describer can render XML'
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -983,7 +991,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_wadl(self):
-    'The Describer can emit WADL'
+    'The Describer can render WADL'
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -1063,6 +1071,23 @@ application:
     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
     res.body = roundtrip(res.body)
     self.assertResponse(res, 200, chk, xml=True)
+
+  #----------------------------------------------------------------------------
+  def test_format_pdf(self):
+    'The Describer can render PDF'
+    try:
+      import pdfkit
+    except ImportError:
+      sys.stderr.write('*** PDFKIT LIBRARY NOT PRESENT - SKIPPING *** ')
+      return
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={'format.default': 'pdf', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+    res = self.send(root, '/desc')
+    # todo: check content-type...
+    self.assertTrue(res.body.startswith('%PDF-1.4\n'))
+    # todo: anything else that can be checked?... can pdfkit perhaps parse PDFs?...
 
 #------------------------------------------------------------------------------
 # end of $Id$
