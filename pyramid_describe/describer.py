@@ -205,6 +205,8 @@ class Describer(object):
     ('showRest',       True),
     ('showImpl',       False),
     ('showInfo',       True),
+    ('showName',       True),
+    ('showDecorated',  True),
     ('showExtra',      True),
     ('showMethods',    True),
     ('showIds',        True),
@@ -651,9 +653,11 @@ class Describer(object):
       endpoint = dict(path=entry.path)
       if data.options.showIds:
         endpoint['id'] = entry.id
-      if data.options.showExtra:
-        endpoint['name']          = entry.name
-        endpoint['decoratedName'] = entry.dname
+      if data.options.showName:
+        endpoint['name'] = entry.name
+      if data.options.showDecorated:
+        if data.options.showName:
+          endpoint['decoratedName'] = entry.dname
         endpoint['decoratedPath'] = entry.dpath
       if includeEntry:
         endpoint['entry'] = entry
