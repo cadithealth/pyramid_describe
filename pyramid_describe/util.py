@@ -8,6 +8,7 @@
 
 from .isstr import isstr
 from .resolve import resolve
+from .reparse import reparse
 from pyramid_controllers.util import adict, pick
 
 #------------------------------------------------------------------------------

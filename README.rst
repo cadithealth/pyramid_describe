@@ -144,17 +144,36 @@ that the first one controls the prefix set on the others):
   SERIOUSLY: this does not work, it only adds the specified path as a
   URL prefix... doh!
 
-* ``{PREFIX}.include`` : list(str), default: null
+* ``{PREFIX}.include`` : list(regex-spec), default: null
 
-  The `include` option lists regular expressions that an endpoint must
-  match at least one of in order to be included in the output.  This
-  option can be used with the `exclude` option, in which case
-  endpoints are first matched for inclusion, then matched for
+  The `include` option lists encapsulated regular expressions that an
+  endpoint must match at least one of in order to be included in the
+  output. This option can be used with the `exclude` option, in which
+  case endpoints are first matched for inclusion, then matched for
   exclusion (i.e. the order is "allow,deny" in apache terminology).
 
-* ``{PREFIX}.exclude`` : list(str), default: null
+  Encapsulated regular expressions are expressed in the syntax
+  "/EXPR/FLAGS", where the "/" can be replaced by any character
+  otherwise not found in the rest of the expression. The flags can
+  be any combination of the following characters:
 
-  The converse of the `include` option.
+  * ``i``: Case-insensitive matching.
+  * ``l``: Use locale-dependent processing (for \w, \W, etc.).
+  * ``m``: Multi-line mode, i.e. "^" and "$" match individual lines.
+  * ``s``: The "." matches newlines as well.
+  * ``u``: Use the unicode properties db (for \w, \W, etc.).
+  * ``x``: Allow verbose regular expressions.
+
+  Example:
+
+  .. code-block:: ini
+
+    describe.include = :^/api/:i :^/foo(/.*)?$:
+    describe.exclude = :.*/private(/.*)?$:i
+
+* ``{PREFIX}.exclude`` : list(regex-spec), default: null
+
+  The inverse of the `include` option -- see `include` for details.
 
 * ``{PREFIX}.filters`` : list(resolve-spec), default: null
 

@@ -21,7 +21,7 @@ except ImportError:
   yaml = None
 
 from .entry import Entry
-from .util import adict, isstr, resolve, pick
+from .util import adict, isstr, resolve, pick, reparse
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -245,9 +245,9 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def __init__(self, settings=None, default=None, override=None):
     self.settings  = adict(settings or dict())
-    self.include   = [re.compile(expr) if isstr(expr) else expr
+    self.include   = [reparse(expr) if isstr(expr) else expr
                       for expr in aslist(self.settings.include or '')]
-    self.exclude   = [re.compile(expr) if isstr(expr) else expr
+    self.exclude   = [reparse(expr) if isstr(expr) else expr
                       for expr in aslist(self.settings.exclude or '')]
     self.formats   = aslist(self.settings.formats or '') or FORMATS
     self.defformat = self.settings.get('format.default', self.formats[0])

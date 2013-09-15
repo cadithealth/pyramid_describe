@@ -94,7 +94,7 @@ def restEnhancer(entry, options):
   return entry
 
 settings_minRst = {
-  'exclude': '^/desc(/.*)?$',
+  'exclude': '|^/desc(/.*)?$|',
   'format.default': 'rst',
   'format.default.showLegend': 'false',
   'format.default.showGenerator': 'false',
@@ -113,7 +113,7 @@ class DescribeTest(TestHelper):
     def ridiculous_init_override(self):
       super(RootController, self).__init__()
       self.desc = DescribeController(
-        view=self, root='/', settings={'exclude': '^/desc(/.*)?$'})
+        view=self, root='/', settings={'exclude': '|^/desc(/.*)?$|'})
     RootController.__init__ = ridiculous_init_override
     # /TODO
     self.app = main({})
@@ -165,7 +165,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$', 'format.default.ascii': 'true'})
+      settings={'exclude': '|^/desc(/.*)?$|', 'format.default.ascii': 'true'})
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -185,7 +185,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$'})
+      settings={'exclude': '|^/desc(/.*)?$|'})
     self.assertResponse(self.send(root, '/desc/application.txt?ascii=true'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -205,7 +205,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$', 'format.default.ascii': 'true', 'filename': 'app'})
+      settings={'exclude': '|^/desc(/.*)?$|', 'format.default.ascii': 'true', 'filename': 'app'})
     self.assertResponse(self.send(root, '/desc/app.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -225,7 +225,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$'})
+      settings={'exclude': '|^/desc(/.*)?$|'})
     self.assertResponse(self.send(root, '/desc/app.txt'), 404)
 
   #----------------------------------------------------------------------------
@@ -234,7 +234,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '^/desc(/.*)?$',
+      settings={'exclude': '|^/desc(/.*)?$|',
                 'formats': 'txt yaml wadl',
                 'filename': 'app-v0.3',
                 'redirect': 'app'})
@@ -254,7 +254,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'include': '^/sub/method$'})
+      settings={'include': '|^/sub/method$|'})
     self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
 /
 └── sub/
@@ -267,7 +267,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'exclude': ('^/sub/method$', '^/desc(/.*)?$')})
+      settings={'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|')})
     self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
@@ -300,7 +300,7 @@ class DescribeTest(TestHelper):
       rest = Rest()
     root = Root()
     root.desc = DescribeController(
-      root, doc='URL tree description.', settings={'exclude': '^/desc(/.*)?$'})
+      root, doc='URL tree description.', settings={'exclude': '|^/desc(/.*)?$|'})
     self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
 /
 └── rest/         # RESTful access, with sub-component
@@ -315,7 +315,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'exclude': '^/desc/.*',
+      settings={'exclude': '|^/desc/.*|',
                 'format.default': 'rst',
                 'format.default.showImpl': 'true',
                 'filters': restEnhancer})
@@ -553,7 +553,7 @@ Contents of "/"
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'filters': restEnhancer, 'exclude': '^/desc/.*$'})
+      settings={'filters': restEnhancer, 'exclude': '|^/desc/.*$|'})
     res = self.send(root, '/desc')
     chk = '''\
 <!DOCTYPE html>
@@ -692,7 +692,7 @@ Contents of "/"
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'json', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+       settings={'format.default': 'json', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''{
   "application": {
@@ -808,7 +808,7 @@ Contents of "/"
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -911,7 +911,7 @@ application:
     root = Root()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -938,7 +938,7 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'format.default': 'xml', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+      settings={'format.default': 'xml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -995,7 +995,7 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'wadl', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+       settings={'format.default': 'wadl', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 <application
@@ -1083,7 +1083,7 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'pdf', 'filters': restEnhancer, 'exclude': '^/desc/.*'})
+       settings={'format.default': 'pdf', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     # todo: check content-type...
     self.assertTrue(res.body.startswith('%PDF-1.4\n'))
