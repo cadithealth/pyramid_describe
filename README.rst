@@ -91,6 +91,17 @@ that the first one controls the prefix set on the others):
     describe-two.attach  = /desc-two
     # other `describe-two` options...
 
+* ``describe.class`` : resolve-spec, default: pyramid_describe.DescribeController
+
+  Sets the global default Controller class that will be instantiated
+  for each of the stanzas defined in `describe.prefixes`. Note that
+  this option can be overriden on a per-stanza basis.
+
+* ``{PREFIX}.class`` : resolve-spec, default: `describe.class`
+
+  Sets the Controller class that will be instantiated for this PREFIX
+  stanza, overriding `describe.class`.
+
 * ``{PREFIX}.attach`` : str, default: /describe
 
   Specifies the path to attach the controller to the current
@@ -125,6 +136,13 @@ that the first one controls the prefix set on the others):
 * ``{PREFIX}.inspect`` : str, default: /
 
   Specifies the top-level URL to start the application inspection at.
+
+  TODO: this does not work.
+
+  WARNING: this does not work.
+
+  SERIOUSLY: this does not work, it only adds the specified path as a
+  URL prefix... doh!
 
 * ``{PREFIX}.include`` : list(str), default: null
 
@@ -237,6 +255,8 @@ Options
 * ``showRest`` : bool, default: true
 * ``showImpl`` : bool, default: false
 * ``showInfo`` : bool, default: true
+* ``showName`` : bool, default: true
+* ``showDecorated`` : bool, default: true
 * ``showExtra`` : bool, default: true
 * ``showMethods`` : bool, default: true
 * ``showIds`` : bool, default: true
