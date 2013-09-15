@@ -25,4 +25,5 @@
 
 - update DescribeController to inspect decorator `method` parameters
 
-- add PDF support
+- should per-stanza configurations default to global configuration
+  defaults? yes. but that is fairly involved.
