@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------
+# file: $Id$
+# auth: Philip J Grabner <grabner@cadit.com>
+# date: 2013/09/15
+# copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
+#------------------------------------------------------------------------------
 
 import re, six
 
@@ -11,6 +17,7 @@ class PatternProxy(object):
   def __setattr__(self, attr, value): return setattr(self.expr, attr, value)
   def __getattr__(self, attr): return getattr(self.expr, attr)
   def __delattr__(self, attr): return delattr(self.expr, attr)
+  def __dir__(self): return dir(self.expr) + self.__dict__.keys()
 
 #------------------------------------------------------------------------------
 def reparse(spec, enhanced=False, accept_multiple=False):
