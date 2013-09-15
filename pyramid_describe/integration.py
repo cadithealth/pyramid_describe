@@ -8,10 +8,13 @@
 
 from pyramid.settings import asbool, aslist
 from .controller import DescribeController
-from .util import pick
+from .util import pick, resolve
 
-OPTION_PREFIXES_NAME    = 'describe.prefixes'
+GLOBAL_PREFIX           = 'describe'
+OPTION_PREFIXES_NAME    = GLOBAL_PREFIX + '.prefixes'
 OPTION_PREFIXES_DEFAULT = 'describe'
+OPTION_CLASS_NAME       = GLOBAL_PREFIX + '.class'
+OPTION_CLASS_DEFAULT    = DescribeController
 
 def includeme(config):
   '''
@@ -21,11 +24,13 @@ def includeme(config):
   '''
   config.include('pyramid_controllers')
   settings = config.registry.settings
+  defkls   = resolve(settings.get(OPTION_CLASS_NAME, OPTION_CLASS_DEFAULT))
   prefixes = aslist(settings.get(OPTION_PREFIXES_NAME, OPTION_PREFIXES_DEFAULT))
   for idx, prefix in enumerate(prefixes):
     curset = pick(settings, prefix=prefix + '.')
     curset['config'] = config
-    controller = DescribeController(settings=curset)
+    curkls = resolve(curset.get('class', defkls))
+    controller = curkls(settings=curset)
     config.add_controller(
       curset.get('name', 'DescribeController-' + str(idx + 1)),
       curset.get('attach', '/describe'),
