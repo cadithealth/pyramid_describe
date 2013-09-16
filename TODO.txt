@@ -27,3 +27,6 @@
 
 - should per-stanza configurations default to global configuration
   defaults? yes. but that is fairly involved.
+
+- add an option to 'force-create' controllers that are referenced by
+  class instead of by instance?
