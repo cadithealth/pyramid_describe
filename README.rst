@@ -236,6 +236,9 @@ that the first one controls the prefix set on the others):
   data formats (JSON, YAML, XML, and WADL), which do not use a
   template.
 
+  Specifying a renderer pre-empts all other rendering fallback
+  mechanisms.
+
 * ``{PREFIX}.format.default.{OPTION}``
 
   Set a default rendering option for all formats. Note that this can

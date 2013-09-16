@@ -196,6 +196,17 @@ class Describer(object):
        ' without request-specific details.')),
     )
 
+  content_types = {
+    'html': ('text/html', 'UTF-8'),
+    'json': ('application/json', 'UTF-8'),
+    'pdf':  ('application/pdf', 'UTF-8'),
+    'rst':  ('text/x-rst', 'UTF-8'),
+    'txt':  ('text/plain', 'UTF-8'),
+    'wadl': ('text/xml', 'UTF-8'),
+    'xml':  ('text/xml', 'UTF-8'),
+    'yaml': ('application/yaml', 'UTF-8'),
+    }
+
   bool_options = (
     ('showUnderscore', False),
     ('showUndoc',      True),
@@ -294,6 +305,11 @@ class Describer(object):
       endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
       legend    = legend,
       )
+
+    ctypedef = self.content_types.get(format)
+    if ctypedef:
+      self.set_ctype(request, ctypedef[0], ctypedef[1])
+
     return self.render(data)
 
   #----------------------------------------------------------------------------
@@ -326,6 +342,7 @@ class Describer(object):
     ret.dispatcher = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs  = set([meth2action(e) for e in ret.restVerbs])
     ret.filters    = self.filters
+    ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
     return ret
 
   #----------------------------------------------------------------------------
@@ -686,63 +703,59 @@ class Describer(object):
     return root
 
   #----------------------------------------------------------------------------
-  def set_ctype(self, response, ctype=None, cset=None):
-    if not response:
+  def set_ctype(self, request, ctype=None, cset=None):
+    if not request.response:
       return
     if ctype is not None:
-      response.content_type = ctype
+      request.response.content_type = ctype
     if cset is not None:
-      response.charset = cset
-
-  #----------------------------------------------------------------------------
-  def template_render(self, data, ctype=None, cset=None):
-    self.set_ctype(data.options.request.response, ctype, cset)
-    return render('pyramid_describe:template/' + data.format + '.mako',
-                  dict(data=data), request=data.options.request)
-
-  #----------------------------------------------------------------------------
-  def render_html(self, data):
-    return self.template_render(data, 'text/html', 'UTF-8')
-
-  #----------------------------------------------------------------------------
-  def render_rst(self, data):
-    return self.template_render(data, 'text/x-rst', 'UTF-8')
-
-  #----------------------------------------------------------------------------
-  def render_txt(self, data):
-    return self.template_render(data, 'text/plain', 'UTF-8')
+      request.response.charset = cset
 
   #----------------------------------------------------------------------------
   def render(self, data, format=None):
-    if format is None:
-      return getattr(self, 'render_' + data.format, self.template_render)(data)
-    tmpfmt = data.format
-    data.format = format
-    ret = self.render(data)
-    data.format = tmpfmt
-    return ret
+    if format is not None:
+      # todo: this is *ugly*... basically, the problem is that data.options
+      #       is format-specific, and therefore i need to regenerate one if
+      #       it is changed. ugh.
+      tmpfmt = data.format
+      tmpopt = data.options
+      data.format = format
+      data.options = self._getOptions(tmpopt.request, format)
+      data.options.view = tmpopt.view
+      data.options.root = tmpopt.root
+      ret = self.render(data)
+      data.format = tmpfmt
+      data.options = tmpopt
+      return ret
+    return getattr(self, 'render_' + data.format, self.template_render)(data)
+
+  #----------------------------------------------------------------------------
+  def template_render(self, data):
+    tpl = data.options.renderer \
+      or 'pyramid_describe:template/' + data.format + '.mako'
+    return render(tpl, dict(data=data), request=data.options.request)
+
+  render_html = template_render
+  render_rst  = template_render
+  render_txt  = template_render
 
   #----------------------------------------------------------------------------
   def render_pdf(self, data):
     html = self.render(data, format='html')
-    self.set_ctype(data.options.request.response, 'application/pdf')
     return pdfkit.from_string(html, False, options={'quiet': ''})
 
   #----------------------------------------------------------------------------
   def render_json(self, data):
-    self.set_ctype(data.options.request.response, 'application/json', 'UTF-8')
     return json.dumps(self.structure_render(data))
 
   #----------------------------------------------------------------------------
   def render_yaml(self, data):
     if yaml is None:
       raise ValueError('no yaml encoder library available')
-    self.set_ctype(data.options.request.response, 'application/yaml', 'UTF-8')
     return yaml.dump(self.structure_render(data))
 
   #----------------------------------------------------------------------------
   def render_xml(self, data):
-    self.set_ctype(data.options.request.response, 'text/xml', 'UTF-8')
     data = self.structure_render(data, dict=collections.OrderedDict)
     # force 'doc' attribute into a list, which causes dict2node to
     # make it into a node instead of an attribute
@@ -838,7 +851,6 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def render_wadl(self, data):
-    self.set_ctype(data.options.request.response, 'text/xml', 'UTF-8')
     options = data.options
     data = self.structure_render(data, dict=collections.OrderedDict)
     # force 'doc' attribute into a list, which causes dict2node to

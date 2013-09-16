@@ -687,6 +687,53 @@ Contents of "/"
     self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
+  def test_format_html_renderer(self):
+    'The Describer honors the format-specific `renderer` option'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'filters': restEnhancer,
+        'exclude': '|^/desc/.*$|',
+        'format.default.showLegend': 'false',
+        'format.html.renderer': 'pyramid_describe:template/list-html.mako',
+        })
+    res = self.send(root, '/desc')
+    chk = '''\
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+ <head>
+  <title>Contents of "/"</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <meta name="generator" content="pyramid-describe/{version}"/>
+  <style type="text/css">
+  </style>
+  <script language="text/javascript" src="/jquery.min.js"></script>
+  <script language="text/javascript">
+   $(document).ready(function(){{
+     alert('hello, world!');
+   }});
+  </script>
+ </head>
+ <body>
+  <h1>Contents of "/"</h1>
+  <ul class="endpoints">
+   <li>/</li>
+   <li>/desc</li>
+   <li>/rest</li>
+   <li>/sub/method</li>
+   <li>/swi</li>
+   <li>/unknown/?</li>
+  </ul>
+ </body>
+</html>
+'''.format(version=getVersion('pyramid_describe'))
+
+    chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
+    res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
+    self.assertResponse(res, 200, chk, xml=True)
+
+  #----------------------------------------------------------------------------
   def test_format_json(self):
     'The Describer can render JSON'
     root = SimpleRoot()
