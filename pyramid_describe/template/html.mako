@@ -7,7 +7,7 @@ from pyramid_controllers.util import getVersion
  <head>
   <%block name="html_head">
    <%block name="html_head_prefix"></%block>
-   <title><%block name="html_head_title">Contents of "${data.root|h}"</%block></title>
+   <title><%block name="html_head_title"><%block name="html_title">Contents of "${data.root|h}"</%block></%block></title>
    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
    <meta name="generator" content="pyramid-describe/${getVersion('pyramid_describe')|h}"/>
    <%block name="html_head_pdfkit">
@@ -40,9 +40,10 @@ from pyramid_controllers.util import getVersion
    <%block name="html_head_suffix"></%block>
   </%block>
  </head>
- <body>
+ <body id="<%block name="html_body_id"></%block>" class="<%block name="html_body_class"></%block>">
   <%block name="html_body">
-   <h1><%block name="html_body_title">Contents of "${data.root|h}"</%block></h1>
+   <%block name="html_body_prefix"></%block>
+   <h1><%block name="html_body_title">${self.html_title()}</%block></h1>
    <%block name="html_body_endpoints">
     <dl class="endpoints">
      % for endpoint in data.endpoints:
@@ -130,6 +131,7 @@ from pyramid_controllers.util import getVersion
      </dl>
     </%block>
    % endif
+   <%block name="html_body_suffix"></%block>
   </%block>
  </body>
 </html>
