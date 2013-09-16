@@ -577,7 +577,7 @@ Contents of "/"
     
    </style>
  </head>
- <body>
+ <body id="" class="">
   <h1>Contents of "/"</h1>
   <dl class="endpoints">
    <dt id="endpoint-_2F"><h2>/</h2></dt>
@@ -715,7 +715,7 @@ Contents of "/"
    }});
   </script>
  </head>
- <body>
+ <body id="" class="">
   <h1>Contents of "/"</h1>
   <ul class="endpoints">
    <li>/</li>
