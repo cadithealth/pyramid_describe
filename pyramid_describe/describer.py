@@ -718,7 +718,7 @@ class Describer(object):
   def template_render(self, data):
     tpl = data.options.renderer \
       or 'pyramid_describe:template/' + data.format + '.mako'
-    return render(tpl, dict(data=data))
+    return render(tpl, dict(data=data), request=data.options.context.request)
 
   render_html = template_render
   render_rst  = template_render
