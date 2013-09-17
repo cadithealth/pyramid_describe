@@ -113,12 +113,13 @@ class DescribeTest(TestHelper):
     def ridiculous_init_override(self):
       super(RootController, self).__init__()
       self.desc = DescribeController(
-        view=self, root='/', settings={'exclude': '|^/desc(/.*)?$|'})
+        view=self, root='/',
+        settings={'formats': 'txt', 'exclude': '|^/desc(/.*)?$|'})
     RootController.__init__ = ridiculous_init_override
     # /TODO
     self.app = main({})
     self.testapp = TestApp(self.app)
-    res = self.testapp.get('/desc?format=txt')
+    res = self.testapp.get('/desc')
     self.assertMultiLineEqual(res.body, '''\
 /                       # The application root.
 ├── contact/            # Contact manager.
@@ -185,7 +186,7 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
-      settings={'exclude': '|^/desc(/.*)?$|'})
+      settings={'format.request': 'true', 'exclude': '|^/desc(/.*)?$|'})
     self.assertResponse(self.send(root, '/desc/application.txt?ascii=true'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -254,8 +255,8 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'include': '|^/sub/method$|'})
-    self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
+      settings={'formats': 'txt', 'include': '|^/sub/method$|'})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
 └── sub/
     └── method    # This method outputs a JSON list.
@@ -267,8 +268,8 @@ class DescribeTest(TestHelper):
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|')})
-    self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
+      settings={'formats': 'txt', 'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|')})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
 │   ├── <DELETE>    # Deletes the entry.
@@ -278,6 +279,64 @@ class DescribeTest(TestHelper):
 ├── swi             # A sub-controller providing only an index.
 └── unknown/?       # A dynamically generated sub-controller.
 ''')
+
+  #----------------------------------------------------------------------------
+  def test_request_option_control_default(self):
+    'By default, no request options are honored during rendering'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'formats': 'txt', 'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|')})
+    self.assertResponse(self.send(root, '/desc?format=html&showRest=false&showInfo=false'), 200, '''\
+/                   # The default root.
+├── rest            # A RESTful entry.
+│   ├── <DELETE>    # Deletes the entry.
+│   ├── <GET>       # Gets the current value.
+│   ├── <POST>      # Creates a new entry.
+│   └── <PUT>       # Updates the value.
+├── swi             # A sub-controller providing only an index.
+└── unknown/?       # A dynamically generated sub-controller.
+''')
+
+  #----------------------------------------------------------------------------
+  def test_request_option_control_enable_all(self):
+    'The rendering options pulled from the request parameters can be set to all options'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'formats': 'txt',
+                'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+                'format.request': 'true',
+                })
+    self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
+/
+├── rest
+├── swi
+└── unknown/?
+''')
+    self.assertIn('<html', self.send(root, '/desc?format=html&showRest=false&showInfo=false').body)
+
+  #----------------------------------------------------------------------------
+  def test_request_option_control_enable_list(self):
+    'The rendering options pulled from the request parameters can be a list of specific options'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'formats': 'txt',
+                'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+                'format.request': 'format showInfo',
+                })
+    self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
+/
+├── rest
+│   ├── <DELETE>
+│   ├── <GET>
+│   ├── <POST>
+│   └── <PUT>
+├── swi
+└── unknown/?
+''')
+    self.assertIn('<html', self.send(root, '/desc?format=html&showRest=false&showInfo=false').body)
 
   #----------------------------------------------------------------------------
   def test_mixed_restful_and_dispatch_txt(self):
@@ -300,8 +359,9 @@ class DescribeTest(TestHelper):
       rest = Rest()
     root = Root()
     root.desc = DescribeController(
-      root, doc='URL tree description.', settings={'exclude': '|^/desc(/.*)?$|'})
-    self.assertResponse(self.send(root, '/desc?format=txt'), 200, '''\
+      root, doc='URL tree description.',
+      settings={'formats': 'txt', 'exclude': '|^/desc(/.*)?$|'})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
 └── rest/         # RESTful access, with sub-component
     ├── <PUT>     # Modify this object

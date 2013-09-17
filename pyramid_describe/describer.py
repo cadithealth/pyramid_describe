@@ -10,7 +10,7 @@ import re, logging, inspect, binascii, types, json, six, collections
 import xml.etree.ElementTree as ET
 from six.moves import urllib
 from pyramid.interfaces import IMultiView
-from pyramid.settings import asbool, aslist
+from pyramid.settings import asbool, aslist, truthy
 from pyramid.renderers import render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
@@ -37,6 +37,9 @@ try:
   import pdfkit
   FORMATS += ('pdf',)
 except ImportError: pass
+
+falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
+booly = frozenset(list(truthy) + list(falsy)) 
 
 #------------------------------------------------------------------------------
 def ccc(name):
@@ -286,7 +289,10 @@ class Describer(object):
       # todo: this is NOT the right way to setup a fake request...
       request = adict(params=adict(), registry=adict(settings=dict()))
     if format is None:
-      format = request.params.get('format', None)
+      # DRY (with _getOptions...)
+      rset = self.settings.get('format.request', 'false')
+      if rset.lower() in truthy or 'format' in aslist(rset):
+        format = request.params.get('format', None)
     if format is None:
       format = self.defformat
     options = self._getOptions(request, format)
@@ -317,7 +323,14 @@ class Describer(object):
     options = adict(self.options)
     options.update(getattr(self, 'options_' + format, None))
     options.update(getattr(request, 'options', None))
-    options.update(request.params)
+    rset = self.settings.get('format.' + format + '.request', None)
+    if rset is None:
+      rset = self.settings.get('format.request', None)
+    if rset is not None:
+      if rset.lower() in booly and asbool(rset):
+        options.update(request.params)
+      else:
+        options.update(pick(request.params, *aslist(rset)))
     options.update(getattr(request, 'override', None))
     options.update(self.override)
     options.update(getattr(self, 'override_' + format, None))

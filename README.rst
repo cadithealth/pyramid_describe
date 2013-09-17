@@ -239,11 +239,30 @@ that the first one controls the prefix set on the others):
   Specifying a renderer pre-empts all other rendering fallback
   mechanisms.
 
+* ``{PREFIX}.format.request`` : { bool, list(str) }, default: false
+
+  Specifies which options, if any, can be controlled by request
+  parameters. The setting can either be a boolean ("true", "false",
+  etc), or a list of options. If truthy, all options can be
+  specified. If falsy, no options can be specified. Otherwise it
+  is interpreted as a space-separated list of options that can be
+  specified.
+
+  Note that this setting can be overridden on a per-format basis
+  by the `format.{FORMAT}.request` setting.
+
+* ``{PREFIX}.format.{FORMAT}.request`` : { bool, list(str) }, default: none
+
+  The per-format version of `format.request`. Note that this
+  completely overrides the `format.request` setting for the
+  given format, it does not extend it.
+
 * ``{PREFIX}.format.default.{OPTION}``
 
   Set a default rendering option for all formats. Note that this can
-  be overridden by request parameters. See the `Options`_ section for
-  a list of all supported options.
+  be overridden by request parameters (see the `format.request`
+  option). See the `Options`_ section for a list of all supported
+  options.
 
 * ``{PREFIX}.format.override.{OPTION}``
 
@@ -255,8 +274,9 @@ that the first one controls the prefix set on the others):
 
   Set a default rendering option for the specified format, which
   overrides any default value set for all formats. Note that this can
-  be overridden by request parameters. See the `Options`_ section for
-  a list of all supported options.
+  be overridden by request parameters (see the `format.request`
+  option). See the `Options`_ section for a list of all supported
+  options.
 
 * ``{PREFIX}.format.{FORMAT}.override.{OPTION}``
 
