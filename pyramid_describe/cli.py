@@ -17,12 +17,12 @@ from .i18n import _
 #------------------------------------------------------------------------------
 def describe_from_config(config, output, root=None, format=None, settings=None):
   env = bootstrap(config)
+  context = dict(request=env['request'])
   return describe_from_app(
-    env['app'], output,
-    request=env['request'], root=root, format=format, settings=settings)
+    env['app'], output, context=context, root=root, format=format, settings=settings)
 
 #------------------------------------------------------------------------------
-def describe_from_app(app, output, root=None, format=None, settings=None, request=None):
+def describe_from_app(app, output, root=None, format=None, settings=None, context=None):
 
   # todo: is this necessary?
   root = root or '/'
@@ -32,7 +32,7 @@ def describe_from_app(app, output, root=None, format=None, settings=None, reques
   view = pvcomm._find_view(root, app.registry)
   from .describer import Describer
   desc = Describer(settings=settings)
-  res = desc.describe(view, request=request, format=format, root=root)
+  res = desc.describe(view, context=context, format=format, root=root).content
   if isinstance(res, six.string_types):
     # todo: encoding the PDF output to UTF-8 is generating the follow error:
     #         UnicodeDecodeError: 'ascii' codec can't decode byte 0xfe in

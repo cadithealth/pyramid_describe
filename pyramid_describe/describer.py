@@ -38,9 +38,6 @@ try:
   FORMATS += ('pdf',)
 except ImportError: pass
 
-falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
-booly = frozenset(list(truthy) + list(falsy)) 
-
 #------------------------------------------------------------------------------
 def ccc(name):
   'Convert Camel Case (converts camelCase to camel-case).'
@@ -284,21 +281,18 @@ class Describer(object):
       self.filters = [resolve(e) for e in self.filters]
 
   #----------------------------------------------------------------------------
-  def describe(self, view, request, format=None, root=None):
-    if request is None:
-      # todo: this is NOT the right way to setup a fake request...
-      request = adict(params=adict(), registry=adict(settings=dict()))
-    if format is None:
-      # DRY (with _getOptions...)
-      rset = self.settings.get('format.request', 'false')
-      if rset.lower() in truthy or 'format' in aslist(rset):
-        format = request.params.get('format', None)
+  def describe(self, view, context=None, format=None, root=None):
+    context = adict(context or {})
+    if context.request is None:
+      # this is really not the "right thing", but it makes a lot of other
+      # coding quicker...
+      context.request = adict()
     if format is None:
       format = self.defformat
-    options = self._getOptions(request, format)
-    options.view = view
-    options.root = root
+    options = self._getOptions(context, format).update(view=view, root=root)
     # todo: filter legend to only those that are actually used?...
+    #       => can't do that here since some renderers artificially
+    #          re-inject other types.
     legend = [
       (key if (key.lower() + 'Format') not in options else
        options.get(key.lower() + 'Format').format(_('NAME')), desc)
@@ -311,27 +305,15 @@ class Describer(object):
       endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
       legend    = legend,
       )
-
-    ctypedef = self.content_types.get(format)
-    if ctypedef:
-      self.set_ctype(request, ctypedef[0], ctypedef[1])
-
-    return self.render(data)
+    ctdef = self.content_types.get(format)
+    return adict(content=self.render(data), content_type=ctdef[0], charset=ctdef[1])
 
   #----------------------------------------------------------------------------
-  def _getOptions(self, request, format):
+  def _getOptions(self, context, format):
     options = adict(self.options)
     options.update(getattr(self, 'options_' + format, None))
-    options.update(getattr(request, 'options', None))
-    rset = self.settings.get('format.' + format + '.request', None)
-    if rset is None:
-      rset = self.settings.get('format.request', None)
-    if rset is not None:
-      if rset.lower() in booly and asbool(rset):
-        options.update(request.params)
-      else:
-        options.update(pick(request.params, *aslist(rset)))
-    options.update(getattr(request, 'override', None))
+    if callable(context.get_options):
+      options.update(context.get_options(format))
     options.update(self.override)
     options.update(getattr(self, 'override_' + format, None))
     ret = adict()
@@ -351,11 +333,11 @@ class Describer(object):
     for name, default in self.str_options:
       ret[name] = options.get(name, default)
     ret.format     = format
-    ret.request    = request
     ret.dispatcher = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs  = set([meth2action(e) for e in ret.restVerbs])
     ret.filters    = self.filters
     ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
+    ret.context    = context
     return ret
 
   #----------------------------------------------------------------------------
@@ -676,7 +658,7 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def structure_render(self, data, dict=dict, includeEntry=False):
-    root = dict(application=dict(url=data.options.request.host_url))
+    root = dict(application=dict(url=data.options.context.request.host_url))
     app = root['application']
     app['endpoints'] = []
     for entry in data.endpoints:
@@ -716,15 +698,6 @@ class Describer(object):
     return root
 
   #----------------------------------------------------------------------------
-  def set_ctype(self, request, ctype=None, cset=None):
-    if not request.response:
-      return
-    if ctype is not None:
-      request.response.content_type = ctype
-    if cset is not None:
-      request.response.charset = cset
-
-  #----------------------------------------------------------------------------
   def render(self, data, format=None):
     if format is not None:
       # todo: this is *ugly*... basically, the problem is that data.options
@@ -733,9 +706,8 @@ class Describer(object):
       tmpfmt = data.format
       tmpopt = data.options
       data.format = format
-      data.options = self._getOptions(tmpopt.request, format)
-      data.options.view = tmpopt.view
-      data.options.root = tmpopt.root
+      data.options = self._getOptions(tmpopt.context, format).update(
+        view=tmpopt.view, root=tmpopt.root)
       ret = self.render(data)
       data.format = tmpfmt
       data.options = tmpopt
@@ -746,7 +718,7 @@ class Describer(object):
   def template_render(self, data):
     tpl = data.options.renderer \
       or 'pyramid_describe:template/' + data.format + '.mako'
-    return render(tpl, dict(data=data), request=data.options.request)
+    return render(tpl, dict(data=data))
 
   render_html = template_render
   render_rst  = template_render

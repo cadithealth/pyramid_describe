@@ -9,9 +9,13 @@
 import os, six
 from six.moves import urllib
 from pyramid.httpexceptions import HTTPFound
+from pyramid.settings import asbool, aslist, truthy
 from pyramid_controllers import Controller, index, ExposeDecorator, expose
 from .describer import Describer
-from .util import adict
+from .util import adict, pick
+
+falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
+booly = frozenset(list(truthy) + list(falsy)) 
 
 #------------------------------------------------------------------------------
 class DescribeController(Controller):
@@ -38,8 +42,28 @@ class DescribeController(Controller):
 
   #----------------------------------------------------------------------------
   def describe(self, request, format):
-    return self.describer.describe(
-      self.params.view, request, format=format, root=self.params.root)
+    context = adict(request=request)
+    def get_options(fmt):
+      rset = None
+      if fmt is not None:
+        rset = self.settings.get('format.' + fmt + '.request', None)
+      if rset is None:
+        rset = self.settings.get('format.request', None)
+      if rset is None:
+        return dict()
+      if rset.lower() in booly and asbool(rset):
+        return request.params
+      return pick(request.params, *aslist(rset))
+    if format is None:
+      format = get_options(None).get('format', None)
+    context.get_options = get_options
+    res = self.describer.describe(
+      self.params.view, context, format=format, root=self.params.root)
+    if res.content_type:
+      request.response.content_type = res.content_type
+    if res.charset:
+      request.response.charset = res.charset
+    return res.content
 
   #----------------------------------------------------------------------------
   @index(forceSlash=False)
