@@ -77,5 +77,5 @@ Legend
     path arguments dynamically; no further information can be determined
     without request-specific details.
 
-.. generator: pyramid-describe/0.1.15 [format=rst]
+.. generator: pyramid-describe/0.1.16 [format=rst]
 .. location: http://localhost/
