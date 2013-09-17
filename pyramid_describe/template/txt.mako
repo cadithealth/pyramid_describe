@@ -22,6 +22,9 @@ else:
 
 entries = data.tree_entries
 
+if not data.options.showRest:
+  entries = [e for e in entries if not e.isMethod]
+
 for entry in entries:
   cur = ''
   indent = ''
