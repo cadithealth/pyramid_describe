@@ -702,19 +702,22 @@ class Describer(object):
     return root
 
   #----------------------------------------------------------------------------
-  def render(self, data, format=None):
+  def render(self, data, format=None, override_options=None):
     if format is not None:
       # todo: this is *ugly*... basically, the problem is that data.options
       #       is format-specific, and therefore i need to regenerate one if
       #       it is changed. ugh.
-      tmpfmt = data.format
-      tmpopt = data.options
+      keep_fmt = data.format
+      keep_opt = data.options
       data.format = format
-      data.options = self._getOptions(tmpopt.context, format).update(
-        view=tmpopt.view, root=tmpopt.root)
+      data.options = self._getOptions(keep_opt.context, format).update(
+        view=keep_opt.view, root=keep_opt.root)
+      if override_options:
+        data.options.update(override_options)
+      data.options.formats = ( keep_opt.formats or [] ) + [ keep_fmt ]
       ret = self.render(data)
-      data.format = tmpfmt
-      data.options = tmpopt
+      data.format  = keep_fmt
+      data.options = keep_opt
       return ret
     return getattr(self, 'render_' + data.format, self.template_render)(data)
 

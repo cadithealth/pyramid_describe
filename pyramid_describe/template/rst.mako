@@ -228,8 +228,8 @@ if data.options.showGenerator:
   gen = 'pyramid-describe'
   if data.options.showGenVersion:
     gen += '/' + getVersion('pyramid_describe')
-## todo: this "format" should only represent the top-most...
-  gen += ' [format=rst]'
+  gen += ' [format={}]'.format(
+    data.options.formats[0] if data.options.formats else 'rst')
 %>
 ${gen or ''|n}
 </%def>\
