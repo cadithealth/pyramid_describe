@@ -7,8 +7,8 @@
 #------------------------------------------------------------------------------
 
 import re, logging, inspect, binascii, types, json, six, collections
-import xml.etree.ElementTree as ET
 from six.moves import urllib
+import xml.etree.ElementTree as ET
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, aslist, truthy
 from pyramid.renderers import render
@@ -216,6 +216,7 @@ class Describer(object):
     ('showRest',       True),
     ('showImpl',       False),
     ('showInfo',       True),
+    ('showMeta',       True),
     ('showName',       True),
     ('showDecorated',  True),
     ('showExtra',      True),
@@ -228,6 +229,7 @@ class Describer(object):
     ('ascii',          False),
     ('showOutline',    True),
     ('pageGrayscale',  False),
+    ('rstMax',         False),
     )
 
   int_options = (
@@ -242,6 +244,7 @@ class Describer(object):
     )
 
   str_options = (
+    ('title',            None),
     ('stubFormat',       '{{{}}}'),     # /path/to/{NAME}/and/more
     ('dynamicFormat',    '{}/?'),       # /path/to/NAME/?
     ('restFormat',       '<{}>'),       # /path/to/<NAME>
@@ -338,6 +341,7 @@ class Describer(object):
     ret.filters    = self.filters
     ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
     ret.context    = context
+    ret.idEncoder  = self._encodeIdComponent
     return ret
 
   #----------------------------------------------------------------------------

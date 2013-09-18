@@ -75,8 +75,12 @@ class SimpleRoot(Controller):
   unknown = Unknown
 
 def restEnhancer(entry, options):
+  if entry and entry.path == '/swi':
+    entry.classes = ['sub-with-index']
+    return entry
   if not entry or entry.path != '/rest?_method=POST':
     return entry
+  entry.classes = ['post-is-not-put', 'fake-docs-here']
   entry.params = (
     adict(id='param-_2Frest_3F_5Fmethod_3DPOST-size', name='size', type='int',
           default=4096, optional=True, doc='The anticipated maximum size'),
@@ -97,8 +101,7 @@ settings_minRst = {
   'exclude': '|^/desc(/.*)?$|',
   'format.default': 'rst',
   'format.default.showLegend': 'false',
-  'format.default.showGenerator': 'false',
-  'format.default.showLocation': 'false',
+  'format.default.showMeta': 'false',
   }
 
 #------------------------------------------------------------------------------
@@ -370,7 +373,7 @@ class DescribeTest(TestHelper):
 ''')
 
   #----------------------------------------------------------------------------
-  def test_format_rst_full(self):
+  def test_format_rst_standard(self):
     'The Describer can render a reStructuredText description'
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -380,135 +383,508 @@ class DescribeTest(TestHelper):
                 'format.default.showImpl': 'true',
                 'filters': restEnhancer})
     self.assertResponse(self.send(root, '/desc'), 200, '''\
+===============
 Contents of "/"
-***************
+===============
 
 /
 =
 
-  Handler: pyramid_describe.test.SimpleRoot() [instance]
+Handler: pyramid_describe.test.SimpleRoot() [instance]
 
-  The default root.
+The default root.
 
 /desc
 =====
 
-  Handler: pyramid_describe.controller.DescribeController() [instance]
+Handler: pyramid_describe.controller.DescribeController() [instance]
 
-  URL tree description.
+URL tree description.
 
 /rest
 =====
 
-  Handler: pyramid_describe.test.Rest() [instance]
+Handler: pyramid_describe.test.Rest() [instance]
 
-  A RESTful entry.
+A RESTful entry.
 
-  Supported Methods
-  -----------------
+Methods
+-------
 
-  * **DELETE**:
+**DELETE**
+``````````
 
-    Handler: pyramid_describe.test.Rest().delete [method]
+Handler: pyramid_describe.test.Rest().delete [method]
 
-    Deletes the entry.
+Deletes the entry.
 
-  * **GET**:
+**GET**
+```````
 
-    Handler: pyramid_describe.test.Rest().get [method]
+Handler: pyramid_describe.test.Rest().get [method]
 
-    Gets the current value.
+Gets the current value.
 
-  * **POST**:
+**POST**
+````````
 
-    Handler: pyramid_describe.test.Rest().post [method]
+Handler: pyramid_describe.test.Rest().post [method]
 
-    Creates a new entry.
+Creates a new entry.
 
-    :Parameters:
+Parameters
+::::::::::
 
-    **size** : int, optional, default 4096
+**size**
+\'''\'''\''
 
-      The anticipated maximum size
+int, optional, default 4096
 
-    **text** : str
+The anticipated maximum size
 
-      The text content for the posting
+**text**
+\'''\'''\''
 
-    :Returns:
+str
 
-    **str**
+The text content for the posting
 
-      The ID of the new posting
+Returns
+:::::::
 
-    :Raises:
+**str**
+\'''\'''\'
 
-    **HTTPUnauthorized**
+The ID of the new posting
 
-      Authenticated access is required
+Raises
+::::::
 
-    **HTTPForbidden**
+**HTTPUnauthorized**
+\'''\'''\'''\'''\'''\'''\''
 
-      The user does not have posting privileges
+Authenticated access is required
 
-  * **PUT**:
+**HTTPForbidden**
+\'''\'''\'''\'''\'''\''
 
-    Handler: pyramid_describe.test.Rest().put [method]
+The user does not have posting privileges
 
-    Updates the value.
+**PUT**
+```````
+
+Handler: pyramid_describe.test.Rest().put [method]
+
+Updates the value.
 
 /sub/method
 ===========
 
-  Handler: pyramid_describe.test.Sub().method [method]
+Handler: pyramid_describe.test.Sub().method [method]
 
-  This method outputs a JSON list.
+This method outputs a JSON list.
 
 /swi
 ====
 
-  Handler: pyramid_describe.test.SubIndex() [instance]
+Handler: pyramid_describe.test.SubIndex() [instance]
 
-  A sub-controller providing only an index.
+A sub-controller providing only an index.
 
 /unknown/?
 ==========
 
-  Handler: pyramid_describe.test.Unknown [class]
+Handler: pyramid_describe.test.Unknown [class]
 
-  A dynamically generated sub-controller.
+A dynamically generated sub-controller.
 
+======
 Legend
-******
+======
 
-  * `{{NAME}}`:
+`{{NAME}}`
+========
 
-    Placeholder -- usually replaced with an ID or other identifier of a RESTful
-    object.
+Placeholder -- usually replaced with an ID or other identifier of a RESTful
+object.
 
-  * `<NAME>`:
+`<NAME>`
+========
 
-    Not an actual endpoint, but the HTTP method to use.
+Not an actual endpoint, but the HTTP method to use.
 
-  * `NAME/?`:
+`NAME/?`
+========
 
-    Dynamically evaluated endpoint; no further information can be determined
-    without request-specific details.
+Dynamically evaluated endpoint; no further information can be determined
+without request-specific details.
 
-  * `*`:
+`*`
+===
 
-    This endpoint is a `default` handler, and is therefore free to interpret
-    path arguments dynamically; no further information can be determined
-    without request-specific details.
+This endpoint is a `default` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
 
-  * `...`:
+`...`
+=====
 
-    This endpoint is a `lookup` handler, and is therefore free to interpret
-    path arguments dynamically; no further information can be determined
-    without request-specific details.
+This endpoint is a `lookup` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
 
-.. generator: pyramid-describe/{version} [format=rst]
-.. location: http://localhost/desc
+.. meta::
+  :title: Contents of "/"
+  :generator: pyramid-describe/{version} [format=rst]
+  :location: http://localhost/desc
+'''.format(version=getVersion('pyramid_describe')))
+
+  #----------------------------------------------------------------------------
+  def test_format_rst_title(self):
+    'The Describer can change the reStructuredText title based on options'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'include': '|^/swi|',
+                'format.default': 'rst',
+                'format.default.title': 'Application API Details',
+                'format.default.showImpl': 'true',
+                'filters': restEnhancer})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+=======================
+Application API Details
+=======================
+
+/swi
+====
+
+Handler: pyramid_describe.test.SubIndex() [instance]
+
+A sub-controller providing only an index.
+
+======
+Legend
+======
+
+`{{NAME}}`
+========
+
+Placeholder -- usually replaced with an ID or other identifier of a RESTful
+object.
+
+`<NAME>`
+========
+
+Not an actual endpoint, but the HTTP method to use.
+
+`NAME/?`
+========
+
+Dynamically evaluated endpoint; no further information can be determined
+without request-specific details.
+
+`*`
+===
+
+This endpoint is a `default` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
+
+`...`
+=====
+
+This endpoint is a `lookup` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
+
+.. meta::
+  :title: Application API Details
+  :generator: pyramid-describe/{version} [format=rst]
+  :location: http://localhost/desc
+'''.format(version=getVersion('pyramid_describe')))
+
+  #----------------------------------------------------------------------------
+  def test_format_rst_maximum(self):
+    'The Describer renders reStructuredText with maximum decorations'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={'exclude': '|^/desc/.*|',
+                'format.default': 'rst',
+                'format.default.showImpl': 'true',
+                'format.default.rstMax': 'true',
+                'filters': restEnhancer})
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+.. title:: Contents of "/"
+
+.. class:: endpoints
+.. id:: section-endpoints
+
+===============
+Contents of "/"
+===============
+
+.. class:: endpoint
+.. id:: endpoint-_2F
+
+/
+=
+
+.. class:: handler
+.. id:: handler-endpoint-_2F
+
+Handler: pyramid_describe.test.SimpleRoot() [instance]
+
+The default root.
+
+.. class:: endpoint
+.. id:: endpoint-_2Fdesc
+
+/desc
+=====
+
+.. class:: handler
+.. id:: handler-endpoint-_2Fdesc
+
+Handler: pyramid_describe.controller.DescribeController() [instance]
+
+URL tree description.
+
+.. class:: endpoint
+.. id:: endpoint-_2Frest
+
+/rest
+=====
+
+.. class:: handler
+.. id:: handler-endpoint-_2Frest
+
+Handler: pyramid_describe.test.Rest() [instance]
+
+A RESTful entry.
+
+.. class:: methods
+.. id:: methods-endpoint-_2Frest
+
+Methods
+-------
+
+.. class:: method
+.. id:: method-_2Frest-DELETE
+
+**DELETE**
+``````````
+
+.. class:: handler
+.. id:: handler-method-_2Frest-DELETE
+
+Handler: pyramid_describe.test.Rest().delete [method]
+
+Deletes the entry.
+
+.. class:: method
+.. id:: method-_2Frest-GET
+
+**GET**
+```````
+
+.. class:: handler
+.. id:: handler-method-_2Frest-GET
+
+Handler: pyramid_describe.test.Rest().get [method]
+
+Gets the current value.
+
+.. class:: method post-is-not-put fake-docs-here
+.. id:: method-_2Frest-POST
+
+**POST**
+````````
+
+.. class:: handler
+.. id:: handler-method-_2Frest-POST
+
+Handler: pyramid_describe.test.Rest().post [method]
+
+Creates a new entry.
+
+.. class:: params
+.. id:: params-method-_2Frest-POST
+
+Parameters
+::::::::::
+
+.. class:: param
+.. id:: param-method-_2Frest-POST-size
+
+**size**
+\'''\'''\''
+
+int, optional, default 4096
+
+The anticipated maximum size
+
+.. class:: param
+.. id:: param-method-_2Frest-POST-text
+
+**text**
+\'''\'''\''
+
+str
+
+The text content for the posting
+
+.. class:: returns
+.. id:: returns-method-_2Frest-POST
+
+Returns
+:::::::
+
+.. class:: return
+.. id:: return-method-_2Frest-POST-str
+
+**str**
+\'''\'''\'
+
+The ID of the new posting
+
+.. class:: raises
+.. id:: raises-method-_2Frest-POST
+
+Raises
+::::::
+
+.. class:: raise
+.. id:: raise-method-_2Frest-POST-HTTPUnauthorized
+
+**HTTPUnauthorized**
+\'''\'''\'''\'''\'''\'''\''
+
+Authenticated access is required
+
+.. class:: raise
+.. id:: raise-method-_2Frest-POST-HTTPForbidden
+
+**HTTPForbidden**
+\'''\'''\'''\'''\'''\''
+
+The user does not have posting privileges
+
+.. class:: method
+.. id:: method-_2Frest-PUT
+
+**PUT**
+```````
+
+.. class:: handler
+.. id:: handler-method-_2Frest-PUT
+
+Handler: pyramid_describe.test.Rest().put [method]
+
+Updates the value.
+
+.. class:: endpoint
+.. id:: endpoint-_2Fsub_2Fmethod
+
+/sub/method
+===========
+
+.. class:: handler
+.. id:: handler-endpoint-_2Fsub_2Fmethod
+
+Handler: pyramid_describe.test.Sub().method [method]
+
+This method outputs a JSON list.
+
+.. class:: endpoint sub-with-index
+.. id:: endpoint-_2Fswi
+
+/swi
+====
+
+.. class:: handler
+.. id:: handler-endpoint-_2Fswi
+
+Handler: pyramid_describe.test.SubIndex() [instance]
+
+A sub-controller providing only an index.
+
+.. class:: endpoint
+.. id:: endpoint-_2Funknown
+
+/unknown/?
+==========
+
+.. class:: handler
+.. id:: handler-endpoint-_2Funknown
+
+Handler: pyramid_describe.test.Unknown [class]
+
+A dynamically generated sub-controller.
+
+.. class:: legend
+.. id:: section-legend
+
+======
+Legend
+======
+
+.. class:: legend-item
+.. id:: legend-item-_7BNAME_7D
+
+`{{NAME}}`
+========
+
+Placeholder -- usually replaced with an ID or other identifier of a RESTful
+object.
+
+.. class:: legend-item
+.. id:: legend-item-_3CNAME_3E
+
+`<NAME>`
+========
+
+Not an actual endpoint, but the HTTP method to use.
+
+.. class:: legend-item
+.. id:: legend-item-NAME_2F_3F
+
+`NAME/?`
+========
+
+Dynamically evaluated endpoint; no further information can be determined
+without request-specific details.
+
+.. class:: legend-item
+.. id:: legend-item-_2A
+
+`*`
+===
+
+This endpoint is a `default` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
+
+.. class:: legend-item
+.. id:: legend-item-_2E_2E_2E
+
+`...`
+=====
+
+This endpoint is a `lookup` handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.
+
+.. meta::
+  :title: Contents of "/"
+  :generator: pyramid-describe/{version} [format=rst]
+  :location: http://localhost/desc
+  :pdfkit-page-size: A4
+  :pdfkit-orientation: Portrait
+  :pdfkit-margin-top: 10mm
+  :pdfkit-margin-right: 10mm
+  :pdfkit-margin-bottom: 10mm
+  :pdfkit-margin-left: 10mm
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
@@ -535,31 +911,32 @@ Legend
       root, doc='URL tree description.',
       settings=settings_minRst)
     self.assertResponse(self.send(root, '/desc'), 200, '''\
+===============
 Contents of "/"
-***************
+===============
 
 /rest
 =====
 
-  RESTful access, with sub-component
+RESTful access, with sub-component
 
-  Supported Methods
-  -----------------
+Methods
+-------
 
-  * **PUT**:
+**PUT**
+```````
 
-    Modify this object
+Modify this object
 
 /rest/access
 ============
 
-  Access control
+Access control
 
 /rest/groups
 ============
 
-  Return the groups for this object
-
+Return the groups for this object
 ''')
 
 #   # TODO: enable this when txt is sensitive to forceSlash...
@@ -597,14 +974,14 @@ Contents of "/"
       root, doc='URL tree description.',
        settings=settings_minRst)
     self.assertResponse(self.send(root, '/desc'), 200, '''\
+===============
 Contents of "/"
-***************
+===============
 
 /
 =
 
-  The index method
-
+The index method
 ''')
 
   #----------------------------------------------------------------------------
