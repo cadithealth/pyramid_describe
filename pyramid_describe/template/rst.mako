@@ -233,7 +233,7 @@ if data.options.showGenerator:
   if data.options.showGenVersion:
     gen += '/' + getVersion('pyramid_describe')
   gen += ' [format={}]'.format(
-    data.options.formats[0] if data.options.formats else 'rst')
+    data.options.formatstack[0] if data.options.formatstack else 'rst')
 %>
 ${gen or ''|n}
 </%def>\

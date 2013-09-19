@@ -704,7 +704,7 @@ class Describer(object):
         view=keep_opt.view, root=keep_opt.root)
       if override_options:
         data.options.update(override_options)
-      data.options.formats = ( keep_opt.formats or [] ) + [ keep_fmt ]
+      data.options.formatstack = ( keep_opt.formatstack or [] ) + [ keep_fmt ]
       ret = self.render(data)
       data.format  = keep_fmt
       data.options = keep_opt
