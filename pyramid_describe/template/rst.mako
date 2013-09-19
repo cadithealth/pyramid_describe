@@ -140,6 +140,10 @@ if node.default:
 % endif
 
 ${section_title('**' + node.name + '**', level + 1)|n}
+% if data.options.rstMax:
+
+.. class:: spec
+% endif
 
 ${spec|n}
 
@@ -263,7 +267,7 @@ ${self.rst_meta_rendering()|n}\
 </%def>\
 ##-----------------------------------------------------------------------------
 <%def name="rst_meta_rendering()">\
-% if data.options.rstMax:
+% if data.options.rstMax and data.options.rstPdfkit:
   :pdfkit-page-size: ${data.options.pageSize|n}
   :pdfkit-orientation: ${data.options.pageOrientation|n}
 % if not data.options.showOutline:
