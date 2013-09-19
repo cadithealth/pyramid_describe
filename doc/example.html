@@ -1,149 +1,126 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
- <head>
-  
-   
-   <title>Contents of "/"</title>
-   <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-   <meta name="generator" content="pyramid-describe/0.1.16"/>
-   
-    <meta name="pdfkit-page-size" content="A4"/>
-    <meta name="pdfkit-orientation" content="Portrait"/>
-    <meta name="pdfkit-margin-top" content="10mm"/>
-    <meta name="pdfkit-margin-right" content="10mm"/>
-    <meta name="pdfkit-margin-bottom" content="10mm"/>
-    <meta name="pdfkit-margin-left" content="10mm"/>
-   
-   <style type="text/css">
-    
-     dl{margin-left: 2em;}
-     dt{font-weight: bold;}
-     dd{margin:0.5em 0 0.75em 2em;}
-     .params .param-spec{font-style: italic;}
-    
-   </style>
-   
-  
- </head>
- <body id="" class="">
-  
-   
-   <h1>Contents of "/"</h1>
-   
-    <dl class="endpoints">
-      
-      
-      
-       <dt id="endpoint-_2F"><h2>/</h2></dt>
-       <dd>
-        
-        <p>The application root.</p>
-      
-       </dd>
-      
-      
-      
-      
-       <dt id="endpoint-_2Fcontact"><h2>/contact</h2></dt>
-       <dd>
-        
-        <p>Contact manager.</p>
-        <h3>Supported Methods</h3>
-        <dl class="methods">
-          <dt id="method-_2Fcontact-POST"><h4>POST</h4></dt>
-          <dd>
-           
-        <p>Creates a new &#39;contact&#39; object.</p>
-      
-          </dd>
-        </dl>
-      
-       </dd>
-      
-      
-      
-      
-       <dt id="endpoint-_2Fcontact_2FCONTACTID"><h2>/contact/{CONTACTID}</h2></dt>
-       <dd>
-        
-        <p>RESTful access to a specific contact.</p>
-        <h3>Supported Methods</h3>
-        <dl class="methods">
-          <dt id="method-_2Fcontact_2FCONTACTID-DELETE"><h4>DELETE</h4></dt>
-          <dd>
-           
-        <p>Delete this contact.</p>
-      
-          </dd>
-          <dt id="method-_2Fcontact_2FCONTACTID-GET"><h4>GET</h4></dt>
-          <dd>
-           
-        <p>Get this contact&#39;s details.</p>
-      
-          </dd>
-          <dt id="method-_2Fcontact_2FCONTACTID-PUT"><h4>PUT</h4></dt>
-          <dd>
-           
-        <p>Update this contact&#39;s details.</p>
-      
-          </dd>
-        </dl>
-      
-       </dd>
-      
-      
-      
-      
-       <dt id="endpoint-_2Flogin"><h2>/login</h2></dt>
-       <dd>
-        
-        <p>Authenticate against the server.</p>
-      
-       </dd>
-      
-      
-      
-      
-       <dt id="endpoint-_2Flogout"><h2>/logout</h2></dt>
-       <dd>
-        
-        <p>Remove authentication tokens.</p>
-      
-       </dd>
-      
-    </dl>
-   
-    
-     <h1 class="legend">Legend</h1>
-     <dl class="legend">
-       
-       
-        <dt><h2>{NAME}</h2></dt>
-        <dd><p>Placeholder -- usually replaced with an ID or other identifier of a RESTful object.</p></dd>
-       
-       
-       
-        <dt><h2>&lt;NAME&gt;</h2></dt>
-        <dd><p>Not an actual endpoint, but the HTTP method to use.</p></dd>
-       
-       
-       
-        <dt><h2>NAME/?</h2></dt>
-        <dd><p>Dynamically evaluated endpoint; no further information can be determined without request-specific details.</p></dd>
-       
-       
-       
-        <dt><h2>*</h2></dt>
-        <dd><p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p></dd>
-       
-       
-       
-        <dt><h2>...</h2></dt>
-        <dd><p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p></dd>
-       
-     </dl>
-    
-   
-  
- </body>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+<title>Contents of &quot;/&quot;</title>
+<meta content="Contents of &quot;/&quot;" name="title" />
+<meta content="pyramid-describe/0.1.18 [format=html]" name="generator" />
+<meta content="http://localhost/" name="location" />
+<meta content="A4" name="pdfkit-page-size" />
+<meta content="Portrait" name="pdfkit-orientation" />
+<meta content="10mm" name="pdfkit-margin-top" />
+<meta content="10mm" name="pdfkit-margin-right" />
+<meta content="10mm" name="pdfkit-margin-bottom" />
+<meta content="10mm" name="pdfkit-margin-left" />
+<style type="text/css">
+
+body {
+  padding: 2em;
+}
+
+#section-endpoints > h1 {
+  margin-top: 0;
+}
+
+.section > * {
+  margin-left: 30px;
+}
+
+.section > h1,
+.section > h2,
+.section > h3,
+.section > h4,
+.section > h5,
+.section > h6 {
+  margin-left: 0;
+}
+
+#section-legend {
+  font-size: 70%;
+  margin-top: 5em;
+  border-top: 2px solid #e0e0e0;
+}
+
+</style>
+</head>
+<body>
+<div class="document">
+<div class="endpoints section" id="section-endpoints">
+<h1>Contents of &quot;/&quot;</h1>
+<div class="endpoint section" id="endpoint-_2F">
+<h2>/</h2>
+<p>The application root.</p>
+</div>
+<div class="endpoint section" id="endpoint-_2Fcontact">
+<h2>/contact</h2>
+<p>Contact manager.</p>
+<div class="methods section" id="methods-endpoint-_2Fcontact">
+<h3>Methods</h3>
+<div class="method section" id="method-_2Fcontact-POST">
+<h4><strong>POST</strong></h4>
+<p>Creates a new 'contact' object.</p>
+</div>
+</div>
+</div>
+<div class="endpoint section" id="endpoint-_2Fcontact_2FCONTACTID">
+<h2>/contact/{CONTACTID}</h2>
+<p>RESTful access to a specific contact.</p>
+<div class="methods section" id="methods-endpoint-_2Fcontact_2FCONTACTID">
+<h3>Methods</h3>
+<div class="method section" id="method-_2Fcontact_2FCONTACTID-DELETE">
+<h4><strong>DELETE</strong></h4>
+<p>Delete this contact.</p>
+</div>
+<div class="method section" id="method-_2Fcontact_2FCONTACTID-GET">
+<h4><strong>GET</strong></h4>
+<p>Get this contact's details.</p>
+</div>
+<div class="method section" id="method-_2Fcontact_2FCONTACTID-PUT">
+<h4><strong>PUT</strong></h4>
+<p>Update this contact's details.</p>
+</div>
+</div>
+</div>
+<div class="endpoint section" id="endpoint-_2Flogin">
+<h2>/login</h2>
+<p>Authenticate against the server.</p>
+</div>
+<div class="endpoint section" id="endpoint-_2Flogout">
+<h2>/logout</h2>
+<p>Remove authentication tokens.</p>
+</div>
+</div>
+<div class="legend section" id="section-legend">
+<h1>Legend</h1>
+<div class="legend-item section" id="legend-item-_7BNAME_7D">
+<h2><cite>{NAME}</cite></h2>
+<p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
+object.</p>
+</div>
+<div class="legend-item section" id="legend-item-_3CNAME_3E">
+<h2><cite>&lt;NAME&gt;</cite></h2>
+<p>Not an actual endpoint, but the HTTP method to use.</p>
+</div>
+<div class="legend-item section" id="legend-item-NAME_2F_3F">
+<h2><cite>NAME/?</cite></h2>
+<p>Dynamically evaluated endpoint; no further information can be determined
+without request-specific details.</p>
+</div>
+<div class="legend-item section" id="legend-item-_2A">
+<h2><cite>*</cite></h2>
+<p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.</p>
+</div>
+<div class="legend-item section" id="legend-item-_2E_2E_2E">
+<h2><cite>...</cite></h2>
+<p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.</p>
+</div>
+</div>
+</div>
+</body>
 </html>
