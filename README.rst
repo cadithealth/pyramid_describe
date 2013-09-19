@@ -289,7 +289,6 @@ that the first one controls the prefix set on the others):
   `Options`_ section for a list of all supported options.
 
 
-
 Options
 =======
 
@@ -355,9 +354,10 @@ Options
   object (enhanced in some way), or a new object to replace it.
 
   For HTML, the filters are provided the result of calling
-  :func:`docutils.core.publish_parts` during the transformation of rST
-  to HTML. The "parts" that are then downstream-relevant are, in
-  order:
+  `docutils.core.publish_parts
+  <http://docutils.sourceforge.net/docs/api/publisher.html#publish-parts-details>`_
+  during the transformation of rST to HTML. The following "parts" are
+  then joined to form the downstream content, in order:
 
   * head_prefix
   * head
