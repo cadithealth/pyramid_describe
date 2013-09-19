@@ -29,7 +29,7 @@ class Entry(adict):
     The "decorated" version of `path`.
 
   ipath : str
-    The python implementation resolver path, if it can be determined. 
+    The python implementation resolver path, if it can be determined.
 
   itype : { 'class', 'instance', 'method', 'function', 'unknown' }
     The python implementation type, if it can be determined.
@@ -84,6 +84,63 @@ class Entry(adict):
     an instantiated method, and is dynamically instantiated when
     handling a request.
 
+  :Extension Attributes:
+
+  The following attributes are *recognized*, but not produced, by the
+  pyramid-describe routines. That means that custom filters can
+  populate them with relevant data, and the system will then take
+  advantage of them. They cannot be *produced* by pyramid-describe, as
+  they either require application-specific knowledge to determine or
+  provide intrinsically custom information or decoration.
+
+  classes : list(str)
+    A list of classes that this entry will be decorated with using the
+    reStructuredText ``class`` directive. This is especially useful in
+    the HTML and PDF rendered outputs, where custom stylesheets can
+    then be applied to them.
+
+  params : list(dict)
+
+    A list of objects that represent parameters that this entry
+    accepts. The objects can have the following attributes:
+
+    name : str
+      The name of the parameter.
+
+    type : str
+      The expected type of the parameter.
+
+    optional : bool, optional, default: false
+      Whether or not this parameter is optional.
+
+    default : str, optional
+      The default value for this parameter, if `optional` is true.
+
+    doc : str, optional
+      Parameter-specific documentation.
+
+  returns : list(dict)
+
+    A list of objects that documents the return values that can be
+    expected from this entry. The objects can have the following
+    attributes:
+
+    type : str
+      The return type.
+
+    doc : str, optional
+      Documentation about this return type.
+
+  raises : list(dict)
+
+    A list of objects that specify what exceptions/errors this entry
+    can raise. The objects can have the following attributes:
+
+    type : str
+      The exception/error type.
+
+    doc : str, optional
+      Documentation about this exception/error type.
   '''
 
   @property
