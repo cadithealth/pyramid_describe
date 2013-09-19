@@ -175,26 +175,26 @@ that the first one controls the prefix set on the others):
 
   The inverse of the `include` option -- see `include` for details.
 
-* ``{PREFIX}.filters`` : list(resolve-spec), default: null
+* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: null
 
   This option specifies a callable (or string in python dot syntax) or
-  list of callables (or strings) that filter and modify the endpoints
-  before they are rendered to the requested format. Each endpoint that
-  is selected for inclusion for rendering is first passed through each
-  filter and replaced by the return value from the call. This is done
-  for each filter in turn. If any filter returns ``None``, the endpoint
-  is removed from the selection list.
+  list of thereof that filter and modify the entries before they are
+  rendered to the requested format. Each entry that is selected for
+  inclusion for rendering is first passed through each filter and
+  replaced by the return value from the call. This is done for each
+  filter consecutively. If any filter returns ``None``, the entry is
+  removed from the selection list.
 
   These filters are intended to allow two primary features:
 
-  * Access control: a filter can inspect the endpoint and the
-    requesting user and determine if the endpoint should be made
-    visible. If not, it should return ``None``.
+  * Access control: a filter can inspect the entry and the requesting
+    user and determine if the entry should be made visible. If not, it
+    should return ``None``.
 
-  * Custom documentation parsing: a filter can parse the endpoints'
-    `doc` attribute (which gets auto-populated with the endpoint's
-    python documentation string), and extract other information such
-    as expected parameters, return values, and exceptions thrown.
+  * Custom documentation parsing: a filter can parse the entry's `doc`
+    attribute (which gets auto-populated with the entry's python
+    documentation string), and extract other information such as
+    expected parameters, return values, and exceptions thrown.
     Typically, this is done with something like numpydoc_.
 
   Filters are passed two parameters: an `entry` object (see
@@ -203,6 +203,10 @@ that the first one controls the prefix set on the others):
   including a reference to the current `request`.
 
   TODO: add documentation about `entry` and `options`.
+
+  Note that there is a *separate* `filters` option that is used to
+  filter the entire output document, which is format-specific. See
+  the formatting options for details.
 
 * ``{PREFIX}.formats`` : list(str), default: ['html', 'txt', 'pdf', 'rst', 'json', 'yaml', 'wadl', 'xml']
 
@@ -312,6 +316,12 @@ Options
 * ``maxDocColumn`` : int, default: null
 * ``minDocLength`` : int, default: 20
 
+* ``cssEmbed`` : bool, default: true
+* ``cssPath`` : { asset-spec, resolve-spec, list({ asset-spec, resolve-spec }) }, default: 'pyramid_describe:template/rst2html.css'
+
+* ``rstMax`` : bool, default: false
+* ``rstPdfkit`` : bool, default: true
+
 * ``stubFormat`` : str, default: '{{{}}}'
 * ``dynamicFormat`` : str, default: '{}/?'
 * ``restFormat`` : str, default: '<{}>'
@@ -330,6 +340,41 @@ Options
   Sets the list of known HTTP methods. This is used during inspection
   to determine whether a given exposed method on a RestController can
   be accessed via an HTTP method.
+
+* ``filters`` : list(resolve-spec), default: null
+
+  Unlike the top-level `entries.filters` setting which filters
+  individual entries as they get selected for rendering, the
+  format-specific `filters` option is called on the entire data object
+  before final rendering, and is very format-specific in what is made
+  available.
+
+  For the structured-data formats (JSON, YAML, XML, and WADL), the
+  filters are provided the data object created by
+  Describer.structure_render. Each filter is expected to return that
+  object (enhanced in some way), or a new object to replace it.
+
+  For HTML, the filters are provided the result of calling
+  :func:`docutils.core.publish_parts` during the transformation of rST
+  to HTML. The "parts" that are then downstream-relevant are, in
+  order:
+
+  * head_prefix
+  * head
+  * stylesheet
+  * body_prefix
+  * body_pre_docinfo
+  * docinfo
+  * body
+  * body_suffix
+
+  For PDF, rendering is accomplished from entries to rST to HTML to
+  PDF. Therefore, the filtering occurs during the rST to HTML
+  transformation.
+
+  TODO: add documentation about `data` and `options`.
+
+* ``encoding`` : str, default: 'UTF-8'
 
 .. _pyramid-controllers: https://pypi.python.org/pypi/pyramid_controllers
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt

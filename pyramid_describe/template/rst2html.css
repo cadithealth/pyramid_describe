@@ -1,0 +1,26 @@
+body {
+  padding: 2em;
+}
+
+#section-endpoints > h1 {
+  margin-top: 0;
+}
+
+.section > * {
+  margin-left: 30px;
+}
+
+.section > h1,
+.section > h2,
+.section > h3,
+.section > h4,
+.section > h5,
+.section > h6 {
+  margin-left: 0;
+}
+
+#section-legend {
+  font-size: 70%;
+  margin-top: 5em;
+  border-top: 2px solid #e0e0e0;
+}

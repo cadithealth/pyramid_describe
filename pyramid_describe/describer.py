@@ -10,7 +10,7 @@ import re, logging, inspect, binascii, types, json, six, collections
 from six.moves import urllib
 import xml.etree.ElementTree as ET
 from pyramid.interfaces import IMultiView
-from pyramid.settings import asbool, aslist, truthy
+from pyramid.settings import asbool, truthy
 from pyramid.renderers import render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
@@ -21,7 +21,8 @@ except ImportError:
   yaml = None
 
 from .entry import Entry
-from .util import adict, isstr, resolve, pick, reparse
+from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters
+from . import rst
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -230,6 +231,8 @@ class Describer(object):
     ('showOutline',    True),
     ('pageGrayscale',  False),
     ('rstMax',         False),
+    ('rstPdfkit',      True),
+    ('cssEmbed',       True),
     )
 
   int_options = (
@@ -241,6 +244,7 @@ class Describer(object):
 
   list_options = (
     ('restVerbs',      HTTP_METHODS),
+    ('filters',        None),
     )
 
   str_options = (
@@ -254,16 +258,21 @@ class Describer(object):
     ('pageMarginRight',  '10mm'),
     ('pageMarginBottom', '10mm'),
     ('pageMarginLeft',   '10mm'),
+    ('cssPath',          'pyramid_describe:template/rst2html.css'),
+    ('encoding',         'UTF-8'),
     )
+
+  # TODO: support per-format system defaults...
+  # todo: then, change cssPath to be html-only.
 
   #----------------------------------------------------------------------------
   def __init__(self, settings=None, default=None, override=None):
     self.settings  = adict(settings or dict())
     self.include   = [reparse(expr) if isstr(expr) else expr
-                      for expr in aslist(self.settings.include or '')]
+                      for expr in tolist(self.settings.include or '')]
     self.exclude   = [reparse(expr) if isstr(expr) else expr
-                      for expr in aslist(self.settings.exclude or '')]
-    self.formats   = aslist(self.settings.formats or '') or FORMATS
+                      for expr in tolist(self.settings.exclude or '')]
+    self.formats   = tolist(self.settings.formats or '') or FORMATS
     self.defformat = self.settings.get('format.default', self.formats[0])
     self.options   = extract(self.settings, 'format.default')
     self.options.update(default or dict())
@@ -272,16 +281,16 @@ class Describer(object):
     for format in self.formats:
       setattr(self, 'options_' + format, extract(self.settings, 'format.' + format + '.default'))
       setattr(self, 'override_' + format, extract(self.settings, 'format.' + format + '.override'))
-    self.filters   = []
-    if self.settings.filters:
+    self.efilters   = self.settings.get('entries.filters', [])
+    if self.efilters:
       try:
-        self.filters = aslist(self.settings.filters)
+        self.efilters = tolist(self.efilters)
       except TypeError:
         try:
-          self.filters = [filt for filt in self.settings.filters]
+          self.efilters = [filt for filt in self.efilters]
         except TypeError:
-          self.filters = [self.settings.filters]
-      self.filters = [resolve(e) for e in self.filters]
+          self.efilters = [self.efilters]
+      self.efilters = [resolve(e) for e in self.efilters]
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
@@ -331,28 +340,18 @@ class Describer(object):
         ret[name] = default
     # convert the list options
     for name, default in self.list_options:
-      ret[name] = aslist(options.get(name, default))
+      ret[name] = tolist(options.get(name, default))
     # copy the string options
     for name, default in self.str_options:
       ret[name] = options.get(name, default)
     ret.format     = format
     ret.dispatcher = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs  = set([meth2action(e) for e in ret.restVerbs])
-    ret.filters    = self.filters
+    ret.efilters   = self.efilters
     ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
     ret.context    = context
     ret.idEncoder  = self._encodeIdComponent
     return ret
-
-  #----------------------------------------------------------------------------
-  def _filter(self, options, entry):
-    if not entry:
-      return None
-    for efilter in options.filters:
-      entry = efilter(entry, options)
-      if not entry:
-        break
-    return entry
 
   #----------------------------------------------------------------------------
   def get_endpoints(self, options):
@@ -383,8 +382,10 @@ class Describer(object):
 
     for entry in self._walkEntries(options, None):
       if entry.methods:
-        entry.methods = filter(None, [self._filter(options, e) for e in entry.methods])
-      entry = self._filter(options, entry)
+        entry.methods = filter(None, [
+          runFilters(options.efilters, e, options)
+          for e in entry.methods])
+      entry = runFilters(options.efilters, entry, options)
       if entry:
         yield entry
 
@@ -530,25 +531,9 @@ class Describer(object):
     or a new one, in which case it will take the place of the passed-in
     entry.
 
-    Although the default :class:`Describer` does not extract or
-    otherwise determine any attributes beyond the above specified
-    attributes, there are additional attributes that some of the
-    formatters will take advantage of. For this reason, sub-classes
-    are encouraged to further decorate the entries where possible with
-    the following attributes:
-
-    * `params`: a list of objects that represent parameters that this
-      entry accepts. The objects can have the following attributes:
-      `name`, `type`, `optional`, `default`, and `doc`.
-
-    * `returns`: a list of objects that documents the return values
-      that can be expected from this method. The objects can have the
-      following attributes: `type` and `doc`.
-
-    * `raises`: a list of objects that specify what exceptions this
-      method can raise. The objects can have the following attributes:
-      `type` and `doc`.
-
+    See :class:`pyramid_describer.entry.Entry` for details on built-in
+    provided attributes, and the list of attributes that are recognized
+    but cannot be provided by the default implementation.
     '''
 
     # determine the implementation path & type to this entry
@@ -699,6 +684,11 @@ class Describer(object):
               endpoint[k] = v
         except AttributeError: pass
       app['endpoints'].append(endpoint)
+
+    
+
+    # filter...
+
     return root
 
   #----------------------------------------------------------------------------
@@ -727,9 +717,15 @@ class Describer(object):
       or 'pyramid_describe:template/' + data.format + '.mako'
     return render(tpl, dict(data=data), request=data.options.context.request)
 
-  render_html = template_render
   render_rst  = template_render
   render_txt  = template_render
+
+  #----------------------------------------------------------------------------
+  def render_html(self, data):
+    text = self.render(data, format='rst', override_options=dict({
+      'rstMax': True,
+      }))
+    return rst.rst2html(data, text)
 
   #----------------------------------------------------------------------------
   def render_pdf(self, data):

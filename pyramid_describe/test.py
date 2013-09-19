@@ -74,7 +74,7 @@ class SimpleRoot(Controller):
   swi  = SubIndex()
   unknown = Unknown
 
-def restEnhancer(entry, options):
+def docsEnhancer(entry, options):
   if entry and entry.path == '/swi':
     entry.classes = ['sub-with-index']
     return entry
@@ -381,7 +381,7 @@ class DescribeTest(TestHelper):
       settings={'exclude': '|^/desc/.*|',
                 'format.default': 'rst',
                 'format.default.showImpl': 'true',
-                'filters': restEnhancer})
+                'entries.filters': docsEnhancer})
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 ===============
 Contents of "/"
@@ -549,7 +549,7 @@ request-specific details.
                 'format.default': 'rst',
                 'format.default.title': 'Application API Details',
                 'format.default.showImpl': 'true',
-                'filters': restEnhancer})
+                'entries.filters': docsEnhancer})
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 =======================
 Application API Details
@@ -613,7 +613,7 @@ request-specific details.
                 'format.default': 'rst',
                 'format.default.showImpl': 'true',
                 'format.default.rstMax': 'true',
-                'filters': restEnhancer})
+                'entries.filters': docsEnhancer})
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 .. title:: Contents of "/"
 
@@ -720,6 +720,8 @@ Parameters
 **size**
 \'''\'''\''
 
+.. class:: spec
+
 int, optional, default 4096
 
 The anticipated maximum size
@@ -729,6 +731,8 @@ The anticipated maximum size
 
 **text**
 \'''\'''\''
+
+.. class:: spec
 
 str
 
@@ -990,131 +994,198 @@ The index method
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'filters': restEnhancer, 'exclude': '|^/desc/.*$|'})
+      settings={
+        'exclude': '|^/desc/.*$|',
+        'entries.filters': docsEnhancer,
+        'format.default.title': 'Application API',
+        'format.default.rstMax': 'true',
+        })
     res = self.send(root, '/desc')
     chk = '''\
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
  <head>
-  <title>Contents of "/"</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-  <meta name="generator" content="pyramid-describe/{version}"/>
-  <meta name="pdfkit-page-size" content="A4"/>
-  <meta name="pdfkit-orientation" content="Portrait"/>
-  <meta name="pdfkit-margin-top" content="10mm"/>
-  <meta name="pdfkit-margin-right" content="10mm"/>
-  <meta name="pdfkit-margin-bottom" content="10mm"/>
-  <meta name="pdfkit-margin-left" content="10mm"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+  <title>Application API</title>
+  <meta content="Application API" name="title" />
+  <meta content="pyramid-describe/{version} [format=html]" name="generator" />
+  <meta content="http://localhost/desc" name="location" />
+  <meta content="A4" name="pdfkit-page-size" />
+  <meta content="Portrait" name="pdfkit-orientation" />
+  <meta content="10mm" name="pdfkit-margin-top" />
+  <meta content="10mm" name="pdfkit-margin-right" />
+  <meta content="10mm" name="pdfkit-margin-bottom" />
+  <meta content="10mm" name="pdfkit-margin-left" />
   <style type="text/css">
-    
-     dl{{margin-left: 2em;}}
-     dt{{font-weight: bold;}}
-     dd{{margin:0.5em 0 0.75em 2em;}}
-     .params .param-spec{{font-style: italic;}}
-    
-   </style>
+
+body {{
+  padding: 2em;
+}}
+
+#section-endpoints > h1 {{
+  margin-top: 0;
+}}
+
+.section > * {{
+  margin-left: 30px;
+}}
+
+.section > h1,
+.section > h2,
+.section > h3,
+.section > h4,
+.section > h5,
+.section > h6 {{
+  margin-left: 0;
+}}
+
+#section-legend {{
+  font-size: 70%;
+  margin-top: 5em;
+  border-top: 2px solid #e0e0e0;
+}}
+
+</style>
  </head>
- <body id="" class="">
-  <h1>Contents of "/"</h1>
-  <dl class="endpoints">
-   <dt id="endpoint-_2F"><h2>/</h2></dt>
-   <dd>
-    <p>The default root.</p>
-   </dd>
-   <dt id="endpoint-_2Fdesc"><h2>/desc</h2></dt>
-   <dd>
-    <p>URL tree description.</p>
-   </dd>
-   <dt id="endpoint-_2Frest"><h2>/rest</h2></dt>
-   <dd>
-    <p>A RESTful entry.</p>
-    <h3>Supported Methods</h3>
-    <dl class="methods">
-     <dt id="method-_2Frest-DELETE"><h4>DELETE</h4></dt>
-     <dd>
-      <p>Deletes the entry.</p>
-     </dd>
-     <dt id="method-_2Frest-GET"><h4>GET</h4></dt>
-     <dd>
-      <p>Gets the current value.</p>
-     </dd>
-     <dt id="method-_2Frest-POST"><h4>POST</h4></dt>
-     <dd>
-      <p>Creates a new entry.</p>
-      <h5>Parameters</h5>
-      <dl class="params">
-       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-size"><h6>size</h6></dt>
-       <dd>
-        <div class="param-spec">int, optional, default 4096</div>
-        <p>The anticipated maximum size</p>
-       </dd>
-       <dt id="param-_2Frest_3F_5Fmethod_3DPOST-text"><h6>text</h6></dt>
-       <dd>
-        <div class="param-spec">str</div>
-        <p>The text content for the posting</p>
-       </dd>
-      </dl>
-      <h5>Returns</h5>
-      <dl class="returns">
-       <dt id="return-_2Frest_3F_5Fmethod_3DPOST-0-str"><h6>str</h6></dt>
-       <dd>
-        <p>The ID of the new posting</p>
-       </dd>
-      </dl>
-      <h5>Raises</h5>
-      <dl class="raises">
-       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized"><h6>HTTPUnauthorized</h6></dt>
-       <dd>
-        <p>Authenticated access is required</p>
-       </dd>
-       <dt id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden"><h6>HTTPForbidden</h6></dt>
-       <dd>
-        <p>The user does not have posting privileges</p>
-       </dd>
-      </dl>
-     </dd>
-     <dt id="method-_2Frest-PUT"><h4>PUT</h4></dt>
-     <dd>
-      <p>Updates the value.</p>
-     </dd>
-    </dl>
-   </dd>
-   <dt id="endpoint-_2Fsub_2Fmethod"><h2>/sub/method</h2></dt>
-   <dd>
-    <p>This method outputs a JSON list.</p>
-   </dd>
-   <dt id="endpoint-_2Fswi"><h2>/swi</h2></dt>
-   <dd>
-    <p>A sub-controller providing only an index.</p>
-   </dd>
-   <dt id="endpoint-_2Funknown"><h2>/unknown/?</h2></dt>
-   <dd>
-    <p>A dynamically generated sub-controller.</p>
-   </dd>
-  </dl>
-  <h1 class="legend">Legend</h1>
-  <dl class="legend">
-   <dt><h2>{{NAME}}</h2></dt>
-   <dd>
-    <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful object.</p>
-   </dd>
-   <dt><h2>&lt;NAME&gt;</h2></dt>
-   <dd>
-    <p>Not an actual endpoint, but the HTTP method to use.</p>
-   </dd>
-   <dt><h2>NAME/?</h2></dt>
-   <dd>
-    <p>Dynamically evaluated endpoint; no further information can be determined without request-specific details.</p>
-   </dd>
-   <dt><h2>*</h2></dt>
-   <dd>
-    <p>This endpoint is a `default` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p>
-   </dd>
-   <dt><h2>...</h2></dt>
-   <dd>
-    <p>This endpoint is a `lookup` handler, and is therefore free to interpret path arguments dynamically; no further information can be determined without request-specific details.</p>
-   </dd>
-  </dl>
+ <body>
+  <div class="document">
+   <div class="endpoints section" id="section-endpoints">
+    <h1>Application API</h1>
+    <div class="endpoint section" id="endpoint-_2F">
+     <h2>/</h2>
+     <p>The default root.</p>
+    </div>
+    <div class="endpoint section" id="endpoint-_2Fdesc">
+     <h2>/desc</h2>
+     <p>URL tree description.</p>
+    </div>
+    <div class="endpoint section" id="endpoint-_2Frest">
+     <h2>/rest</h2>
+     <p>A RESTful entry.</p>
+     <div class="methods section" id="methods-endpoint-_2Frest">
+      <h3>Methods</h3>
+      <div class="method section" id="method-_2Frest-DELETE">
+       <h4>
+        <strong>DELETE</strong>
+       </h4>
+       <p>Deletes the entry.</p>
+      </div>
+      <div class="method section" id="method-_2Frest-GET">
+       <h4>
+        <strong>GET</strong>
+       </h4>
+       <p>Gets the current value.</p>
+      </div>
+      <div class="method post-is-not-put fake-docs-here section" id="method-_2Frest-POST">
+       <h4>
+        <strong>POST</strong>
+       </h4>
+       <p>Creates a new entry.</p>
+       <div class="params section" id="params-method-_2Frest-POST">
+        <h5>Parameters</h5>
+        <div class="param section" id="param-method-_2Frest-POST-size">
+         <h6>
+          <strong>size</strong>
+         </h6>
+         <p class="spec">int, optional, default 4096</p>
+         <p>The anticipated maximum size</p>
+        </div>
+        <div class="param section" id="param-method-_2Frest-POST-text">
+         <h6>
+          <strong>text</strong>
+         </h6>
+         <p class="spec">str</p>
+         <p>The text content for the posting</p>
+        </div>
+       </div>
+       <div class="returns section" id="returns-method-_2Frest-POST">
+        <h5>Returns</h5>
+        <div class="return section" id="return-method-_2Frest-POST-str">
+         <h6>
+          <strong>str</strong>
+         </h6>
+         <p>The ID of the new posting</p>
+        </div>
+       </div>
+       <div class="raises section" id="raises-method-_2Frest-POST">
+        <h5>Raises</h5>
+        <div class="raise section" id="raise-method-_2Frest-POST-HTTPUnauthorized">
+         <h6>
+          <strong>HTTPUnauthorized</strong>
+         </h6>
+         <p>Authenticated access is required</p>
+        </div>
+        <div class="raise section" id="raise-method-_2Frest-POST-HTTPForbidden">
+         <h6>
+          <strong>HTTPForbidden</strong>
+         </h6>
+         <p>The user does not have posting privileges</p>
+        </div>
+       </div>
+      </div>
+      <div class="method section" id="method-_2Frest-PUT">
+       <h4>
+        <strong>PUT</strong>
+       </h4>
+       <p>Updates the value.</p>
+      </div>
+     </div>
+    </div>
+    <div class="endpoint section" id="endpoint-_2Fsub_2Fmethod">
+     <h2>/sub/method</h2>
+     <p>This method outputs a JSON list.</p>
+    </div>
+    <div class="endpoint sub-with-index section" id="endpoint-_2Fswi">
+     <h2>/swi</h2>
+     <p>A sub-controller providing only an index.</p>
+    </div>
+    <div class="endpoint section" id="endpoint-_2Funknown">
+     <h2>/unknown/?</h2>
+     <p>A dynamically generated sub-controller.</p>
+    </div>
+   </div>
+   <div class="legend section" id="section-legend">
+    <h1>Legend</h1>
+    <div class="legend-item section" id="legend-item-_7BNAME_7D">
+     <h2>
+      <cite>{{NAME}}</cite>
+     </h2>
+     <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
+object.</p>
+    </div>
+    <div class="legend-item section" id="legend-item-_3CNAME_3E">
+     <h2>
+      <cite>&lt;NAME&gt;</cite>
+     </h2>
+     <p>Not an actual endpoint, but the HTTP method to use.</p>
+    </div>
+    <div class="legend-item section" id="legend-item-NAME_2F_3F">
+     <h2>
+      <cite>NAME/?</cite>
+     </h2>
+     <p>Dynamically evaluated endpoint; no further information can be determined
+without request-specific details.</p>
+    </div>
+    <div class="legend-item section" id="legend-item-_2A">
+     <h2>
+      <cite>*</cite>
+     </h2>
+     <p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.</p>
+    </div>
+    <div class="legend-item section" id="legend-item-_2E_2E_2E">
+     <h2>
+      <cite>...</cite>
+     </h2>
+     <p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
+arguments dynamically; no further information can be determined without
+request-specific details.</p>
+    </div>
+   </div>
+  </div>
  </body>
 </html>
 '''.format(version=getVersion('pyramid_describe'))
@@ -1124,44 +1195,39 @@ The index method
     self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
-  def test_format_html_renderer(self):
-    'The Describer honors the format-specific `renderer` option'
+  def test_format_html_filters(self):
+    'The Describer honors the format-specific `filters` option'
+    def remove_body(parts, options):
+      parts['body'] = ''
+      return parts
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
-        'filters': restEnhancer,
+        'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*$|',
         'format.default.showLegend': 'false',
-        'format.html.renderer': 'pyramid_describe:template/list-html.mako',
+        'format.default.rstPdfkit': 'false',
+        'format.html.default.cssPath': None,
+        'format.html.default.filters': remove_body,
         })
     res = self.send(root, '/desc')
     chk = '''\
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
  <head>
-  <title>Contents of "/"</title>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-  <meta name="generator" content="pyramid-describe/{version}"/>
-  <style type="text/css">
-  </style>
-  <script language="text/javascript" src="/jquery.min.js"></script>
-  <script language="text/javascript">
-   $(document).ready(function(){{
-     alert('hello, world!');
-   }});
-  </script>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+  <title>Contents of &quot;/&quot;</title>
+  <meta content="Contents of &quot;/&quot;" name="title" />
+  <meta content="pyramid-describe/{version} [format=html]" name="generator" />
+  <meta content="http://localhost/desc" name="location" />
  </head>
- <body id="" class="">
-  <h1>Contents of "/"</h1>
-  <ul class="endpoints">
-   <li>/</li>
-   <li>/desc</li>
-   <li>/rest</li>
-   <li>/sub/method</li>
-   <li>/swi</li>
-   <li>/unknown/?</li>
-  </ul>
+ <body>
+  <div class="endpoints document" id="section-endpoints">
+   <h1 class="title">Contents of &quot;/&quot;</h1>
+  </div>
  </body>
 </html>
 '''.format(version=getVersion('pyramid_describe'))
@@ -1176,7 +1242,9 @@ The index method
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'json', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+       settings={'format.default': 'json',
+                 'entries.filters': docsEnhancer,
+                 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''{
   "application": {
@@ -1292,7 +1360,9 @@ The index method
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+       settings={'format.default': 'yaml',
+                 'entries.filters': docsEnhancer,
+                 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -1395,7 +1465,9 @@ application:
     root = Root()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'yaml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+       settings={'format.default': 'yaml',
+                 'entries.filters': docsEnhancer,
+                 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -1422,7 +1494,9 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
-      settings={'format.default': 'xml', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+      settings={'format.default': 'xml',
+                'entries.filters': docsEnhancer,
+                'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1479,7 +1553,9 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'wadl', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+       settings={'format.default': 'wadl',
+                 'entries.filters': docsEnhancer,
+                 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     chk = '''
 <application
@@ -1567,7 +1643,9 @@ application:
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
-       settings={'format.default': 'pdf', 'filters': restEnhancer, 'exclude': '|^/desc/.*|'})
+       settings={'format.default': 'pdf',
+                 'entries.filters': docsEnhancer,
+                 'exclude': '|^/desc/.*|'})
     res = self.send(root, '/desc')
     # todo: check content-type...
     self.assertTrue(res.body.startswith('%PDF-1.4\n'))
