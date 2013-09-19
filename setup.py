@@ -34,6 +34,7 @@ dependencies = [
   'pyramid-controllers  >= 0.3.18',
   'pyramid-iniherit     >= 0.1.7',
   'six                  >= 1.4.1',
+  'docutils             >= 0.10',
   ]
 
 extras_dependencies = {
