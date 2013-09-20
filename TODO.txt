@@ -30,3 +30,6 @@
 
 - add an option to 'force-create' controllers that are referenced by
   class instead of by instance?
+
+- remove the inconsistency between filters receiving `data`
+  vs. `options`...
