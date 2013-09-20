@@ -28,6 +28,12 @@ and maintained.
   kind of pyramid application, currently it only supports
   pyramid-controllers_ based dispatch.
 
+.. note::
+
+  Currently, pyramid-describe can only inspect the first Controller
+  it finds -- this will eventually be fixed to correctly implement
+  the `inspect` option.
+
 
 TL;DR
 =====
@@ -52,6 +58,8 @@ Command-line example:
   │       └── <PUT>       # Update this contact's details.
   ├── login               # Authenticate against the server.
   └── logout              # Remove authentication tokens.
+
+.. TODO - figure out how to serve these assets with the correct Content-Type...
 
 Examples of the above application in all other formats with built-in
 support are available at:
@@ -120,18 +128,56 @@ that the first one controls the prefix set on the others):
     http://localhost:8080/describe/application.json
     http://localhost:8080/describe?format=json
 
-* ``{PREFIX}.filename`` : str, default: application
+* ``{PREFIX}.fullname`` : str, default: 'application'
 
-  Sets the filename base component. Typically, this is set to the
-  application's name and should probably include the application
-  version.
+  Sets the filename (excluding the extension) that the output will be
+  served at using the DescribeController. The extension provided by
+  the request will determine which format to serve, and must be listed
+  in the `formats` option. If the format is not listed, a 404 is
+  returned. Typically, this is set to the application's name and
+  might also include the application version.
 
-* ``{PREFIX}.redirect`` : str, default: null
+* ``{PREFIX}.basename`` : str, default: null
 
-  Similar to the `filename` option, this option sets a filename base
-  component that will redirect (with a 302) to the current `filename`.
-  This allows there to be a persistent known location that can be used
-  if the `filename` option is dynamic or changes with revisions.
+  Similar to the `fullname` option, this option sets a filename base
+  component that will either redirect to the current `fullname` or
+  actually serve the content based on the `base-redirect` option. This
+  allows there to be a persistent known location that can be used if
+  the `filename` option is dynamic or changes with revisions.
+
+* ``{PREFIX}.index-redirect`` : { bool, int, str }, default: true
+
+  Controls what happens when a request comes to the index location
+  of the DescribeController, i.e. the value of the `attach` option.
+  The following values are accepted:
+
+  falsy
+
+    Responds with the actual content using the default format.
+
+  truthy
+
+    Redirects with a 302 to the `basename` if set, otherwise to
+    the `fullname`, using the default format's extension.
+
+  int
+
+    Same as if truthy, but uses the specified response code (e.g.
+    301 instead of 302).
+
+  str
+
+    Responds with a redirect using the specified string as the
+    ``Location`` header. By default, issues a 302 unless the string is
+    prefixed with the code and a space, e.g. ``301
+    /path/to/filename``. If the location is not absolute, it will be
+    evaluated relative to the current URL.
+
+* ``{PREFIX}.base-redirect`` : { bool, int, str }, default: true
+
+  If `basename` is set, then this controls how the response is handled
+  -- see the `index-redirect` option for accepted values, with the
+  adjustment that the default redirect location is the `fullname`.
 
 * ``{PREFIX}.inspect`` : str, default: /
 
