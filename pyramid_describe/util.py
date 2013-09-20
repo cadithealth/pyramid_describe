@@ -6,12 +6,15 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-from pyramid.settings import aslist
+from pyramid.settings import aslist, asbool, truthy
 from pyramid_controllers.util import adict, pick
 
 from .isstr import isstr
 from .resolve import resolve
 from .reparse import reparse
+
+falsy = frozenset(('f', 'false', 'n', 'no', 'off', '0'))
+booly = frozenset(list(truthy) + list(falsy)) 
 
 #------------------------------------------------------------------------------
 def runFilters(filters, target, *args, **kw):
@@ -24,6 +27,12 @@ def runFilters(filters, target, *args, **kw):
     if not target:
       break
   return target
+
+#------------------------------------------------------------------------------
+def tobool(val, force=True):
+  if force or val.lower() in booly:
+    return asbool(val)
+  raise ValueError('invalid literal for tobool(): %r', (val,))
 
 #------------------------------------------------------------------------------
 def tolist(obj):
