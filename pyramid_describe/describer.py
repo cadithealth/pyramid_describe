@@ -595,12 +595,11 @@ class Describer(object):
       entry.id = 'endpoint-{}'.format(self._encodeIdComponent(entry.path))
 
     # get the docstring
-    if options.showInfo:
-      entry.doc = inspect.getdoc(entry.view)
-      if options.pruneIndex and entry.isController:
-        meta = options.dispatcher.getMeta(entry.view)
-        for handler in meta.index or []:
-          entry.doc = inspect.getdoc(handler) or entry.doc
+    entry.doc = inspect.getdoc(entry.view)
+    if options.pruneIndex and entry.isController:
+      meta = options.dispatcher.getMeta(entry.view)
+      for handler in meta.index or []:
+        entry.doc = inspect.getdoc(handler) or entry.doc
 
     return entry
 
