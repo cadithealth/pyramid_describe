@@ -351,6 +351,7 @@ class Describer(object):
     ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
     ret.context    = context
     ret.idEncoder  = self._encodeIdComponent
+    ret.filters    = [resolve(e) for e in ( ret.filters or [] )]
     return ret
 
   #----------------------------------------------------------------------------
