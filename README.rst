@@ -34,6 +34,12 @@ and maintained.
   it finds -- this will eventually be fixed to correctly implement
   the `inspect` option.
 
+Project Info
+============
+
+* Project Page: https://github.com/cadithealth/pyramid_describe
+* Bug Tracking: https://github.com/cadithealth/pyramid_describe/issues
+
 
 TL;DR
 =====
@@ -73,14 +79,160 @@ support are available at:
 and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
 
-Configuration
-=============
+Installation
+============
 
-When pyramid-describe is integrated via inclusion
-(e.g. ``config.include('pyramid_describe')``), the module will
-auto-create DescribeController's as defined in the application's
-settings. The following configurations can be specified there (note
-that the first one controls the prefix set on the others):
+Install with the usual python mechanism, e.g. here with ``pip``:
+
+.. code-block:: bash
+
+  $ pip install pyramid-describe
+
+
+Usage
+=====
+
+There are three mechanisms to use pyramid-describe: via standard
+pyramid inclusion which will add routes to the current application, by
+explicitly embedding a ``pyramid_describe.DescribeController``
+instance, or by directly calling the ``pyramid_describe.Describer``
+object methods.
+
+
+Pyramid Inclusion
+=================
+
+Pyramid-describe can be added via standard pyramid inclusion, either
+in the INI file or directly in your `main` function. For example:
+
+.. code-block:: python
+
+  def main(global_config, **settings):
+    # ...
+    config.include('pyramid_describe')
+
+When using pyramid inclusion, pyramid-describe expects to find
+configuration options in the application settings. See the `Options`_
+section for a listed of all supported options, with a short example
+here:
+
+.. code-block:: ini
+
+  [app:main]
+
+  describe.attach                        = /doc
+  describe.formats                       = html json pdf
+  describe.format.default.title          = My Application
+  describe.format.html.default.cssPath   = myapp:static/doc.css
+  describe.entries.filters               = myapp.describe.entry_docify
+
+Note that multiple describers, each with different configurations, can
+be added via pyramid inclusion by using the `describe.prefixes`
+option.
+
+
+DescribeController
+==================
+
+Pyramid-describe can also be added to your application by embedding a
+DescribeController object. The DescribeController constructor takes
+the following parameters:
+
+`view`:
+
+  An instance of ``pyramid.interfaces.IView``, which is the view that
+  should be inspected and reflected.
+
+`root`:
+
+  The root path to the specified URL, so that host-relative URLs can
+  be generated to the views found.
+
+`settings`:
+
+  A dictionary of all the options to apply to this describer. Note that
+  in this case, the options should not have any prefix.
+
+Example:
+
+.. code-block:: python
+
+  from pyramid_describe import DescribeController
+
+  def main(global_config, **settings):
+    # ...
+    config.include('pyramid_controllers')
+
+    settings = {
+        'formats'                       : ['html', 'json', 'pdf'],
+        'format.default.title'          : 'My Application',
+        'format.html.default.cssPath'   : 'myapp:static/doc.css',
+        'entries.filters'               : 'myapp.describe.entry_docify',
+      }
+
+    config.add_controller('MyAppDescriber', '/doc', DescribeController(settings))
+
+
+Describer
+=========
+
+Pyramid-describe can also be added to your application by directly
+calling the Describer's functionality. This is an even lower-level
+approach than, but still quite similar to, embedding the
+`DescribeController`_; the constructor takes the same `settings`
+parameter as the DescribeController, and then a call to the `describe`
+method actually generates the output. The `describe` method takes as
+parameters a `context` and a `format`, and returns a dictionary with
+the following attributes:
+
+.. TODO - document `context` and `format`...
+
+`content_type`:
+
+  The MIME content-type associated with the rendered output.
+
+`charset`:
+
+  The character set that the output is encoded in.
+
+`content`:
+
+  The actual rendering output.
+
+Example:
+
+.. code-block:: python
+
+  from pyramid_describe import Describer
+
+  def my_describer(request):
+
+    settings = {
+        'formats'                       : ['html', 'json', 'pdf'],
+        'format.default.title'          : 'My Application',
+        'format.html.default.cssPath'   : 'myapp:static/doc.css',
+        'entries.filters'               : 'myapp.describe.entry_docify',
+      }
+
+    describer = Describer(settings=settings)
+    context   = dict(request=request)
+    result    = describer.describe(context=context, format='pdf')
+
+    request.response.content_type = result['content_type']
+    request.response.charset      = result['charset']
+    request.response.body         = result['content']
+
+    return request.response
+
+
+Options
+=======
+
+The configuration of pyramid-describe is done by setting any of the
+following options. Note that if specified in the application settings
+(i.e. the INI file), then they must be prefixed with (by default)
+``describe.``. Otherwise, when passing a dictionary of settings to the
+constructors, the prefix is left off. The following options exist:
 
 * ``describe.prefixes`` : list(str), default: 'describe'
 
@@ -311,32 +463,32 @@ that the first one controls the prefix set on the others):
 
   Set a default rendering option for all formats. Note that this can
   be overridden by request parameters (see the `format.request`
-  option). See the `Options`_ section for a list of all supported
-  options.
+  option). See the `Format Options`_ section for a list of all
+  supported options.
 
 * ``{PREFIX}.format.override.{OPTION}``
 
   Set a rendering option for all formats that overrides any request
-  parameters. See the `Options`_ section for a list of all supported
-  options.
+  parameters. See the `Format Options`_ section for a list of all
+  supported options.
 
 * ``{PREFIX}.format.{FORMAT}.default.{OPTION}``
 
   Set a default rendering option for the specified format, which
   overrides any default value set for all formats. Note that this can
   be overridden by request parameters (see the `format.request`
-  option). See the `Options`_ section for a list of all supported
-  options.
+  option). See the `Format Options`_ section for a list of all
+  supported options.
 
 * ``{PREFIX}.format.{FORMAT}.override.{OPTION}``
 
   Set a rendering option for the specified format that overrides any
   request parameters and any generic format override options. See the
-  `Options`_ section for a list of all supported options.
+  `Format Options`_ section for a list of all supported options.
 
 
-Options
-=======
+Format Options
+==============
 
 * ``showUnderscore`` : bool, default: false
 * ``showUndoc`` : bool, default: true
