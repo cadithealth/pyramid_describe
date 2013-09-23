@@ -90,5 +90,5 @@ request-specific details.
 
 .. meta::
   :title: Contents of "/"
-  :generator: pyramid-describe/0.1.18 [format=rst]
+  :generator: pyramid-describe/0.1.23 [format=rst]
   :location: http://localhost/
