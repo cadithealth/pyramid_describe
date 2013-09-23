@@ -441,6 +441,9 @@ constructors, the prefix is left off. The following options exist:
   Specifying a renderer pre-empts all other rendering fallback
   mechanisms.
 
+  See `Format Cascading`_ for details on how the `{FORMAT}` string is
+  evaluated.
+
 * ``{PREFIX}.format.request`` : { bool, list(str) }, default: false
 
   Specifies which options, if any, can be controlled by request
@@ -458,6 +461,9 @@ constructors, the prefix is left off. The following options exist:
   The per-format version of `format.request`. Note that this
   completely overrides the `format.request` setting for the
   given format, it does not extend it.
+
+  See `Format Cascading`_ for details on how the `{FORMAT}` string is
+  evaluated.
 
 * ``{PREFIX}.format.default.{OPTION}``
 
@@ -480,11 +486,56 @@ constructors, the prefix is left off. The following options exist:
   option). See the `Format Options`_ section for a list of all
   supported options.
 
+  See `Format Cascading`_ for details on how the `{FORMAT}` string is
+  evaluated.
+
 * ``{PREFIX}.format.{FORMAT}.override.{OPTION}``
 
   Set a rendering option for the specified format that overrides any
   request parameters and any generic format override options. See the
   `Format Options`_ section for a list of all supported options.
+
+  See `Format Cascading`_ for details on how the `{FORMAT}` string is
+  evaluated.
+
+
+Format Cascading
+================
+
+Some formats are rendered based on the output of other renderers. For
+example, PDF's are generated from HTML, and HTML is in turn generated
+from reStructuredText. Because options may need to be different for
+the the various formats based on the ultimate output, there is the
+ability to specify "cascaded" formats by joining them with a "+" in
+the settings. The cascaded options can either be explicitly overriden
+or explicitly reverted to their system-wide default by setting them to
+the special value ``pyramid_describe:DEFAULT``.
+
+Therefore, options for format "rst" apply to the reStructuredText
+rendering, regardless of ultimate output. Options for format
+"rst+html" apply to reStructuredText rendering, but only if the next
+renderer is "html". These can be chained to any depth, for example
+options for format "rst+html+pdf" apply to reStructuredText rendering,
+but only if the next renderer is "html" followed by "pdf". Note that
+one cannot skip a renderer in a rendering pipeline, e.g. in the
+previous case, you cannot short-hand the format as "rst+pdf".
+
+For example, the following configuration will apply a different CSS to
+the HTML rendering based on whether the output is going to be HTML,
+PDF, or SWF:
+
+.. code-block:: ini
+
+   # the following sets the `cssPath` option for *any* HTML rendering:
+   describe.format.html.default.cssPath = mypkg:style/rst2html.css
+
+   # this now overrides the `cssPath` option during rendering of the
+   # HTML, but only in the context of a PDF rendering:
+   describe.format.html+pdf.default.cssPath = mypkg:style/rst2pdf.css
+
+   # when generating SWFs, this tells the describer to revert to using
+   # the system default value of `cssPath`:
+   describe.format.html+swf.default.cssPath = pyramid_describe:DEFAULT
 
 
 Format Options

@@ -27,6 +27,7 @@ from .i18n import _
 
 log = logging.getLogger(__name__)
 
+DEFAULT = 'pyramid_describe:DEFAULT'
 FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
 
 try:
@@ -274,13 +275,27 @@ class Describer(object):
                       for expr in tolist(self.settings.exclude or '')]
     self.formats   = tolist(self.settings.formats or '') or FORMATS
     self.defformat = self.settings.get('format.default', self.formats[0])
-    self.options   = extract(self.settings, 'format.default')
-    self.options.update(default or dict())
-    self.override  = extract(self.settings, 'format.override')
-    self.override.update(override or dict())
-    for format in self.formats:
-      setattr(self, 'options_' + format, extract(self.settings, 'format.' + format + '.default'))
-      setattr(self, 'override_' + format, extract(self.settings, 'format.' + format + '.override'))
+    # load the renderer, default and override options
+    self.renderers = dict()
+    self.options   = dict()
+    self.override  = dict()
+    self.options[None] = extract(self.settings, 'format.default')
+    self.options[None].update(default or dict())
+    self.override[None] = extract(self.settings, 'format.override')
+    self.override[None].update(override or dict())
+    # note that all format settings must be extracted since there may
+    # be cascaded formatting calls (instead of just restricting it to
+    # the set in `self.formats`...
+    fmts = set([k.split('.', 2)[1] for k in self.settings.keys()
+                if k.startswith('format.') and '.' in k[8:]])
+    fmts -= set(['default', 'override'])
+    for fmt in fmts:
+      rndr = self.settings.get('format.' + fmt + '.renderer', None)
+      if rndr:
+        self.renderers[fmt] = rndr
+      self.options[fmt]  = extract(self.settings, 'format.' + fmt + '.default')
+      self.override[fmt] = extract(self.settings, 'format.' + fmt + '.override')
+    # and now load the entry filters
     self.efilters   = self.settings.get('entries.filters', [])
     if self.efilters:
       try:
@@ -301,7 +316,7 @@ class Describer(object):
       context.request = adict()
     if format is None:
       format = self.defformat
-    options = self._getOptions(context, format).update(view=view, root=root)
+    options = self._getOptions(context, [format]).update(view=view, root=root)
     # todo: filter legend to only those that are actually used?...
     #       => can't do that here since some renderers artificially
     #          re-inject other types.
@@ -321,14 +336,20 @@ class Describer(object):
     return adict(content=self.render(data), content_type=ctdef[0], charset=ctdef[1])
 
   #----------------------------------------------------------------------------
-  def _getOptions(self, context, format):
-    options = adict(self.options)
-    options.update(getattr(self, 'options_' + format, None))
+  def _getOptions(self, context, formatstack):
+    format = formatstack[0]
+    options = adict(self.options[None])
+    for idx in range(len(formatstack)):
+      options.update(self.options.get('+'.join(formatstack[:1 + idx])))
     if callable(context.get_options):
       options.update(context.get_options(format))
-    options.update(self.override)
-    options.update(getattr(self, 'override_' + format, None))
+    options.update(self.override[None])
+    for idx in range(len(formatstack)):
+      options.update(self.override.get('+'.join(formatstack[:1 + idx])))
     ret = adict()
+    # remove all 'revert-to-default' options
+    for key in [key for key, value in options.items() if value == DEFAULT]:
+      del options[key]
     # convert the boolean options
     for name, default in self.bool_options:
       ret[name] = asbool(options.get(name, default))
@@ -344,14 +365,19 @@ class Describer(object):
     # copy the string options
     for name, default in self.str_options:
       ret[name] = options.get(name, default)
-    ret.format     = format
-    ret.dispatcher = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
-    ret.restVerbs  = set([meth2action(e) for e in ret.restVerbs])
-    ret.efilters   = self.efilters
-    ret.renderer   = self.settings.get('format.' + format + '.renderer', None)
-    ret.context    = context
-    ret.idEncoder  = self._encodeIdComponent
-    ret.filters    = [resolve(e) for e in ( ret.filters or [] )]
+    ret.format      = format
+    ret.formatstack = formatstack
+    ret.dispatcher  = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
+    ret.restVerbs   = set([meth2action(e) for e in ret.restVerbs])
+    ret.efilters    = self.efilters
+    ret.renderer    = None
+    for idx in range(len(formatstack)):
+      fmt = '+'.join(formatstack[:1 + idx])
+      if fmt in self.renderers:
+        ret.renderer = self.renderers[fmt]
+    ret.context     = context
+    ret.idEncoder   = self._encodeIdComponent
+    ret.filters     = [resolve(e) for e in ( ret.filters or [] )]
     return ret
 
   #----------------------------------------------------------------------------
@@ -699,12 +725,12 @@ class Describer(object):
       #       it is changed. ugh.
       keep_fmt = data.format
       keep_opt = data.options
+      formatstack = [format] + data.options.formatstack
       data.format = format
-      data.options = self._getOptions(keep_opt.context, format).update(
+      data.options = self._getOptions(keep_opt.context, formatstack).update(
         view=keep_opt.view, root=keep_opt.root)
       if override_options:
         data.options.update(override_options)
-      data.options.formatstack = ( keep_opt.formatstack or [] ) + [ keep_fmt ]
       ret = self.render(data)
       data.format  = keep_fmt
       data.options = keep_opt

@@ -106,6 +106,10 @@ settings_minRst = {
   }
 
 #------------------------------------------------------------------------------
+def pdfclean(pdf):
+  return re.sub('^/CreationDate \(D:[0-9\'-]+\)$', '', pdf, flags=re.MULTILINE)
+
+#------------------------------------------------------------------------------
 class DescribeTest(TestHelper):
 
   maxDiff = None
@@ -1819,6 +1823,61 @@ application:
     # todo: check content-type...
     self.assertTrue(res.body.startswith('%PDF-1.4\n'))
     # todo: anything else that can be checked?... can pdfkit perhaps parse PDFs?...
+
+  #----------------------------------------------------------------------------
+  def test_renderer_override(self):
+    'Format-specific rendering options can be overriden and cascaded through format chains'
+    try:
+      import pdfkit
+    except ImportError:
+      sys.stderr.write('*** PDFKIT LIBRARY NOT PRESENT - SKIPPING *** ')
+      return
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={
+         'format.default': 'pdf',
+         'index-redirect': 'false',
+         'entries.filters': docsEnhancer,
+         'exclude': '|^/desc/.*|',
+         })
+    pdf_orig = pdfclean(self.send(root, '/desc').body)
+    # confirm that pdf renderings stay consistent
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={
+         'format.default': 'pdf',
+         'index-redirect': 'false',
+         'entries.filters': docsEnhancer,
+         'exclude': '|^/desc/.*|',
+         })
+    self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
+    # confirm that fiddling with html css rendering changes pdf
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={
+         'format.default': 'pdf',
+         'index-redirect': 'false',
+         'entries.filters': docsEnhancer,
+         'exclude': '|^/desc/.*|',
+         'format.html.default.cssPath': None,
+         })
+    self.assertNotEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
+    # confirm that fiddling with html css cascading can be controlled
+    root = SimpleRoot()
+    root.desc = DescribeController(
+       root, doc='URL tree description.',
+       settings={
+         'format.default': 'pdf',
+         'index-redirect': 'false',
+         'entries.filters': docsEnhancer,
+         'exclude': '|^/desc/.*|',
+         'format.html.default.cssPath': None,
+         'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
+         })
+    self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
 
 #------------------------------------------------------------------------------
 # end of $Id$
