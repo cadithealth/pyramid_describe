@@ -118,11 +118,13 @@ class DescribeController(Controller):
   #----------------------------------------------------------------------------
   # NOTE: this method is OPTIONALLY exposed dynamically at run-time in __init__
   def handle_base(self, request):
-    if not self.bredir or not asbool(request.params.get('redirect', 'true')):
-      return self.describe(request, None)
     ext = os.path.splitext(request.path)[1]
+    if ext.startswith('.'):
+      ext = ext[1:]
+    if not self.bredir or not asbool(request.params.get('redirect', 'true')):
+      return self.describe(request, ext)
     url = urllib.parse.urljoin(
-      request.path_url, self.bredir[1] or ( self.fullname + ext ) )
+      request.path_url, self.bredir[1] or ( self.fullname + '.' + ext ) )
     if not self.bredir[1] and request.query_string:
       url += '?' + request.query_string
     request.response.status_code = self.bredir[0]
