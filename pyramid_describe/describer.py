@@ -662,7 +662,7 @@ class Describer(object):
         endpoint['decoratedPath'] = entry.dpath
       if includeEntry:
         endpoint['entry'] = entry
-      if entry.doc:
+      if data.options.showInfo and entry.doc:
         endpoint['doc'] = entry.doc
       if data.options.showMethods and entry.methods:
         endpoint['methods'] = []
