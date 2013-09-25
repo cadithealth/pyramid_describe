@@ -530,176 +530,176 @@ class DescribeTest(TestHelper):
         'entries.filters': docsEnhancer,
         })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
-***************
+===============
 Contents of "/"
-***************
+===============
 
-=================
+-----------------
 |title_encode_2f|
-=================
+-----------------
 .. |title_encode_2f| replace:: /
 
 Handler: pyramid_describe.test.SimpleRoot() [instance]
 
 The default root.
 
-=====
+-----
 /desc
-=====
+-----
 
 Handler: pyramid_describe.controller.DescribeController() [instance]
 
 URL tree description.
 
-=====
+-----
 /rest
-=====
+-----
 
 Handler: pyramid_describe.test.Rest() [instance]
 
 A RESTful entry.
 
--------
+```````
 Methods
--------
+```````
 
-``````````
+::::::::::
 **DELETE**
-``````````
+::::::::::
 
 Handler: pyramid_describe.test.Rest().delete [method]
 
 Deletes the entry.
 
-```````
+:::::::
 **GET**
-```````
+:::::::
 
 Handler: pyramid_describe.test.Rest().get [method]
 
 Gets the current value.
 
-````````
+::::::::
 **POST**
-````````
+::::::::
 
 Handler: pyramid_describe.test.Rest().post [method]
 
 Creates a new entry.
 
-::::::::::
+''\'''\'''\''
 Parameters
-::::::::::
+''\'''\'''\''
 
-\'''\'''\''
+""""""""
 **size**
-\'''\'''\''
+""""""""
 
 int, optional, default 4096
 
 The anticipated maximum size
 
-\'''\'''\''
+""""""""
 **text**
-\'''\'''\''
+""""""""
 
 str
 
 The text content for the posting
 
-:::::::
+''\'''\''
 Returns
-:::::::
+''\'''\''
 
-\'''\'''\'
+"""""""
 **str**
-\'''\'''\'
+"""""""
 
 The ID of the new posting
 
-::::::
+''\'''\'
 Raises
-::::::
+''\'''\'
 
-\'''\'''\'''\'''\'''\'''\''
+""""""""""""""""""""
 **HTTPUnauthorized**
-\'''\'''\'''\'''\'''\'''\''
+""""""""""""""""""""
 
 Authenticated access is required
 
-\'''\'''\'''\'''\'''\''
+"""""""""""""""""
 **HTTPForbidden**
-\'''\'''\'''\'''\'''\''
+"""""""""""""""""
 
 The user does not have posting privileges
 
-```````
+:::::::
 **PUT**
-```````
+:::::::
 
 Handler: pyramid_describe.test.Rest().put [method]
 
 Updates the value.
 
-===========
+-----------
 /sub/method
-===========
+-----------
 
 Handler: pyramid_describe.test.Sub().method [method]
 
 This method outputs a JSON list.
 
-====
+----
 /swi
-====
+----
 
 Handler: pyramid_describe.test.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
-==========
+----------
 /unknown/?
-==========
+----------
 
 Handler: pyramid_describe.test.Unknown [class]
 
 A dynamically generated sub-controller.
 
-******
+======
 Legend
-******
+======
 
-========
+--------
 `{{NAME}}`
-========
+--------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
 
-========
+--------
 `<NAME>`
-========
+--------
 
 Not an actual endpoint, but the HTTP method to use.
 
-========
+--------
 `NAME/?`
-========
+--------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
 
-===
+---
 `*`
-===
+---
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.
 
-=====
+-----
 `...`
-=====
+-----
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -726,53 +726,53 @@ request-specific details.
         'entries.filters': docsEnhancer,
         })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
-***********************
+=======================
 Application API Details
-***********************
+=======================
 
-====
+----
 /swi
-====
+----
 
 Handler: pyramid_describe.test.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
-******
+======
 Legend
-******
+======
 
-========
+--------
 `{{NAME}}`
-========
+--------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
 
-========
+--------
 `<NAME>`
-========
+--------
 
 Not an actual endpoint, but the HTTP method to use.
 
-========
+--------
 `NAME/?`
-========
+--------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
 
-===
+---
 `*`
-===
+---
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.
 
-=====
+-----
 `...`
-=====
+-----
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -804,16 +804,16 @@ request-specific details.
 .. class:: endpoints
 .. id:: section-endpoints
 
-***************
+===============
 Contents of "/"
-***************
+===============
 
 .. class:: endpoint
 .. id:: endpoint-_2F
 
-=================
+-----------------
 |title_encode_2f|
-=================
+-----------------
 .. |title_encode_2f| replace:: /
 
 .. class:: handler
@@ -826,9 +826,9 @@ The default root.
 .. class:: endpoint
 .. id:: endpoint-_2Fdesc
 
-=====
+-----
 /desc
-=====
+-----
 
 .. class:: handler
 .. id:: handler-endpoint-_2Fdesc
@@ -840,9 +840,9 @@ URL tree description.
 .. class:: endpoint
 .. id:: endpoint-_2Frest
 
-=====
+-----
 /rest
-=====
+-----
 
 .. class:: handler
 .. id:: handler-endpoint-_2Frest
@@ -854,16 +854,16 @@ A RESTful entry.
 .. class:: methods
 .. id:: methods-endpoint-_2Frest
 
--------
+```````
 Methods
--------
+```````
 
 .. class:: method
 .. id:: method-_2Frest-DELETE
 
-``````````
+::::::::::
 **DELETE**
-``````````
+::::::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-DELETE
@@ -875,9 +875,9 @@ Deletes the entry.
 .. class:: method
 .. id:: method-_2Frest-GET
 
-```````
+:::::::
 **GET**
-```````
+:::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-GET
@@ -889,9 +889,9 @@ Gets the current value.
 .. class:: method post-is-not-put fake-docs-here
 .. id:: method-_2Frest-POST
 
-````````
+::::::::
 **POST**
-````````
+::::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-POST
@@ -903,16 +903,16 @@ Creates a new entry.
 .. class:: params
 .. id:: params-method-_2Frest-POST
 
-::::::::::
+''\'''\'''\''
 Parameters
-::::::::::
+''\'''\'''\''
 
 .. class:: param
 .. id:: param-method-_2Frest-POST-size
 
-\'''\'''\''
+""""""""
 **size**
-\'''\'''\''
+""""""""
 
 .. class:: spec
 
@@ -923,9 +923,9 @@ The anticipated maximum size
 .. class:: param
 .. id:: param-method-_2Frest-POST-text
 
-\'''\'''\''
+""""""""
 **text**
-\'''\'''\''
+""""""""
 
 .. class:: spec
 
@@ -936,50 +936,50 @@ The text content for the posting
 .. class:: returns
 .. id:: returns-method-_2Frest-POST
 
-:::::::
+''\'''\''
 Returns
-:::::::
+''\'''\''
 
 .. class:: return
 .. id:: return-method-_2Frest-POST-str
 
-\'''\'''\'
+"""""""
 **str**
-\'''\'''\'
+"""""""
 
 The ID of the new posting
 
 .. class:: raises
 .. id:: raises-method-_2Frest-POST
 
-::::::
+''\'''\'
 Raises
-::::::
+''\'''\'
 
 .. class:: raise
 .. id:: raise-method-_2Frest-POST-HTTPUnauthorized
 
-\'''\'''\'''\'''\'''\'''\''
+""""""""""""""""""""
 **HTTPUnauthorized**
-\'''\'''\'''\'''\'''\'''\''
+""""""""""""""""""""
 
 Authenticated access is required
 
 .. class:: raise
 .. id:: raise-method-_2Frest-POST-HTTPForbidden
 
-\'''\'''\'''\'''\'''\''
+"""""""""""""""""
 **HTTPForbidden**
-\'''\'''\'''\'''\'''\''
+"""""""""""""""""
 
 The user does not have posting privileges
 
 .. class:: method
 .. id:: method-_2Frest-PUT
 
-```````
+:::::::
 **PUT**
-```````
+:::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-PUT
@@ -991,9 +991,9 @@ Updates the value.
 .. class:: endpoint
 .. id:: endpoint-_2Fsub_2Fmethod
 
-===========
+-----------
 /sub/method
-===========
+-----------
 
 .. class:: handler
 .. id:: handler-endpoint-_2Fsub_2Fmethod
@@ -1005,9 +1005,9 @@ This method outputs a JSON list.
 .. class:: endpoint sub-with-index
 .. id:: endpoint-_2Fswi
 
-====
+----
 /swi
-====
+----
 
 .. class:: handler
 .. id:: handler-endpoint-_2Fswi
@@ -1019,9 +1019,9 @@ A sub-controller providing only an index.
 .. class:: endpoint
 .. id:: endpoint-_2Funknown
 
-==========
+----------
 /unknown/?
-==========
+----------
 
 .. class:: handler
 .. id:: handler-endpoint-_2Funknown
@@ -1033,16 +1033,16 @@ A dynamically generated sub-controller.
 .. class:: legend
 .. id:: section-legend
 
-******
+======
 Legend
-******
+======
 
 .. class:: legend-item
 .. id:: legend-item-_7BNAME_7D
 
-========
+--------
 `{{NAME}}`
-========
+--------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
@@ -1050,18 +1050,18 @@ object.
 .. class:: legend-item
 .. id:: legend-item-_3CNAME_3E
 
-========
+--------
 `<NAME>`
-========
+--------
 
 Not an actual endpoint, but the HTTP method to use.
 
 .. class:: legend-item
 .. id:: legend-item-NAME_2F_3F
 
-========
+--------
 `NAME/?`
-========
+--------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
@@ -1069,9 +1069,9 @@ without request-specific details.
 .. class:: legend-item
 .. id:: legend-item-_2A
 
-===
+---
 `*`
-===
+---
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -1080,9 +1080,9 @@ request-specific details.
 .. class:: legend-item
 .. id:: legend-item-_2E_2E_2E
 
-=====
+-----
 `...`
-=====
+-----
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -1124,35 +1124,35 @@ request-specific details.
       root, doc='URL tree description.',
       settings=settings_minRst)
     self.assertResponse(self.send(root, '/desc'), 200, '''\
-***************
+===============
 Contents of "/"
-***************
+===============
 
-=====
+-----
 /rest
-=====
+-----
 
 RESTful access, with sub-component
 
--------
+```````
 Methods
--------
+```````
 
-```````
+:::::::
 **PUT**
-```````
+:::::::
 
 Modify this object
 
-============
+------------
 /rest/access
-============
+------------
 
 Access control
 
-============
+------------
 /rest/groups
-============
+------------
 
 Return the groups for this object
 ''')
@@ -1192,13 +1192,13 @@ Return the groups for this object
       root, doc='URL tree description.',
        settings=settings_minRst)
     self.assertResponse(self.send(root, '/desc'), 200, '''\
-***************
+===============
 Contents of "/"
-***************
+===============
 
-=================
+-----------------
 |title_encode_2f|
-=================
+-----------------
 .. |title_encode_2f| replace:: /
 
 The index method

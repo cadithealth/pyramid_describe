@@ -2,7 +2,7 @@
 ## TODO: i18n...
 <%!
 import textwrap, re
-SECTIONCHARS = '''*=-`:'"~^_+#<>'''
+SECTIONCHARS = '''=-`:'"~^_*+#<>'''
 from pyramid_controllers.util import getVersion
 def section_title(title, level=0):
   # ensure that the title is not a repetition of a non-alphanumeric
