@@ -1,16 +1,25 @@
 # -*- coding: utf-8 -*-
+## TODO: i18n...
 <%!
-import textwrap
-SECTIONCHARS = '''=-`:'"~^_*+#<>'''
+import textwrap, re
+SECTIONCHARS = '''*=-`:'"~^_+#<>'''
 from pyramid_controllers.util import getVersion
 def section_title(title, level=0):
-  top = level == 0
-  level = SECTIONCHARS[level if top else level - 1]
-  ret = level * len(title)
+  # ensure that the title is not a repetition of a non-alphanumeric
+  # character, as that gets misinterpreted...
+  replace = None
+  if len(title) > 0 and title == title[0] * len(title[0]) and re.match('[^a-zA-Z0-9]', title[0]):
+    replace = '.. |title_encode_' + title.encode('hex') + '| replace:: ' + title
+    title = '|title_encode_' + title.encode('hex') + '|'
+  top   = level < len(SECTIONCHARS)
+  level = SECTIONCHARS[level % len(SECTIONCHARS)]
+  ret   = level * max(3, len(title))
   if top:
     ret = [ret, title, ret]
   else:
     ret = [title, ret]
+  if replace is not None:
+    ret.append(replace)
   return '\n'.join(ret)
 %>\
 ##-----------------------------------------------------------------------------
@@ -208,19 +217,19 @@ ${node.doc|n}
 
 ${section_title('Legend', 0)|n}
 % for item, desc in data.legend:
-${self.rst_legend_item(item, desc)|n}\
+${self.rst_legend_item(item, desc, 1)|n}\
 % endfor
 % endif
 </%def>\
 ##-----------------------------------------------------------------------------
-<%def name="rst_legend_item(item, desc)">\
+<%def name="rst_legend_item(item, desc, level)">\
 % if data.options.rstMax:
 
 .. class:: legend-item
 .. id:: legend-item-${data.options.idEncoder(item)|n}
 % endif
 
-${section_title('`' + item + '`', 1)|n}
+${section_title('`' + item + '`', level)|n}
 
 ${textwrap.fill(desc, width=data.options.width)|n}
 </%def>\
