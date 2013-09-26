@@ -534,10 +534,9 @@ class DescribeTest(TestHelper):
 Contents of "/"
 ===============
 
------------------
-|title_encode_2f|
------------------
-.. |title_encode_2f| replace:: /
+--
+\/
+--
 
 Handler: pyramid_describe.test.SimpleRoot() [instance]
 
@@ -811,10 +810,9 @@ Contents of "/"
 .. class:: endpoint
 .. id:: endpoint-_2F
 
------------------
-|title_encode_2f|
------------------
-.. |title_encode_2f| replace:: /
+--
+\/
+--
 
 .. class:: handler
 .. id:: handler-endpoint-_2F
@@ -1196,10 +1194,9 @@ Return the groups for this object
 Contents of "/"
 ===============
 
------------------
-|title_encode_2f|
------------------
-.. |title_encode_2f| replace:: /
+--
+\/
+--
 
 The index method
 ''')

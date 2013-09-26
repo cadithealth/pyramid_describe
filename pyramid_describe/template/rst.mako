@@ -7,19 +7,15 @@ from pyramid_controllers.util import getVersion
 def section_title(title, level=0):
   # ensure that the title is not a repetition of a non-alphanumeric
   # character, as that gets misinterpreted...
-  replace = None
   if len(title) > 0 and title == title[0] * len(title[0]) and re.match('[^a-zA-Z0-9]', title[0]):
-    replace = '.. |title_encode_' + title.encode('hex') + '| replace:: ' + title
-    title = '|title_encode_' + title.encode('hex') + '|'
+    title = re.sub('([^a-zA-Z0-9])', '\\\\\\1', title)
   top   = level < len(SECTIONCHARS)
   level = SECTIONCHARS[level % len(SECTIONCHARS)]
-  ret   = level * max(3, len(title))
+  ret   = level * len(title)
   if top:
     ret = [ret, title, ret]
   else:
     ret = [title, ret]
-  if replace is not None:
-    ret.append(replace)
   return '\n'.join(ret)
 %>\
 ##-----------------------------------------------------------------------------
