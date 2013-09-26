@@ -26,7 +26,7 @@ def sectionTitle(title, level=None, char=None, top=None):
     char = SECTIONCHARS[level % len(SECTIONCHARS)]
   if top is None and level is not None:
     top = level < len(SECTIONCHARS)
-  if len(title) > 0 and title == title[0] * len(title[0]) and re.match('[^a-zA-Z0-9]', title[0]):
+  if len(title) > 0 and title == title[0] * len(title) and re.match('[^a-zA-Z0-9]', title[0]):
     title = re.sub('([^a-zA-Z0-9])', '\\\\\\1', title)
   ret = char * len(title)
   if top:
