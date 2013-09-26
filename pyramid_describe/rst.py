@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys
+import sys, re
 from pyramid.settings import aslist
 from pyramid.path import AssetResolver, DottedNameResolver
 from docutils import nodes, core
@@ -15,6 +15,25 @@ from docutils.transforms import misc
 from six.moves import urllib
 
 from .util import resolve, runFilters
+
+SECTIONCHARS = '''=-`:'"~^_*+#<>'''
+
+#------------------------------------------------------------------------------
+def sectionTitle(title, level=None, char=None, top=None):
+  if level is None and char is None:
+    level = 0
+  if level is not None:
+    char = SECTIONCHARS[level % len(SECTIONCHARS)]
+    top  = level < len(SECTIONCHARS)
+  if len(title) > 0 and title == title[0] * len(title[0]) and re.match('[^a-zA-Z0-9]', title[0]):
+    title = re.sub('([^a-zA-Z0-9])', '\\\\\\1', title)
+  ret = char * len(title)
+  if top:
+    ret = [ret, title, ret]
+  else:
+    ret = [title, ret]
+  return '\n'.join(ret)
+
 
 #------------------------------------------------------------------------------
 class IdAttribute(misc.Transform):

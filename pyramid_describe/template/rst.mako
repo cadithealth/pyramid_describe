@@ -1,22 +1,9 @@
 # -*- coding: utf-8 -*-
 ## TODO: i18n...
 <%!
-import textwrap, re
-SECTIONCHARS = '''=-`:'"~^_*+#<>'''
+import textwrap
 from pyramid_controllers.util import getVersion
-def section_title(title, level=0):
-  # ensure that the title is not a repetition of a non-alphanumeric
-  # character, as that gets misinterpreted...
-  if len(title) > 0 and title == title[0] * len(title[0]) and re.match('[^a-zA-Z0-9]', title[0]):
-    title = re.sub('([^a-zA-Z0-9])', '\\\\\\1', title)
-  top   = level < len(SECTIONCHARS)
-  level = SECTIONCHARS[level % len(SECTIONCHARS)]
-  ret   = level * len(title)
-  if top:
-    ret = [ret, title, ret]
-  else:
-    ret = [title, ret]
-  return '\n'.join(ret)
+from pyramid_describe.rst import sectionTitle
 %>\
 ##-----------------------------------------------------------------------------
 <%block name="rst_body">\
@@ -42,7 +29,7 @@ Contents of "${data.root|n}"
 </%def>\
 ##-----------------------------------------------------------------------------
 <%def name="rst_title()">\
-${section_title(capture(self.title), 0)|n}
+${sectionTitle(capture(self.title), level=0)|n}
 </%def>\
 ##-----------------------------------------------------------------------------
 <%def name="rst_endpoints()">\
@@ -63,7 +50,7 @@ ${self.rst_endpoint(endpoint, 1)|n}\
 .. id:: ${entry.id|n}
 % endif
 
-${section_title(entry.dpath, level)|n}
+${sectionTitle(entry.dpath, level=level)|n}
 ${self.rst_endpoint_body(entry, level=level + 1)|n}\
 % else:
 
@@ -103,7 +90,7 @@ ${entry.doc|n}
 .. id:: methods-${entry.id|n}
 % endif
 
-${section_title('Methods', level)|n}
+${sectionTitle('Methods', level=level)|n}
 % for meth in entry.methods:
 % if data.options.rstMax:
 
@@ -115,7 +102,7 @@ ${section_title('Methods', level)|n}
 .. id:: ${meth.id|n}
 % endif
 
-${section_title('**' + ( meth.method or meth.name ) + '**', level + 1)|n}
+${sectionTitle('**' + ( meth.method or meth.name ) + '**', level=level + 1)|n}
 ${self.rst_endpoint_body(meth, level + 2)|n}\
 % endfor
 % endif
@@ -129,7 +116,7 @@ ${self.rst_endpoint_body(meth, level + 2)|n}\
 .. id:: params-${entry.id|n}
 % endif
 
-${section_title('Parameters', level)|n}
+${sectionTitle('Parameters', level=level)|n}
 % for node in entry.params:
 <%
 spec = node.type or ''
@@ -144,7 +131,7 @@ if node.default:
 .. id:: param-${entry.id|n}-${data.options.idEncoder(node.name)|n}
 % endif
 
-${section_title('**' + node.name + '**', level + 1)|n}
+${sectionTitle('**' + node.name + '**', level=level + 1)|n}
 % if data.options.rstMax:
 
 .. class:: spec
@@ -165,7 +152,7 @@ ${node.doc|n}
 .. id:: returns-${entry.id|n}
 % endif
 
-${section_title('Returns', level)|n}
+${sectionTitle('Returns', level=level)|n}
 % for node in entry.returns:
 % if data.options.rstMax:
 
@@ -173,7 +160,7 @@ ${section_title('Returns', level)|n}
 .. id:: return-${entry.id|n}-${data.options.idEncoder(node.type)|n}
 % endif
 
-${section_title('**' + node.type + '**', level + 1)|n}
+${sectionTitle('**' + node.type + '**', level=level + 1)|n}
 
 ${node.doc|n}
 % endfor
@@ -188,7 +175,7 @@ ${node.doc|n}
 .. id:: raises-${entry.id|n}
 % endif
 
-${section_title('Raises', level)|n}
+${sectionTitle('Raises', level=level)|n}
 % for node in entry.raises:
 % if data.options.rstMax:
 
@@ -196,7 +183,7 @@ ${section_title('Raises', level)|n}
 .. id:: raise-${entry.id|n}-${data.options.idEncoder(node.type)|n}
 % endif
 
-${section_title('**' + node.type + '**', level + 1)|n}
+${sectionTitle('**' + node.type + '**', level=level + 1)|n}
 
 ${node.doc|n}
 % endfor
@@ -211,7 +198,7 @@ ${node.doc|n}
 .. id:: section-legend
 % endif
 
-${section_title('Legend', 0)|n}
+${sectionTitle('Legend', level=0)|n}
 % for item, desc in data.legend:
 ${self.rst_legend_item(item, desc, 1)|n}\
 % endfor
@@ -225,7 +212,7 @@ ${self.rst_legend_item(item, desc, 1)|n}\
 .. id:: legend-item-${data.options.idEncoder(item)|n}
 % endif
 
-${section_title('`' + item + '`', level)|n}
+${sectionTitle('`' + item + '`', level=level)|n}
 
 ${textwrap.fill(desc, width=data.options.width)|n}
 </%def>\
