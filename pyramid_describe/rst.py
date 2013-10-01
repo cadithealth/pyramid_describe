@@ -28,7 +28,9 @@ def sectionTitle(title, level=None, char=None, top=None):
     top = level < len(SECTIONCHARS)
   if len(title) > 0 and title == title[0] * len(title) and re.match('[^a-zA-Z0-9]', title[0]):
     title = re.sub('([^a-zA-Z0-9])', '\\\\\\1', title)
-  ret = char * len(title)
+  # note setting minimum of 6 under/over chars since ":::" (when title
+  # is "PUT") seems to have problems...
+  ret = char * max(6, len(title))
   if top:
     ret = [ret, title, ret]
   else:
