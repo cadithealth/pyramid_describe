@@ -2,20 +2,23 @@ body {
   padding: 2em;
 }
 
-#section-endpoints > h1 {
+.section {
+  padding-left: 30px;
+}
+
+.section > *:first-child {
+  margin-left: -30px;
+}
+
+.document > .section > h1 {
   margin-top: 0;
 }
 
-.section > * {
-  margin-left: 30px;
+.document > .section {
+  padding-left: 0;
 }
 
-.section > h1,
-.section > h2,
-.section > h3,
-.section > h4,
-.section > h5,
-.section > h6 {
+.document > .section > *:first-child {
   margin-left: 0;
 }
 
