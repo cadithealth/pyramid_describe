@@ -24,6 +24,7 @@ from pyramid_controllers.util import getVersion
 
 from pyramid_describe.util import adict
 from pyramid_describe.controller import DescribeController
+from pyramid_describe.rst import relevelTitles
 
 # make the XML namespace output a bit easier to grok...
 ET.register_namespace('wadl', 'http://research.sun.com/wadl/2006/10')
@@ -534,25 +535,25 @@ class DescribeTest(TestHelper):
 Contents of "/"
 ===============
 
---
+------
 \/
---
+------
 
 Handler: pyramid_describe.test.SimpleRoot() [instance]
 
 The default root.
 
------
+------
 /desc
------
+------
 
 Handler: pyramid_describe.controller.DescribeController() [instance]
 
 URL tree description.
 
------
+------
 /rest
------
+------
 
 Handler: pyramid_describe.test.Rest() [instance]
 
@@ -562,25 +563,25 @@ A RESTful entry.
 Methods
 ```````
 
-::::::::::
-**DELETE**
-::::::::::
+::::::
+DELETE
+::::::
 
 Handler: pyramid_describe.test.Rest().delete [method]
 
 Deletes the entry.
 
-:::::::
-**GET**
-:::::::
+::::::
+GET
+::::::
 
 Handler: pyramid_describe.test.Rest().get [method]
 
 Gets the current value.
 
-::::::::
-**POST**
-::::::::
+::::::
+POST
+::::::
 
 Handler: pyramid_describe.test.Rest().post [method]
 
@@ -590,17 +591,17 @@ Creates a new entry.
 Parameters
 ''\'''\'''\''
 
-""""""""
-**size**
-""""""""
+""""""
+size
+""""""
 
 int, optional, default 4096
 
 The anticipated maximum size
 
-""""""""
-**text**
-""""""""
+""""""
+text
+""""""
 
 str
 
@@ -610,9 +611,9 @@ The text content for the posting
 Returns
 ''\'''\''
 
-"""""""
-**str**
-"""""""
+""""""
+str
+""""""
 
 The ID of the new posting
 
@@ -620,21 +621,21 @@ The ID of the new posting
 Raises
 ''\'''\'
 
-""""""""""""""""""""
-**HTTPUnauthorized**
-""""""""""""""""""""
+""""""""""""""""
+HTTPUnauthorized
+""""""""""""""""
 
 Authenticated access is required
 
-"""""""""""""""""
-**HTTPForbidden**
-"""""""""""""""""
+"""""""""""""
+HTTPForbidden
+"""""""""""""
 
 The user does not have posting privileges
 
-:::::::
-**PUT**
-:::::::
+::::::
+PUT
+::::::
 
 Handler: pyramid_describe.test.Rest().put [method]
 
@@ -648,9 +649,9 @@ Handler: pyramid_describe.test.Sub().method [method]
 
 This method outputs a JSON list.
 
-----
+------
 /swi
-----
+------
 
 Handler: pyramid_describe.test.SubIndex() [instance]
 
@@ -668,37 +669,37 @@ A dynamically generated sub-controller.
 Legend
 ======
 
---------
-`{{NAME}}`
---------
+------
+{{NAME}}
+------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
 
---------
-`<NAME>`
---------
+------
+<NAME>
+------
 
 Not an actual endpoint, but the HTTP method to use.
 
---------
-`NAME/?`
---------
+------
+NAME/?
+------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
 
----
-`*`
----
+------
+\*
+------
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.
 
------
-`...`
------
+------
+\.\.\.
+------
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -729,9 +730,9 @@ request-specific details.
 Application API Details
 =======================
 
-----
+------
 /swi
-----
+------
 
 Handler: pyramid_describe.test.SubIndex() [instance]
 
@@ -741,37 +742,37 @@ A sub-controller providing only an index.
 Legend
 ======
 
---------
-`{{NAME}}`
---------
+------
+{{NAME}}
+------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
 
---------
-`<NAME>`
---------
+------
+<NAME>
+------
 
 Not an actual endpoint, but the HTTP method to use.
 
---------
-`NAME/?`
---------
+------
+NAME/?
+------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
 
----
-`*`
----
+------
+\*
+------
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.
 
------
-`...`
------
+------
+\.\.\.
+------
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -810,9 +811,9 @@ Contents of "/"
 .. class:: endpoint
 .. id:: endpoint-_2F
 
---
+------
 \/
---
+------
 
 .. class:: handler
 .. id:: handler-endpoint-_2F
@@ -824,9 +825,9 @@ The default root.
 .. class:: endpoint
 .. id:: endpoint-_2Fdesc
 
------
+------
 /desc
------
+------
 
 .. class:: handler
 .. id:: handler-endpoint-_2Fdesc
@@ -838,9 +839,9 @@ URL tree description.
 .. class:: endpoint
 .. id:: endpoint-_2Frest
 
------
+------
 /rest
------
+------
 
 .. class:: handler
 .. id:: handler-endpoint-_2Frest
@@ -859,9 +860,9 @@ Methods
 .. class:: method
 .. id:: method-_2Frest-DELETE
 
-::::::::::
-**DELETE**
-::::::::::
+::::::
+DELETE
+::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-DELETE
@@ -873,9 +874,9 @@ Deletes the entry.
 .. class:: method
 .. id:: method-_2Frest-GET
 
-:::::::
-**GET**
-:::::::
+::::::
+GET
+::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-GET
@@ -887,9 +888,9 @@ Gets the current value.
 .. class:: method post-is-not-put fake-docs-here
 .. id:: method-_2Frest-POST
 
-::::::::
-**POST**
-::::::::
+::::::
+POST
+::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-POST
@@ -908,9 +909,9 @@ Parameters
 .. class:: param
 .. id:: param-method-_2Frest-POST-size
 
-""""""""
-**size**
-""""""""
+""""""
+size
+""""""
 
 .. class:: spec
 
@@ -921,9 +922,9 @@ The anticipated maximum size
 .. class:: param
 .. id:: param-method-_2Frest-POST-text
 
-""""""""
-**text**
-""""""""
+""""""
+text
+""""""
 
 .. class:: spec
 
@@ -941,9 +942,9 @@ Returns
 .. class:: return
 .. id:: return-method-_2Frest-POST-str
 
-"""""""
-**str**
-"""""""
+""""""
+str
+""""""
 
 The ID of the new posting
 
@@ -957,27 +958,27 @@ Raises
 .. class:: raise
 .. id:: raise-method-_2Frest-POST-HTTPUnauthorized
 
-""""""""""""""""""""
-**HTTPUnauthorized**
-""""""""""""""""""""
+""""""""""""""""
+HTTPUnauthorized
+""""""""""""""""
 
 Authenticated access is required
 
 .. class:: raise
 .. id:: raise-method-_2Frest-POST-HTTPForbidden
 
-"""""""""""""""""
-**HTTPForbidden**
-"""""""""""""""""
+"""""""""""""
+HTTPForbidden
+"""""""""""""
 
 The user does not have posting privileges
 
 .. class:: method
 .. id:: method-_2Frest-PUT
 
-:::::::
-**PUT**
-:::::::
+::::::
+PUT
+::::::
 
 .. class:: handler
 .. id:: handler-method-_2Frest-PUT
@@ -1003,9 +1004,9 @@ This method outputs a JSON list.
 .. class:: endpoint sub-with-index
 .. id:: endpoint-_2Fswi
 
-----
+------
 /swi
-----
+------
 
 .. class:: handler
 .. id:: handler-endpoint-_2Fswi
@@ -1038,9 +1039,9 @@ Legend
 .. class:: legend-item
 .. id:: legend-item-_7BNAME_7D
 
---------
-`{{NAME}}`
---------
+------
+{{NAME}}
+------
 
 Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
@@ -1048,18 +1049,18 @@ object.
 .. class:: legend-item
 .. id:: legend-item-_3CNAME_3E
 
---------
-`<NAME>`
---------
+------
+<NAME>
+------
 
 Not an actual endpoint, but the HTTP method to use.
 
 .. class:: legend-item
 .. id:: legend-item-NAME_2F_3F
 
---------
-`NAME/?`
---------
+------
+NAME/?
+------
 
 Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
@@ -1067,9 +1068,9 @@ without request-specific details.
 .. class:: legend-item
 .. id:: legend-item-_2A
 
----
-`*`
----
+------
+\*
+------
 
 This endpoint is a `default` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -1078,9 +1079,9 @@ request-specific details.
 .. class:: legend-item
 .. id:: legend-item-_2E_2E_2E
 
------
-`...`
------
+------
+\.\.\.
+------
 
 This endpoint is a `lookup` handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -1126,9 +1127,9 @@ request-specific details.
 Contents of "/"
 ===============
 
------
+------
 /rest
------
+------
 
 RESTful access, with sub-component
 
@@ -1136,9 +1137,9 @@ RESTful access, with sub-component
 Methods
 ```````
 
-:::::::
-**PUT**
-:::::::
+::::::
+PUT
+::::::
 
 Modify this object
 
@@ -1194,9 +1195,9 @@ Return the groups for this object
 Contents of "/"
 ===============
 
---
+------
 \/
---
+------
 
 The index method
 ''')
@@ -1238,20 +1239,23 @@ body {{
   padding: 2em;
 }}
 
-#section-endpoints > h1 {{
+.section {{
+  padding-left: 30px;
+}}
+
+.section > *:first-child {{
+  margin-left: -30px;
+}}
+
+.document > .section > h1 {{
   margin-top: 0;
 }}
 
-.section > * {{
-  margin-left: 30px;
+.document > .section {{
+  padding-left: 0;
 }}
 
-.section > h1,
-.section > h2,
-.section > h3,
-.section > h4,
-.section > h5,
-.section > h6 {{
+.document > .section > *:first-child {{
   margin-left: 0;
 }}
 
@@ -1281,35 +1285,25 @@ body {{
      <div class="methods section" id="methods-endpoint-_2Frest">
       <h3>Methods</h3>
       <div class="method section" id="method-_2Frest-DELETE">
-       <h4>
-        <strong>DELETE</strong>
-       </h4>
+       <h4>DELETE</h4>
        <p>Deletes the entry.</p>
       </div>
       <div class="method section" id="method-_2Frest-GET">
-       <h4>
-        <strong>GET</strong>
-       </h4>
+       <h4>GET</h4>
        <p>Gets the current value.</p>
       </div>
       <div class="method post-is-not-put fake-docs-here section" id="method-_2Frest-POST">
-       <h4>
-        <strong>POST</strong>
-       </h4>
+       <h4>POST</h4>
        <p>Creates a new entry.</p>
        <div class="params section" id="params-method-_2Frest-POST">
         <h5>Parameters</h5>
         <div class="param section" id="param-method-_2Frest-POST-size">
-         <h6>
-          <strong>size</strong>
-         </h6>
+         <h6>size</h6>
          <p class="spec">int, optional, default 4096</p>
          <p>The anticipated maximum size</p>
         </div>
         <div class="param section" id="param-method-_2Frest-POST-text">
-         <h6>
-          <strong>text</strong>
-         </h6>
+         <h6>text</h6>
          <p class="spec">str</p>
          <p>The text content for the posting</p>
         </div>
@@ -1317,32 +1311,24 @@ body {{
        <div class="returns section" id="returns-method-_2Frest-POST">
         <h5>Returns</h5>
         <div class="return section" id="return-method-_2Frest-POST-str">
-         <h6>
-          <strong>str</strong>
-         </h6>
+         <h6>str</h6>
          <p>The ID of the new posting</p>
         </div>
        </div>
        <div class="raises section" id="raises-method-_2Frest-POST">
         <h5>Raises</h5>
         <div class="raise section" id="raise-method-_2Frest-POST-HTTPUnauthorized">
-         <h6>
-          <strong>HTTPUnauthorized</strong>
-         </h6>
+         <h6>HTTPUnauthorized</h6>
          <p>Authenticated access is required</p>
         </div>
         <div class="raise section" id="raise-method-_2Frest-POST-HTTPForbidden">
-         <h6>
-          <strong>HTTPForbidden</strong>
-         </h6>
+         <h6>HTTPForbidden</h6>
          <p>The user does not have posting privileges</p>
         </div>
        </div>
       </div>
       <div class="method section" id="method-_2Frest-PUT">
-       <h4>
-        <strong>PUT</strong>
-       </h4>
+       <h4>PUT</h4>
        <p>Updates the value.</p>
       </div>
      </div>
@@ -1363,37 +1349,27 @@ body {{
    <div class="legend section" id="section-legend">
     <h1>Legend</h1>
     <div class="legend-item section" id="legend-item-_7BNAME_7D">
-     <h2>
-      <cite>{{NAME}}</cite>
-     </h2>
+     <h2>{{NAME}}</h2>
      <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.</p>
     </div>
     <div class="legend-item section" id="legend-item-_3CNAME_3E">
-     <h2>
-      <cite>&lt;NAME&gt;</cite>
-     </h2>
+     <h2>&lt;NAME&gt;</h2>
      <p>Not an actual endpoint, but the HTTP method to use.</p>
     </div>
     <div class="legend-item section" id="legend-item-NAME_2F_3F">
-     <h2>
-      <cite>NAME/?</cite>
-     </h2>
+     <h2>NAME/?</h2>
      <p>Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.</p>
     </div>
     <div class="legend-item section" id="legend-item-_2A">
-     <h2>
-      <cite>*</cite>
-     </h2>
+     <h2>*</h2>
      <p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>
     </div>
     <div class="legend-item section" id="legend-item-_2E_2E_2E">
-     <h2>
-      <cite>...</cite>
-     </h2>
+     <h2>...</h2>
      <p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>
