@@ -102,7 +102,7 @@ ${sectionTitle('Methods', level=level)|n}
 .. id:: ${meth.id|n}
 % endif
 
-${sectionTitle('**' + ( meth.method or meth.name ) + '**', level=level + 1)|n}
+${sectionTitle(meth.method or meth.name, level=level + 1)|n}
 ${self.rst_endpoint_body(meth, level + 2)|n}\
 % endfor
 % endif
@@ -131,7 +131,7 @@ if node.default:
 .. id:: param-${entry.id|n}-${data.options.idEncoder(node.name)|n}
 % endif
 
-${sectionTitle('**' + node.name + '**', level=level + 1)|n}
+${sectionTitle(node.name, level=level + 1)|n}
 % if data.options.rstMax:
 
 .. class:: spec
@@ -160,7 +160,7 @@ ${sectionTitle('Returns', level=level)|n}
 .. id:: return-${entry.id|n}-${data.options.idEncoder(node.type)|n}
 % endif
 
-${sectionTitle('**' + node.type + '**', level=level + 1)|n}
+${sectionTitle(node.type, level=level + 1)|n}
 
 ${node.doc|n}
 % endfor
@@ -183,7 +183,7 @@ ${sectionTitle('Raises', level=level)|n}
 .. id:: raise-${entry.id|n}-${data.options.idEncoder(node.type)|n}
 % endif
 
-${sectionTitle('**' + node.type + '**', level=level + 1)|n}
+${sectionTitle(node.type, level=level + 1)|n}
 
 ${node.doc|n}
 % endfor
@@ -212,7 +212,7 @@ ${self.rst_legend_item(item, desc, 1)|n}\
 .. id:: legend-item-${data.options.idEncoder(item)|n}
 % endif
 
-${sectionTitle('`' + item + '`', level=level)|n}
+${sectionTitle(item, level=level)|n}
 
 ${textwrap.fill(desc, width=data.options.width)|n}
 </%def>\
