@@ -34,51 +34,6 @@ DEFAULT_TEXT_WIDTH    = 79
 DEFAULT_INDENT        = ' '*4
 
 #------------------------------------------------------------------------------
-# default settings:
-#   footnote_backlinks:              1
-#   record_dependencies:             DependencyList(None, [])
-#   language_code:                   'en'
-#   traceback:                       True
-#   strip_comments:                  None
-#   toc_backlinks:                   'entry'
-#   dump_internals:                  None
-#   datestamp:                       None
-#   report_level:                    2
-#   strict_visitor:                  None
-#   _destination:                    None
-#   halt_level:                      4
-#   strip_classes:                   None
-#   title:                           None
-#   error_encoding_error_handler:    'backslashreplace'
-#   debug:                           None
-#   dump_transforms:                 None
-#   warning_stream:                  None
-#   text_width:                      79
-#   exit_status_level:               5
-#   config:                          None
-#   section_chars:                   '=-`:\'"~^_*+#<>'
-#   dump_pseudo_xml:                 None
-#   expose_internals:                None
-#   source_link:                     None
-#   output_encoding_error_handler:   'strict'
-#   source_url:                      None
-#   input_encoding:                  None
-#   _disable_config:                 None
-#   id_prefix:                       ''
-#   sectnum_xform:                   1
-#   error_encoding:                  'UTF-8'
-#   output_encoding:                 'utf-8'
-#   generator:                       None
-#   explicit_title:                  False
-#   _source:                         None
-#   input_encoding_error_handler:    'strict'
-#   auto_id_prefix:                  'id'
-#   strip_elements_with_classes:     None
-#   _config_files:                   []
-#   dump_settings:                   None
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 class Writer(writers.Writer):
 
   supported = ('reStructuredText', 'text', 'txt', 'rst')
