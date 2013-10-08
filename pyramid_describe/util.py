@@ -6,6 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
+import re, binascii
 from pyramid.settings import aslist, asbool, truthy
 from pyramid_controllers.util import adict, pick
 
@@ -43,6 +44,13 @@ def tolist(obj):
   if isinstance(obj, (list, tuple)):
     return obj
   return [obj]
+
+#------------------------------------------------------------------------------
+tag_re = re.compile('[^a-zA-Z0-9]')
+def tag_repl(match):
+  return '_' + binascii.hexlify(match.group(0)).upper()
+def tag(text):
+  return tag_re.sub(tag_repl, text)
 
 #------------------------------------------------------------------------------
 # end of $Id$
