@@ -24,7 +24,6 @@ from pyramid_controllers.util import getVersion
 
 from pyramid_describe.util import adict
 from pyramid_describe.controller import DescribeController
-from pyramid_describe.rst import relevelTitles
 
 # make the XML namespace output a bit easier to grok...
 ET.register_namespace('wadl', 'http://research.sun.com/wadl/2006/10')
@@ -706,9 +705,9 @@ arguments dynamically; no further information can be determined without
 request-specific details.
 
 .. meta::
-  :title: Contents of "/"
-  :generator: pyramid-describe/{version} [format=rst]
-  :location: http://localhost/desc
+    :title: Contents of "/"
+    :generator: pyramid-describe/{version} [format=rst]
+    :location: http://localhost/desc
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
@@ -779,9 +778,9 @@ arguments dynamically; no further information can be determined without
 request-specific details.
 
 .. meta::
-  :title: Application API Details
-  :generator: pyramid-describe/{version} [format=rst]
-  :location: http://localhost/desc
+    :title: Application API Details
+    :generator: pyramid-describe/{version} [format=rst]
+    :location: http://localhost/desc
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
@@ -802,6 +801,7 @@ request-specific details.
 .. title:: Contents of "/"
 
 .. class:: endpoints
+
 .. id:: section-endpoints
 
 ===============
@@ -809,6 +809,7 @@ Contents of "/"
 ===============
 
 .. class:: endpoint
+
 .. id:: endpoint-_2F
 
 ------
@@ -816,6 +817,7 @@ Contents of "/"
 ------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2F
 
 Handler: pyramid_describe.test.SimpleRoot() [instance]
@@ -823,6 +825,7 @@ Handler: pyramid_describe.test.SimpleRoot() [instance]
 The default root.
 
 .. class:: endpoint
+
 .. id:: endpoint-_2Fdesc
 
 ------
@@ -830,6 +833,7 @@ The default root.
 ------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2Fdesc
 
 Handler: pyramid_describe.controller.DescribeController() [instance]
@@ -837,6 +841,7 @@ Handler: pyramid_describe.controller.DescribeController() [instance]
 URL tree description.
 
 .. class:: endpoint
+
 .. id:: endpoint-_2Frest
 
 ------
@@ -844,6 +849,7 @@ URL tree description.
 ------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2Frest
 
 Handler: pyramid_describe.test.Rest() [instance]
@@ -851,6 +857,7 @@ Handler: pyramid_describe.test.Rest() [instance]
 A RESTful entry.
 
 .. class:: methods
+
 .. id:: methods-endpoint-_2Frest
 
 ```````
@@ -858,6 +865,7 @@ Methods
 ```````
 
 .. class:: method
+
 .. id:: method-_2Frest-DELETE
 
 ::::::
@@ -865,6 +873,7 @@ DELETE
 ::::::
 
 .. class:: handler
+
 .. id:: handler-method-_2Frest-DELETE
 
 Handler: pyramid_describe.test.Rest().delete [method]
@@ -872,6 +881,7 @@ Handler: pyramid_describe.test.Rest().delete [method]
 Deletes the entry.
 
 .. class:: method
+
 .. id:: method-_2Frest-GET
 
 ::::::
@@ -879,6 +889,7 @@ GET
 ::::::
 
 .. class:: handler
+
 .. id:: handler-method-_2Frest-GET
 
 Handler: pyramid_describe.test.Rest().get [method]
@@ -886,6 +897,7 @@ Handler: pyramid_describe.test.Rest().get [method]
 Gets the current value.
 
 .. class:: method post-is-not-put fake-docs-here
+
 .. id:: method-_2Frest-POST
 
 ::::::
@@ -893,6 +905,7 @@ POST
 ::::::
 
 .. class:: handler
+
 .. id:: handler-method-_2Frest-POST
 
 Handler: pyramid_describe.test.Rest().post [method]
@@ -900,6 +913,7 @@ Handler: pyramid_describe.test.Rest().post [method]
 Creates a new entry.
 
 .. class:: params
+
 .. id:: params-method-_2Frest-POST
 
 ''\'''\'''\''
@@ -907,6 +921,7 @@ Parameters
 ''\'''\'''\''
 
 .. class:: param
+
 .. id:: param-method-_2Frest-POST-size
 
 """"""
@@ -920,6 +935,7 @@ int, optional, default 4096
 The anticipated maximum size
 
 .. class:: param
+
 .. id:: param-method-_2Frest-POST-text
 
 """"""
@@ -933,6 +949,7 @@ str
 The text content for the posting
 
 .. class:: returns
+
 .. id:: returns-method-_2Frest-POST
 
 ''\'''\''
@@ -940,6 +957,7 @@ Returns
 ''\'''\''
 
 .. class:: return
+
 .. id:: return-method-_2Frest-POST-str
 
 """"""
@@ -949,6 +967,7 @@ str
 The ID of the new posting
 
 .. class:: raises
+
 .. id:: raises-method-_2Frest-POST
 
 ''\'''\'
@@ -956,6 +975,7 @@ Raises
 ''\'''\'
 
 .. class:: raise
+
 .. id:: raise-method-_2Frest-POST-HTTPUnauthorized
 
 """"""""""""""""
@@ -965,6 +985,7 @@ HTTPUnauthorized
 Authenticated access is required
 
 .. class:: raise
+
 .. id:: raise-method-_2Frest-POST-HTTPForbidden
 
 """""""""""""
@@ -974,6 +995,7 @@ HTTPForbidden
 The user does not have posting privileges
 
 .. class:: method
+
 .. id:: method-_2Frest-PUT
 
 ::::::
@@ -981,6 +1003,7 @@ PUT
 ::::::
 
 .. class:: handler
+
 .. id:: handler-method-_2Frest-PUT
 
 Handler: pyramid_describe.test.Rest().put [method]
@@ -988,6 +1011,7 @@ Handler: pyramid_describe.test.Rest().put [method]
 Updates the value.
 
 .. class:: endpoint
+
 .. id:: endpoint-_2Fsub_2Fmethod
 
 -----------
@@ -995,6 +1019,7 @@ Updates the value.
 -----------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2Fsub_2Fmethod
 
 Handler: pyramid_describe.test.Sub().method [method]
@@ -1002,6 +1027,7 @@ Handler: pyramid_describe.test.Sub().method [method]
 This method outputs a JSON list.
 
 .. class:: endpoint sub-with-index
+
 .. id:: endpoint-_2Fswi
 
 ------
@@ -1009,6 +1035,7 @@ This method outputs a JSON list.
 ------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2Fswi
 
 Handler: pyramid_describe.test.SubIndex() [instance]
@@ -1016,6 +1043,7 @@ Handler: pyramid_describe.test.SubIndex() [instance]
 A sub-controller providing only an index.
 
 .. class:: endpoint
+
 .. id:: endpoint-_2Funknown
 
 ----------
@@ -1023,6 +1051,7 @@ A sub-controller providing only an index.
 ----------
 
 .. class:: handler
+
 .. id:: handler-endpoint-_2Funknown
 
 Handler: pyramid_describe.test.Unknown [class]
@@ -1030,6 +1059,7 @@ Handler: pyramid_describe.test.Unknown [class]
 A dynamically generated sub-controller.
 
 .. class:: legend
+
 .. id:: section-legend
 
 ======
@@ -1037,6 +1067,7 @@ Legend
 ======
 
 .. class:: legend-item
+
 .. id:: legend-item-_7BNAME_7D
 
 ------
@@ -1047,6 +1078,7 @@ Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.
 
 .. class:: legend-item
+
 .. id:: legend-item-_3CNAME_3E
 
 ------
@@ -1056,6 +1088,7 @@ object.
 Not an actual endpoint, but the HTTP method to use.
 
 .. class:: legend-item
+
 .. id:: legend-item-NAME_2F_3F
 
 ------
@@ -1066,6 +1099,7 @@ Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.
 
 .. class:: legend-item
+
 .. id:: legend-item-_2A
 
 ------
@@ -1077,6 +1111,7 @@ arguments dynamically; no further information can be determined without
 request-specific details.
 
 .. class:: legend-item
+
 .. id:: legend-item-_2E_2E_2E
 
 ------
@@ -1088,15 +1123,15 @@ arguments dynamically; no further information can be determined without
 request-specific details.
 
 .. meta::
-  :title: Contents of "/"
-  :generator: pyramid-describe/{version} [format=rst]
-  :location: http://localhost/desc
-  :pdfkit-page-size: A4
-  :pdfkit-orientation: Portrait
-  :pdfkit-margin-top: 10mm
-  :pdfkit-margin-right: 10mm
-  :pdfkit-margin-bottom: 10mm
-  :pdfkit-margin-left: 10mm
+    :title: Contents of "/"
+    :generator: pyramid-describe/{version} [format=rst]
+    :location: http://localhost/desc
+    :pdfkit-page-size: A4
+    :pdfkit-orientation: Portrait
+    :pdfkit-margin-top: 10mm
+    :pdfkit-margin-right: 10mm
+    :pdfkit-margin-bottom: 10mm
+    :pdfkit-margin-left: 10mm
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
