@@ -184,6 +184,65 @@ some text.
       doc, writer=rst.Writer(), settings_overrides={'explicit_title': False})
     self.assertMultiLineEqual(out, chk)
 
+  #----------------------------------------------------------------------------
+  def test_lists(self):
+    src = '''\
+Current list of **states**
+that this
+engine can be in:
+
+* beta
+* production
+* deprecated (this is a long line to cause
+  the text handler to wrap it to the next line,
+  and therefore test the indentation that must be
+  done)
+
+The following `skill` levels exist:
+
+``Novice``:
+  a true beginner.
+
+``Intermediate``:
+  an average user, *usually* expressed with::
+
+    import average_user
+    average_user.express()
+
+``Expert``:
+  the sky is the limit.
+'''
+    chk = '''\
+Current list of **states** that this engine can be in:
+
+* beta
+
+* production
+
+* deprecated (this is a long line to cause the text handler to wrap it to the
+  next line, and therefore test the indentation that must be done)
+
+The following `skill` levels exist:
+
+``Novice``:
+
+    a true beginner.
+
+``Intermediate``:
+
+    an average user, *usually* expressed with:
+
+    ::
+
+        import average_user
+        average_user.express()
+
+``Expert``:
+
+    the sky is the limit.
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------

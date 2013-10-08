@@ -89,6 +89,7 @@ def collapseLines(value, step):
   return value + [step]
 
 #------------------------------------------------------------------------------
+newline_re = re.compile('\n([^\n])')
 class Output:
   def __init__(self):
     self.lines = []
@@ -104,8 +105,13 @@ class Output:
     self.lines.append(data)
   def extend(self, data):
     self.lines.extend(data)
-  def data(self):
-    return ''.join(reduce(collapseLines, self.lines, []))
+  def data(self, indent=None, notrail=False):
+    ret = ''.join(reduce(collapseLines, self.lines, []))
+    if notrail and ret.endswith('\n'):
+      ret = ret[:-1]
+    if indent is None:
+      return ret
+    return indent + newline_re.sub('\n' + indent.replace('\\', '\\\\') + '\\1', ret)
 
 #------------------------------------------------------------------------------
 class RstTranslator(nodes.GenericNodeVisitor):
@@ -232,7 +238,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
     sclen = len(self.settings.section_chars)
     over  = self.level < sclen
     lsym  = self.settings.section_chars[self.level % sclen]
-    text  = self._popStack().data()
+    text  = self._popStack().data(notrail=True)
     if len(text) > 0 and text == text[0] * len(text) and re.match('[^a-zA-Z0-9]', text[0]):
       text = re.sub('([^a-zA-Z0-9])', '\\\\\\1', text)
     width = max(6, len(text))
@@ -260,7 +266,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def depart_paragraph(self, node):
-    text = self._popStack().data()
+    text = self._popStack().data(notrail=True)
     self.output.emptyline()
     # todo: do textwrapping rules change in rST?...
     self.output.append(
@@ -273,7 +279,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def depart_literal_block(self, node):
-    text = self._popStack().data()
+    text = self._popStack().data(notrail=True)
     self.output.emptyline()
     cmd = '::'
     if 'code' in node['classes']:
@@ -316,7 +322,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
         and isinstance(sibs[idx + 1], nodes.target) \
         and node['name'] in sibs[idx + 1]['names'] \
         and sibs[idx + 1].referenced == 1:
-      text = self._popStack().data()
+      text = self._popStack().data(notrail=True)
       self._pushStack()
       self.output.append('{text} <{uri}>'.format(
         text = text,
@@ -341,6 +347,47 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def depart_meta(self, node):
     pass
+
+  #----------------------------------------------------------------------------
+  def visit_bullet_list(self, node): pass
+  def depart_bullet_list(self, node): pass
+
+  #----------------------------------------------------------------------------
+  def visit_list_item(self, node):
+    self._pushStack()
+
+  #----------------------------------------------------------------------------
+  def depart_list_item(self, node):
+    blt  = node.parent['bullet']
+    text = self._popStack().data(indent=' ' * ( len(blt) + 1 ), notrail=True)
+    self.output.emptyline()
+    self.output.append(blt + text[len(blt):])
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_definition_list(self, node): pass
+  def depart_definition_list(self, node): pass
+  def visit_definition_list_item(self, node): pass
+  def depart_definition_list_item(self, node): pass
+
+  #----------------------------------------------------------------------------
+  def visit_term(self, node):
+    self.output.emptyline()
+
+  #----------------------------------------------------------------------------
+  def depart_term(self, node):
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_definition(self, node):
+    self._pushStack()
+
+  #----------------------------------------------------------------------------
+  def depart_definition(self, node):
+    text = self._popStack().data(indent=self.settings.indent, notrail=True)
+    self.output.emptyline()
+    self.output.append(text)
+    self.output.newline()
 
 #------------------------------------------------------------------------------
 # end of $Id$
