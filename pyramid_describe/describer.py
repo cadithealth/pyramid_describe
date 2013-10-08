@@ -9,20 +9,21 @@
 import re, logging, inspect, binascii, types, json, six, collections
 from six.moves import urllib
 import xml.etree.ElementTree as ET
+try:
+  import yaml
+except ImportError:
+  yaml = None
+from docutils.core import publish_doctree, publish_from_doctree
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, truthy
 from pyramid.renderers import render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
-try:
-  import yaml
-except ImportError:
-  yaml = None
 
 from .entry import Entry
-from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters
-from . import rst
+from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters, tag
+from . import rst, doctree
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -156,13 +157,6 @@ def extract(settings, prefix):
                 if name.startswith(prefix)})
 
 #------------------------------------------------------------------------------
-pue_re   = re.compile('[^a-zA-Z0-9]')
-def pue_repl(match):
-  return '_' + binascii.hexlify(match.group(0)).upper()
-def pseudoUrlEncode(text):
-  return pue_re.sub(pue_repl, text)
-
-#------------------------------------------------------------------------------
 class Describer(object):
 
   xmlns = dict(
@@ -261,6 +255,7 @@ class Describer(object):
     ('pageMarginLeft',   '10mm'),
     ('cssPath',          'pyramid_describe:template/rst2html.css'),
     ('encoding',         'UTF-8'),
+    ('rstWriter',        'pyramid_describe.writers.rst.Writer'),
     )
 
   # TODO: support per-format system defaults...
@@ -376,7 +371,7 @@ class Describer(object):
       if fmt in self.renderers:
         ret.renderer = self.renderers[fmt]
     ret.context     = context
-    ret.idEncoder   = self._encodeIdComponent
+    ret.idEncoder   = tag
     ret.filters     = [resolve(e) for e in ( ret.filters or [] )]
     return ret
 
@@ -615,10 +610,10 @@ class Describer(object):
     # generate an ID
     if entry.isMethod:
       entry.id = 'method-{}-{}'.format(
-        self._encodeIdComponent(entry.path[:entry.path.find('?_method=')]),
-        self._encodeIdComponent(entry.method or entry.name))
+        tag(entry.path[:entry.path.find('?_method=')]),
+        tag(entry.method or entry.name))
     else:
-      entry.id = 'endpoint-{}'.format(self._encodeIdComponent(entry.path))
+      entry.id = 'endpoint-{}'.format(tag(entry.path))
 
     # get the docstring
     entry.doc = inspect.getdoc(entry.view)
@@ -628,10 +623,6 @@ class Describer(object):
         entry.doc = inspect.getdoc(handler) or entry.doc
 
     return entry
-
-  #----------------------------------------------------------------------------
-  def _encodeIdComponent(self, text):
-    return pseudoUrlEncode(text)
 
   #----------------------------------------------------------------------------
   def _pick_param(self, options, value):
@@ -711,11 +702,19 @@ class Describer(object):
         except AttributeError: pass
       app['endpoints'].append(endpoint)
 
-    
-
     # filter...
 
     return root
+
+  #----------------------------------------------------------------------------
+  def template_render(self, data):
+    tpl = data.options.renderer \
+      or 'pyramid_describe:template/' + data.format + '.mako'
+    return render(tpl, dict(data=data), request=data.options.context.request)
+
+  #----------------------------------------------------------------------------
+  def doctree_render(self, data):
+    return doctree.render(data)
 
   #----------------------------------------------------------------------------
   def render(self, data, format=None, override_options=None):
@@ -738,13 +737,17 @@ class Describer(object):
     return getattr(self, 'render_' + data.format, self.template_render)(data)
 
   #----------------------------------------------------------------------------
-  def template_render(self, data):
-    tpl = data.options.renderer \
-      or 'pyramid_describe:template/' + data.format + '.mako'
-    return render(tpl, dict(data=data), request=data.options.context.request)
+  def render_rst(self, data):
+    doc = self.doctree_render(data)
+    writer = resolve(data.options.rstWriter)()
+    settings = {}
+    if data.options.rstMax:
+      settings['explicit_title'] = True
+    return publish_from_doctree(
+      doc, writer=writer, settings_overrides=settings)
 
-  render_rst  = template_render
-  render_txt  = template_render
+  #----------------------------------------------------------------------------
+  render_txt = template_render
 
   #----------------------------------------------------------------------------
   def render_html(self, data):
@@ -885,7 +888,7 @@ class Describer(object):
     for endpoint in data['application']['endpoints']:
       if not endpoint.get('methods'):
         endpoint['methods'] = [dict(
-          id='method-{}-GET'.format(self._encodeIdComponent(endpoint['path'])),
+          id='method-{}-GET'.format(tag(endpoint['path'])),
           name='GET')]
     data = dict2node(data)
     data = self.et2wadl(options, data)
