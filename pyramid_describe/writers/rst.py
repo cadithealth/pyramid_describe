@@ -21,7 +21,20 @@ def rstEscape(text, context=None):
     if context not in text and '\\' not in text:
       return text
     return text.replace('\\', '\\\\').replace(context, '\\' + context)
-  # TODO
+
+  # todo: it is a bit unclear what *should* be done here... but what
+  #       is happening now, is to backslash-escape any text that could
+  #       be interpreted as a title under/overline... which is primarily
+  #       being used by the `visit_bullet_list` method, to avoid creating:
+  #         ``* /``
+  #       which generates the warning:
+  #         Unexpected possible title overline or transition.
+  #         Treating it as ordinary text because it's so short.
+
+  if len(text) > 0 \
+      and text == text[0] * len(text) \
+      and not re.match('a-zA-Z0-9', text[0]):
+    text = ( '\\' + text[0] ) * len(text)
   return text
 
 #------------------------------------------------------------------------------
@@ -200,8 +213,9 @@ class RstTranslator(nodes.GenericNodeVisitor):
       nids_ng = set(nids) - set(node['ids'])
       if nids_ng:
         self.output.emptyline()
-        self.output.append('.. id:: ' + ' '.join(sorted(nids_ng)))
-        self.output.emptyline()
+        for nid in sorted(nids_ng):
+          self.output.append('.. _{id}:'.format(id=rstTicks(nid)))
+          self.output.emptyline()
       self.document.ids = dids
       node['ids'] = nids
 
@@ -220,6 +234,40 @@ class RstTranslator(nodes.GenericNodeVisitor):
       if fmt[1]:
         text = fmt[1](text)
       self.output.append(fmt[0].format(text))
+
+  #----------------------------------------------------------------------------
+  def visit_problematic(self, node):
+    self._pushStack()
+
+  #----------------------------------------------------------------------------
+  def depart_problematic(self, node):
+    self._popStack()
+    text = rstTicks(node.astext())
+    if text.startswith('`'):
+      text = text[1:-1]
+    # note: wrapping the link with newlines to protect
+    # from other surrounding words.
+    self.output.newline()
+    self.output.append('`{text} <#{refuri}>`__'.format(
+      text   = text,
+      refuri = node['refid'],
+      ))
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_system_message(self, node):
+    kls = node['classes']
+    node['classes'] = kls + ['system-message']
+    self._putAttributes(node)
+    node['classes'] = kls
+    self.visit_title(None)
+    self.output.append(
+      '{type}/{level} ({source}, line {line})'.format(**node.attributes))
+    self.depart_title(None)
+
+  #----------------------------------------------------------------------------
+  def depart_system_message(self, node):
+    pass
 
   #----------------------------------------------------------------------------
   def depart_document(self, node):
@@ -358,10 +406,10 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def depart_list_item(self, node):
-    blt  = node.parent['bullet']
+    blt  = node.parent.get('bullet', '*')
     text = self._popStack().data(indent=' ' * ( len(blt) + 1 ), notrail=True)
     self.output.emptyline()
-    self.output.append(blt + text[len(blt):])
+    self.output.append(blt + ' ' + rstEscape(text[len(blt) + 1:]))
     self.output.newline()
 
   #----------------------------------------------------------------------------

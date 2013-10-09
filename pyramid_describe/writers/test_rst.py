@@ -17,7 +17,7 @@ class TestRst(unittest.TestCase):
   #----------------------------------------------------------------------------
   def rt(self, data, writer=None, settings=None):
     from docutils.core import publish_doctree, publish_from_doctree
-    dt = publish_doctree(data)
+    dt = publish_doctree(data, settings_overrides=settings)
     return publish_from_doctree(dt,
                                 writer=writer or rst.Writer(),
                                 settings_overrides=settings)
@@ -140,7 +140,7 @@ a `link with space`_.
     chk = '''\
 .. class:: c1 c2
 
-.. id:: my-test-id
+.. _`my-test-id`:
 
 ======
 Title
@@ -241,6 +241,26 @@ The following `skill` levels exist:
 
     the sky is the limit.
 '''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_problematic(self):
+    src = 'this paragraph is not **clean.\n'
+    chk = '''\
+this paragraph is not  `** <#id1>`__ clean.
+
+.. class:: system-message
+
+.. _id1:
+
+============================
+WARNING/2 (<string>, line 1)
+============================
+
+Inline strong start-string without end-string.
+'''
+    # TODO: it would be great to remove the error being printed out...
+    #   <string>:1: (WARNING/2) Inline strong start-string without end-string.
     self.assertMultiLineEqual(self.rt(src), chk)
 
 #------------------------------------------------------------------------------
