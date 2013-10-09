@@ -23,6 +23,7 @@ from pyramid_controllers.test_helpers import TestHelper
 from pyramid_controllers.util import getVersion
 
 from pyramid_describe.util import adict
+from pyramid_describe.rst import AsIs
 from pyramid_describe.controller import DescribeController
 
 # make the XML namespace output a bit easier to grok...
@@ -82,17 +83,17 @@ def docsEnhancer(entry, options):
     return entry
   entry.classes = ['post-is-not-put', 'fake-docs-here']
   entry.params = (
-    adict(id='param-_2Frest_3F_5Fmethod_3DPOST-size', name='size', type='int',
+    adict(id='param-2f726573743f5f6d6574686f643d504f5354-73697a65', name='size', type='int',
           default=4096, optional=True, doc='The anticipated maximum size'),
-    adict(id='param-_2Frest_3F_5Fmethod_3DPOST-text', name='text', type='str',
+    adict(id='param-2f726573743f5f6d6574686f643d504f5354-74657874', name='text', type='str',
           optional=False, doc='The text content for the posting'),
     )
-  entry.returns = (adict(id='return-_2Frest_3F_5Fmethod_3DPOST-0-str', type='str',
+  entry.returns = (adict(id='return-2f726573743f5f6d6574686f643d504f5354-30-737472', type='str',
                          doc='The ID of the new posting'),)
   entry.raises  = (
-    adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized',
+    adict(id='raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564',
           type='HTTPUnauthorized', doc='Authenticated access is required'),
-    adict(id='raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden',
+    adict(id='raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e',
           type='HTTPForbidden', doc='The user does not have posting privileges'),
     )
   return entry
@@ -438,8 +439,8 @@ class DescribeTest(TestHelper):
 ''')
 
   #----------------------------------------------------------------------------
-  def test_request_option_control_enable_all(self):
-    'The rendering options pulled from the request parameters can be set to all options'
+  def test_request_option_control_enable_all_txt(self):
+    'The rendering options pulled from the request parameters can be set to all options (txt)'
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -455,7 +456,77 @@ class DescribeTest(TestHelper):
 ├── swi
 └── unknown/?
 ''')
-    self.assertIn('<html', self.send(root, '/desc?format=html&showRest=false&showInfo=false').body)
+
+  #----------------------------------------------------------------------------
+  def test_request_option_control_enable_all_rst(self):
+    'The rendering options pulled from the request parameters can be set to all options (rst)'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats': 'rst',
+        'index-redirect': 'false',
+        'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+        'format.request': 'true',
+        })
+    self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false&showLegend=false&showMeta=false&rstMax=true'), 200, '''\
+.. title:: Contents of "/"
+
+.. class:: endpoints
+
+.. _`section-endpoints`:
+
+===============
+Contents of "/"
+===============
+
+* \/
+
+* /rest
+
+* /swi
+
+* /unknown/?
+''')
+
+  #----------------------------------------------------------------------------
+  def test_request_option_control_enable_all_html(self):
+    'The rendering options pulled from the request parameters can be set to all options (html)'
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats': 'txt',
+        'index-redirect': 'false',
+        'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+        'format.request': 'true',
+        })
+    chk = '''\
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+  <title>Contents of &quot;/&quot;</title>
+ </head>
+ <body>
+  <div class="document endpoints" id="section-endpoints">
+   <h1 class="title">Contents of &quot;/&quot;</h1>
+   <ul class="simple">
+    <li>/</li>
+    <li>/rest</li>
+    <li>/swi</li>
+    <li>/unknown/?</li>
+   </ul>
+  </div>
+ </body>
+</html>
+'''
+    chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
+    res = self.send(root, '/desc?format=html&showRest=false&showInfo=false&showLegend=false&cssPath=&showMeta=false')
+    res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
+    self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
   def test_request_option_control_enable_list(self):
@@ -485,7 +556,7 @@ class DescribeTest(TestHelper):
   def test_mixed_restful_and_dispatch_txt(self):
     'The Describer supports mixing RESTful and URL component methods in "txt" format'
     class Access(Controller):
-      @index
+      @index(forceSlash=False)
       def index(self, request):
         'Access control'
     class Rest(RestController):
@@ -514,6 +585,36 @@ class DescribeTest(TestHelper):
     ├── <PUT>     # Modify this object
     ├── access    # Access control
     └── groups    # Return the groups for this object
+''')
+
+  #----------------------------------------------------------------------------
+  def test_format_txt_differentiates_forced_slash_index(self):
+    'The Describer can differentiate a forced-slash index'
+    class SubIndexForceSlash(Controller):
+      @index(forceSlash=True)
+      def myindex(self, request):
+        'A sub-controller providing only a slash-index.'
+        return 'my.index'
+    root = SimpleRoot()
+    root.swfs = SubIndexForceSlash()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats': 'txt',
+        'index-redirect': 'false',
+        'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+        'format.request': 'format showInfo',
+        })
+    self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
+/
+├── rest
+│   ├── <DELETE>
+│   ├── <GET>
+│   ├── <POST>
+│   └── <PUT>
+├── swfs/
+├── swi
+└── unknown/?
 ''')
 
   #----------------------------------------------------------------------------
@@ -802,7 +903,7 @@ request-specific details.
 
 .. class:: endpoints
 
-.. id:: section-endpoints
+.. _`section-endpoints`:
 
 ===============
 Contents of "/"
@@ -810,7 +911,7 @@ Contents of "/"
 
 .. class:: endpoint
 
-.. id:: endpoint-_2F
+.. _`endpoint-2f`:
 
 ------
 \/
@@ -818,7 +919,7 @@ Contents of "/"
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2F
+.. _`handler-endpoint-2f`:
 
 Handler: pyramid_describe.test.SimpleRoot() [instance]
 
@@ -826,7 +927,7 @@ The default root.
 
 .. class:: endpoint
 
-.. id:: endpoint-_2Fdesc
+.. _`endpoint-2f64657363`:
 
 ------
 /desc
@@ -834,7 +935,7 @@ The default root.
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2Fdesc
+.. _`handler-endpoint-2f64657363`:
 
 Handler: pyramid_describe.controller.DescribeController() [instance]
 
@@ -842,7 +943,7 @@ URL tree description.
 
 .. class:: endpoint
 
-.. id:: endpoint-_2Frest
+.. _`endpoint-2f72657374`:
 
 ------
 /rest
@@ -850,7 +951,7 @@ URL tree description.
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2Frest
+.. _`handler-endpoint-2f72657374`:
 
 Handler: pyramid_describe.test.Rest() [instance]
 
@@ -858,7 +959,7 @@ A RESTful entry.
 
 .. class:: methods
 
-.. id:: methods-endpoint-_2Frest
+.. _`methods-endpoint-2f72657374`:
 
 ```````
 Methods
@@ -866,7 +967,7 @@ Methods
 
 .. class:: method
 
-.. id:: method-_2Frest-DELETE
+.. _`method-2f72657374-44454c455445`:
 
 ::::::
 DELETE
@@ -874,7 +975,7 @@ DELETE
 
 .. class:: handler
 
-.. id:: handler-method-_2Frest-DELETE
+.. _`handler-method-2f72657374-44454c455445`:
 
 Handler: pyramid_describe.test.Rest().delete [method]
 
@@ -882,7 +983,7 @@ Deletes the entry.
 
 .. class:: method
 
-.. id:: method-_2Frest-GET
+.. _`method-2f72657374-474554`:
 
 ::::::
 GET
@@ -890,7 +991,7 @@ GET
 
 .. class:: handler
 
-.. id:: handler-method-_2Frest-GET
+.. _`handler-method-2f72657374-474554`:
 
 Handler: pyramid_describe.test.Rest().get [method]
 
@@ -898,7 +999,7 @@ Gets the current value.
 
 .. class:: method post-is-not-put fake-docs-here
 
-.. id:: method-_2Frest-POST
+.. _`method-2f72657374-504f5354`:
 
 ::::::
 POST
@@ -906,7 +1007,7 @@ POST
 
 .. class:: handler
 
-.. id:: handler-method-_2Frest-POST
+.. _`handler-method-2f72657374-504f5354`:
 
 Handler: pyramid_describe.test.Rest().post [method]
 
@@ -914,7 +1015,7 @@ Creates a new entry.
 
 .. class:: params
 
-.. id:: params-method-_2Frest-POST
+.. _`params-method-2f72657374-504f5354`:
 
 ''\'''\'''\''
 Parameters
@@ -922,7 +1023,7 @@ Parameters
 
 .. class:: param
 
-.. id:: param-method-_2Frest-POST-size
+.. _`param-method-2f72657374-504f5354-73697a65`:
 
 """"""
 size
@@ -936,7 +1037,7 @@ The anticipated maximum size
 
 .. class:: param
 
-.. id:: param-method-_2Frest-POST-text
+.. _`param-method-2f72657374-504f5354-74657874`:
 
 """"""
 text
@@ -950,7 +1051,7 @@ The text content for the posting
 
 .. class:: returns
 
-.. id:: returns-method-_2Frest-POST
+.. _`returns-method-2f72657374-504f5354`:
 
 ''\'''\''
 Returns
@@ -958,7 +1059,7 @@ Returns
 
 .. class:: return
 
-.. id:: return-method-_2Frest-POST-str
+.. _`return-method-2f72657374-504f5354-737472`:
 
 """"""
 str
@@ -968,7 +1069,7 @@ The ID of the new posting
 
 .. class:: raises
 
-.. id:: raises-method-_2Frest-POST
+.. _`raises-method-2f72657374-504f5354`:
 
 ''\'''\'
 Raises
@@ -976,7 +1077,7 @@ Raises
 
 .. class:: raise
 
-.. id:: raise-method-_2Frest-POST-HTTPUnauthorized
+.. _`raise-method-2f72657374-504f5354-48545450556e617574686f72697a6564`:
 
 """"""""""""""""
 HTTPUnauthorized
@@ -986,7 +1087,7 @@ Authenticated access is required
 
 .. class:: raise
 
-.. id:: raise-method-_2Frest-POST-HTTPForbidden
+.. _`raise-method-2f72657374-504f5354-48545450466f7262696464656e`:
 
 """""""""""""
 HTTPForbidden
@@ -996,7 +1097,7 @@ The user does not have posting privileges
 
 .. class:: method
 
-.. id:: method-_2Frest-PUT
+.. _`method-2f72657374-505554`:
 
 ::::::
 PUT
@@ -1004,7 +1105,7 @@ PUT
 
 .. class:: handler
 
-.. id:: handler-method-_2Frest-PUT
+.. _`handler-method-2f72657374-505554`:
 
 Handler: pyramid_describe.test.Rest().put [method]
 
@@ -1012,7 +1113,7 @@ Updates the value.
 
 .. class:: endpoint
 
-.. id:: endpoint-_2Fsub_2Fmethod
+.. _`endpoint-2f7375622f6d6574686f64`:
 
 -----------
 /sub/method
@@ -1020,7 +1121,7 @@ Updates the value.
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2Fsub_2Fmethod
+.. _`handler-endpoint-2f7375622f6d6574686f64`:
 
 Handler: pyramid_describe.test.Sub().method [method]
 
@@ -1028,7 +1129,7 @@ This method outputs a JSON list.
 
 .. class:: endpoint sub-with-index
 
-.. id:: endpoint-_2Fswi
+.. _`endpoint-2f737769`:
 
 ------
 /swi
@@ -1036,7 +1137,7 @@ This method outputs a JSON list.
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2Fswi
+.. _`handler-endpoint-2f737769`:
 
 Handler: pyramid_describe.test.SubIndex() [instance]
 
@@ -1044,7 +1145,7 @@ A sub-controller providing only an index.
 
 .. class:: endpoint
 
-.. id:: endpoint-_2Funknown
+.. _`endpoint-2f756e6b6e6f776e`:
 
 ----------
 /unknown/?
@@ -1052,7 +1153,7 @@ A sub-controller providing only an index.
 
 .. class:: handler
 
-.. id:: handler-endpoint-_2Funknown
+.. _`handler-endpoint-2f756e6b6e6f776e`:
 
 Handler: pyramid_describe.test.Unknown [class]
 
@@ -1060,7 +1161,7 @@ A dynamically generated sub-controller.
 
 .. class:: legend
 
-.. id:: section-legend
+.. _`section-legend`:
 
 ======
 Legend
@@ -1068,7 +1169,7 @@ Legend
 
 .. class:: legend-item
 
-.. id:: legend-item-_7BNAME_7D
+.. _`legend-item-7b4e414d457d`:
 
 ------
 {{NAME}}
@@ -1079,7 +1180,7 @@ object.
 
 .. class:: legend-item
 
-.. id:: legend-item-_3CNAME_3E
+.. _`legend-item-3c4e414d453e`:
 
 ------
 <NAME>
@@ -1089,7 +1190,7 @@ Not an actual endpoint, but the HTTP method to use.
 
 .. class:: legend-item
 
-.. id:: legend-item-NAME_2F_3F
+.. _`legend-item-4e414d452f3f`:
 
 ------
 NAME/?
@@ -1100,7 +1201,7 @@ without request-specific details.
 
 .. class:: legend-item
 
-.. id:: legend-item-_2A
+.. _`legend-item-2a`:
 
 ------
 \*
@@ -1112,7 +1213,7 @@ request-specific details.
 
 .. class:: legend-item
 
-.. id:: legend-item-_2E_2E_2E
+.. _`legend-item-2e2e2e`:
 
 ------
 \.\.\.
@@ -1191,27 +1292,6 @@ Access control
 Return the groups for this object
 ''')
 
-#   # TODO: enable this when txt is sensitive to forceSlash...
-#   #----------------------------------------------------------------------------
-#   def test_format_txt_differentiates_forced_slash_index(self):
-#     'The Describer can differentiate a forced-slash index'
-#     class SubIndexForceSlash(Controller):
-#       @index
-#       def myindex(self, request):
-#         'A sub-controller providing only a slash-index.'
-#         return 'my.index'
-#     root = SimpleRoot()
-#     root.swfs = SubIndexForceSlash()
-#     root.desc = DescribeController(root, doc='URL tree description.')
-#     self.assertResponse(self.send(root, '/desc'), 200, '''\
-# /
-# ├── desc
-# ├── sub/
-# │   └── method
-# ├── swfs/
-# └── swi
-# ''')
-
   #----------------------------------------------------------------------------
   def test_prune_index(self):
     'The Describer can collapse up index docs'
@@ -1235,6 +1315,67 @@ Contents of "/"
 ------
 
 The index method
+''')
+
+  #----------------------------------------------------------------------------
+  def test_restructuredtext_in_documentation(self):
+    'The Describer can integrate reStructuredText from docstrings'
+    class Root(Controller):
+      @index
+      def index(self, request):
+        '''
+        Current list of **states** that this
+        controller
+        can be in (long line to cause line wrapping):
+
+        * beta
+        * production
+        * deprecated
+
+        The following `skill` levels exist:
+
+        ``Novice``:
+          a true beginner.
+        ``Intermediate``:
+          an average user.
+        ``Expert``:
+          the sky is the limit.
+        '''
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+       settings=settings_minRst)
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+===============
+Contents of "/"
+===============
+
+------
+\/
+------
+
+Current list of **states** that this controller can be in (long line to cause
+line wrapping):
+
+* beta
+
+* production
+
+* deprecated
+
+The following `skill` levels exist:
+
+``Novice``:
+
+    a true beginner.
+
+``Intermediate``:
+
+    an average user.
+
+``Expert``:
+
+    the sky is the limit.
 ''')
 
   #----------------------------------------------------------------------------
@@ -1306,104 +1447,104 @@ body {{
   <div class="document">
    <div class="endpoints section" id="section-endpoints">
     <h1>Application API</h1>
-    <div class="endpoint section" id="endpoint-_2F">
+    <div class="endpoint section" id="endpoint-2f">
      <h2>/</h2>
      <p>The default root.</p>
     </div>
-    <div class="endpoint section" id="endpoint-_2Fdesc">
+    <div class="endpoint section" id="endpoint-2f64657363">
      <h2>/desc</h2>
      <p>URL tree description.</p>
     </div>
-    <div class="endpoint section" id="endpoint-_2Frest">
+    <div class="endpoint section" id="endpoint-2f72657374">
      <h2>/rest</h2>
      <p>A RESTful entry.</p>
-     <div class="methods section" id="methods-endpoint-_2Frest">
+     <div class="methods section" id="methods-endpoint-2f72657374">
       <h3>Methods</h3>
-      <div class="method section" id="method-_2Frest-DELETE">
+      <div class="method section" id="method-2f72657374-44454c455445">
        <h4>DELETE</h4>
        <p>Deletes the entry.</p>
       </div>
-      <div class="method section" id="method-_2Frest-GET">
+      <div class="method section" id="method-2f72657374-474554">
        <h4>GET</h4>
        <p>Gets the current value.</p>
       </div>
-      <div class="method post-is-not-put fake-docs-here section" id="method-_2Frest-POST">
+      <div class="fake-docs-here method post-is-not-put section" id="method-2f72657374-504f5354">
        <h4>POST</h4>
        <p>Creates a new entry.</p>
-       <div class="params section" id="params-method-_2Frest-POST">
+       <div class="params section" id="params-method-2f72657374-504f5354">
         <h5>Parameters</h5>
-        <div class="param section" id="param-method-_2Frest-POST-size">
+        <div class="param section" id="param-method-2f72657374-504f5354-73697a65">
          <h6>size</h6>
          <p class="spec">int, optional, default 4096</p>
          <p>The anticipated maximum size</p>
         </div>
-        <div class="param section" id="param-method-_2Frest-POST-text">
+        <div class="param section" id="param-method-2f72657374-504f5354-74657874">
          <h6>text</h6>
          <p class="spec">str</p>
          <p>The text content for the posting</p>
         </div>
        </div>
-       <div class="returns section" id="returns-method-_2Frest-POST">
+       <div class="returns section" id="returns-method-2f72657374-504f5354">
         <h5>Returns</h5>
-        <div class="return section" id="return-method-_2Frest-POST-str">
+        <div class="return section" id="return-method-2f72657374-504f5354-737472">
          <h6>str</h6>
          <p>The ID of the new posting</p>
         </div>
        </div>
-       <div class="raises section" id="raises-method-_2Frest-POST">
+       <div class="raises section" id="raises-method-2f72657374-504f5354">
         <h5>Raises</h5>
-        <div class="raise section" id="raise-method-_2Frest-POST-HTTPUnauthorized">
+        <div class="raise section" id="raise-method-2f72657374-504f5354-48545450556e617574686f72697a6564">
          <h6>HTTPUnauthorized</h6>
          <p>Authenticated access is required</p>
         </div>
-        <div class="raise section" id="raise-method-_2Frest-POST-HTTPForbidden">
+        <div class="raise section" id="raise-method-2f72657374-504f5354-48545450466f7262696464656e">
          <h6>HTTPForbidden</h6>
          <p>The user does not have posting privileges</p>
         </div>
        </div>
       </div>
-      <div class="method section" id="method-_2Frest-PUT">
+      <div class="method section" id="method-2f72657374-505554">
        <h4>PUT</h4>
        <p>Updates the value.</p>
       </div>
      </div>
     </div>
-    <div class="endpoint section" id="endpoint-_2Fsub_2Fmethod">
+    <div class="endpoint section" id="endpoint-2f7375622f6d6574686f64">
      <h2>/sub/method</h2>
      <p>This method outputs a JSON list.</p>
     </div>
-    <div class="endpoint sub-with-index section" id="endpoint-_2Fswi">
+    <div class="endpoint section sub-with-index" id="endpoint-2f737769">
      <h2>/swi</h2>
      <p>A sub-controller providing only an index.</p>
     </div>
-    <div class="endpoint section" id="endpoint-_2Funknown">
+    <div class="endpoint section" id="endpoint-2f756e6b6e6f776e">
      <h2>/unknown/?</h2>
      <p>A dynamically generated sub-controller.</p>
     </div>
    </div>
    <div class="legend section" id="section-legend">
     <h1>Legend</h1>
-    <div class="legend-item section" id="legend-item-_7BNAME_7D">
+    <div class="legend-item section" id="legend-item-7b4e414d457d">
      <h2>{{NAME}}</h2>
      <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.</p>
     </div>
-    <div class="legend-item section" id="legend-item-_3CNAME_3E">
+    <div class="legend-item section" id="legend-item-3c4e414d453e">
      <h2>&lt;NAME&gt;</h2>
      <p>Not an actual endpoint, but the HTTP method to use.</p>
     </div>
-    <div class="legend-item section" id="legend-item-NAME_2F_3F">
+    <div class="legend-item section" id="legend-item-4e414d452f3f">
      <h2>NAME/?</h2>
      <p>Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.</p>
     </div>
-    <div class="legend-item section" id="legend-item-_2A">
+    <div class="legend-item section" id="legend-item-2a">
      <h2>*</h2>
      <p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>
     </div>
-    <div class="legend-item section" id="legend-item-_2E_2E_2E">
+    <div class="legend-item section" id="legend-item-2e2e2e">
      <h2>...</h2>
      <p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
@@ -1420,11 +1561,25 @@ request-specific details.</p>
     self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
-  def test_format_html_filters(self):
+  def test_AsIs(self):
     'The Describer honors the format-specific `filters` option'
-    def remove_body(parts, options):
-      parts['body'] = ''
-      return parts
+    from docutils import nodes
+    def fiddler(doc, options):
+      doc['classes'].append('fiddled')
+      def specials(node):
+        return [n for n in node.children if isinstance(n, nodes.Special)] \
+          + [sn for n in node.children for sn in specials(n)]
+      keep = [n for n in doc.children if isinstance(n, nodes.title)] \
+        + specials(doc)
+      doc.children = []
+      doc.extend(keep)
+      doc.append(nodes.paragraph('', '', nodes.Text('some text.')))
+      doc.append(AsIs('''\
+<script>
+  alert('hello, world!');
+</script>
+'''))
+      return doc
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -1435,7 +1590,7 @@ request-specific details.</p>
         'format.default.showLegend': 'false',
         'format.default.rstPdfkit': 'false',
         'format.html.default.cssPath': None,
-        'format.html.default.filters': remove_body,
+        'format.html.default.filters': fiddler,
         })
     res = self.send(root, '/desc')
     chk = '''\
@@ -1451,8 +1606,12 @@ request-specific details.</p>
   <meta content="http://localhost/desc" name="location" />
  </head>
  <body>
-  <div class="endpoints document" id="section-endpoints">
+  <div class="document endpoints fiddled" id="section-endpoints">
    <h1 class="title">Contents of &quot;/&quot;</h1>
+   <p>some text.</p>
+<script>
+  alert('hello, world!');
+</script>
   </div>
  </body>
 </html>
@@ -1480,47 +1639,47 @@ request-specific details.</p>
     "url": "http://localhost",
     "endpoints": [
       { "name": "",
-        "id": "endpoint-_2F",
+        "id": "endpoint-2f",
         "path": "/",
         "decoratedName": "",
         "decoratedPath": "/",
         "doc": "The default root."
       },
       { "name": "desc",
-        "id": "endpoint-_2Fdesc",
+        "id": "endpoint-2f64657363",
         "path": "/desc",
         "decoratedName": "desc",
         "decoratedPath": "/desc",
         "doc": "URL tree description."
       },
       { "name": "rest",
-        "id": "endpoint-_2Frest",
+        "id": "endpoint-2f72657374",
         "path": "/rest",
         "decoratedName": "rest",
         "decoratedPath": "/rest",
         "doc": "A RESTful entry.",
         "methods": [
           { "name": "DELETE",
-            "id": "method-_2Frest-DELETE",
+            "id": "method-2f72657374-44454c455445",
             "doc": "Deletes the entry."
           },
           { "name": "GET",
-            "id": "method-_2Frest-GET",
+            "id": "method-2f72657374-474554",
             "doc": "Gets the current value."
           },
           { "name": "POST",
-            "id": "method-_2Frest-POST",
+            "id": "method-2f72657374-504f5354",
             "doc": "Creates a new entry.",
             "params": [
               { "name": "size",
-                "id": "param-_2Frest_3F_5Fmethod_3DPOST-size",
+                "id": "param-2f726573743f5f6d6574686f643d504f5354-73697a65",
                 "type": "int",
                 "optional": true,
                 "default": 4096,
                 "doc": "The anticipated maximum size"
               },
               { "name": "text",
-                "id": "param-_2Frest_3F_5Fmethod_3DPOST-text",
+                "id": "param-2f726573743f5f6d6574686f643d504f5354-74657874",
                 "type": "str",
                 "optional": false,
                 "doc": "The text content for the posting"
@@ -1528,43 +1687,43 @@ request-specific details.</p>
             ],
             "returns": [
               { "type": "str",
-                "id": "return-_2Frest_3F_5Fmethod_3DPOST-0-str",
+                "id": "return-2f726573743f5f6d6574686f643d504f5354-30-737472",
                 "doc": "The ID of the new posting"
               }
             ],
             "raises": [
               { "type": "HTTPUnauthorized",
-                "id": "raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized",
+                "id": "raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564",
                 "doc": "Authenticated access is required"
               },
               { "type": "HTTPForbidden",
-                "id": "raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden",
+                "id": "raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e",
                 "doc": "The user does not have posting privileges"
               }
             ]
           },
           { "name": "PUT",
-            "id": "method-_2Frest-PUT",
+            "id": "method-2f72657374-505554",
             "doc": "Updates the value."
           }
         ]
       },
       { "name": "method",
-        "id": "endpoint-_2Fsub_2Fmethod",
+        "id": "endpoint-2f7375622f6d6574686f64",
         "path": "/sub/method",
         "decoratedName": "method",
         "decoratedPath": "/sub/method",
         "doc": "This method outputs a JSON list."
       },
       { "name": "swi",
-        "id": "endpoint-_2Fswi",
+        "id": "endpoint-2f737769",
         "path": "/swi",
         "decoratedName": "swi",
         "decoratedPath": "/swi",
         "doc": "A sub-controller providing only an index."
       },
       { "name": "unknown",
-        "id": "endpoint-_2Funknown",
+        "id": "endpoint-2f756e6b6e6f776e",
         "path": "/unknown",
         "decoratedName": "unknown/?",
         "decoratedPath": "/unknown/?",
@@ -1601,73 +1760,73 @@ application:
   url: 'http://localhost'
   endpoints:
     - name: ''
-      id: 'endpoint-_2F'
+      id: 'endpoint-2f'
       path: /
       decoratedName: ''
       decoratedPath: /
       doc: The default root.
     - name: desc
-      id: 'endpoint-_2Fdesc'
+      id: 'endpoint-2f64657363'
       path: /desc
       decoratedName: desc
       decoratedPath: /desc
       doc: URL tree description.
     - name: rest
-      id: 'endpoint-_2Frest'
+      id: 'endpoint-2f72657374'
       path: /rest
       decoratedName: rest
       decoratedPath: /rest
       doc: A RESTful entry.
       methods:
         - name: DELETE
-          id: 'method-_2Frest-DELETE'
+          id: 'method-2f72657374-44454c455445'
           doc: Deletes the entry.
         - name: GET
-          id: 'method-_2Frest-GET'
+          id: 'method-2f72657374-474554'
           doc: Gets the current value.
         - name: POST
-          id: 'method-_2Frest-POST'
+          id: 'method-2f72657374-504f5354'
           doc: Creates a new entry.
           params:
             - name: size
-              id: 'param-_2Frest_3F_5Fmethod_3DPOST-size'
+              id: 'param-2f726573743f5f6d6574686f643d504f5354-73697a65'
               type: int
               optional: true
               default: 4096
               doc: The anticipated maximum size
             - name: text
-              id: 'param-_2Frest_3F_5Fmethod_3DPOST-text'
+              id: 'param-2f726573743f5f6d6574686f643d504f5354-74657874'
               type: str
               optional: false
               doc: The text content for the posting
           returns:
             - type: str
-              id: 'return-_2Frest_3F_5Fmethod_3DPOST-0-str'
+              id: 'return-2f726573743f5f6d6574686f643d504f5354-30-737472'
               doc: The ID of the new posting
           raises:
             - type: HTTPUnauthorized
-              id: 'raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized'
+              id: 'raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564'
               doc: Authenticated access is required
             - type: HTTPForbidden
-              id: 'raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden'
+              id: 'raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e'
               doc: The user does not have posting privileges
         - name: PUT
-          id: 'method-_2Frest-PUT'
+          id: 'method-2f72657374-505554'
           doc: Updates the value.
     - name: method
-      id: 'endpoint-_2Fsub_2Fmethod'
+      id: 'endpoint-2f7375622f6d6574686f64'
       path: /sub/method
       decoratedName: method
       decoratedPath: /sub/method
       doc: This method outputs a JSON list.
     - name: swi
-      id: 'endpoint-_2Fswi'
+      id: 'endpoint-2f737769'
       path: /swi
       decoratedName: swi
       decoratedPath: /swi
       doc: A sub-controller providing only an index.
     - name: unknown
-      id: 'endpoint-_2Funknown'
+      id: 'endpoint-2f756e6b6e6f776e'
       path: /unknown
       decoratedName: unknown/?
       decoratedPath: /unknown/?
@@ -1709,13 +1868,13 @@ application:
   url: http://localhost
   endpoints:
     - name: desc
-      id: 'endpoint-_2Fdesc'
+      id: 'endpoint-2f64657363'
       path: /desc
       decoratedName: desc
       decoratedPath: /desc
       doc: URL tree description.
     - name: describe
-      id: 'endpoint-_2Fdescribe'
+      id: 'endpoint-2f6465736372696265'
       path: /describe
       decoratedName: describe
       decoratedPath: /describe
@@ -1739,43 +1898,43 @@ application:
     chk = '''\
 <?xml version="1.0" encoding="UTF-8"?>
 <application url="http://localhost">
- <endpoint name="" path="/" decorated-name="" decorated-path="/" id="endpoint-_2F">
+ <endpoint name="" path="/" decorated-name="" decorated-path="/" id="endpoint-2f">
   <doc>The default root.</doc>
  </endpoint>
- <endpoint name="desc" path="/desc" decorated-name="desc" decorated-path="/desc" id="endpoint-_2Fdesc">
+ <endpoint name="desc" path="/desc" decorated-name="desc" decorated-path="/desc" id="endpoint-2f64657363">
   <doc>URL tree description.</doc>
  </endpoint>
- <endpoint name="rest" path="/rest" decorated-name="rest" decorated-path="/rest" id="endpoint-_2Frest">
+ <endpoint name="rest" path="/rest" decorated-name="rest" decorated-path="/rest" id="endpoint-2f72657374">
   <doc>A RESTful entry.</doc>
-  <method id="method-_2Frest-DELETE" name="DELETE"><doc>Deletes the entry.</doc></method>
-  <method id="method-_2Frest-GET" name="GET"><doc>Gets the current value.</doc></method>
-  <method id="method-_2Frest-POST" name="POST">
+  <method id="method-2f72657374-44454c455445" name="DELETE"><doc>Deletes the entry.</doc></method>
+  <method id="method-2f72657374-474554" name="GET"><doc>Gets the current value.</doc></method>
+  <method id="method-2f72657374-504f5354" name="POST">
    <doc>Creates a new entry.</doc>
-   <param default="4096" id="param-_2Frest_3F_5Fmethod_3DPOST-size" name="size" optional="True" type="int">
+   <param default="4096" id="param-2f726573743f5f6d6574686f643d504f5354-73697a65" name="size" optional="True" type="int">
     <doc>The anticipated maximum size</doc>
    </param>
-   <param id="param-_2Frest_3F_5Fmethod_3DPOST-text" name="text" optional="False" type="str">
+   <param id="param-2f726573743f5f6d6574686f643d504f5354-74657874" name="text" optional="False" type="str">
     <doc>The text content for the posting</doc>
    </param>
-   <return id="return-_2Frest_3F_5Fmethod_3DPOST-0-str" type="str">
+   <return id="return-2f726573743f5f6d6574686f643d504f5354-30-737472" type="str">
     <doc>The ID of the new posting</doc>
    </return>
-   <raise id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized" type="HTTPUnauthorized">
+   <raise id="raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564" type="HTTPUnauthorized">
     <doc>Authenticated access is required</doc>
    </raise>
-   <raise id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden" type="HTTPForbidden">
+   <raise id="raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e" type="HTTPForbidden">
     <doc>The user does not have posting privileges</doc>
    </raise>
   </method>
-  <method id="method-_2Frest-PUT" name="PUT"><doc>Updates the value.</doc></method>
+  <method id="method-2f72657374-505554" name="PUT"><doc>Updates the value.</doc></method>
  </endpoint>
- <endpoint name="method" path="/sub/method" decorated-name="method" decorated-path="/sub/method" id="endpoint-_2Fsub_2Fmethod">
+ <endpoint name="method" path="/sub/method" decorated-name="method" decorated-path="/sub/method" id="endpoint-2f7375622f6d6574686f64">
   <doc>This method outputs a JSON list.</doc>
  </endpoint>
- <endpoint name="swi" path="/swi" decorated-name="swi" decorated-path="/swi" id="endpoint-_2Fswi">
+ <endpoint name="swi" path="/swi" decorated-name="swi" decorated-path="/swi" id="endpoint-2f737769">
   <doc>A sub-controller providing only an index.</doc>
  </endpoint>
- <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-_2Funknown">
+ <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-2f756e6b6e6f776e">
   <doc>A dynamically generated sub-controller.</doc>
  </endpoint>
 </application>
@@ -1807,59 +1966,59 @@ application:
  xsi:schemaLocation="http://research.sun.com/wadl/2006/10 wadl.xsd"
  >
  <resources base="http://localhost">
-  <resource id="endpoint-_2F" path="">
+  <resource id="endpoint-2f" path="">
    <pd:doc>The default root.</pd:doc>
-   <method id="method-_2F-GET" name="GET"/>
+   <method id="method-2f-474554" name="GET"/>
   </resource>
-  <resource id="endpoint-_2Fdesc" path="desc">
+  <resource id="endpoint-2f64657363" path="desc">
    <pd:doc>URL tree description.</pd:doc>
-   <method id="method-_2Fdesc-GET" name="GET"/>
+   <method id="method-2f64657363-474554" name="GET"/>
   </resource>
-  <resource id="endpoint-_2Frest" path="rest">
+  <resource id="endpoint-2f72657374" path="rest">
    <pd:doc>A RESTful entry.</pd:doc>
-   <method id="method-_2Frest-DELETE" name="DELETE">
+   <method id="method-2f72657374-44454c455445" name="DELETE">
     <pd:doc>Deletes the entry.</pd:doc>
    </method>
-   <method id="method-_2Frest-GET" name="GET">
+   <method id="method-2f72657374-474554" name="GET">
     <pd:doc>Gets the current value.</pd:doc>
    </method>
-   <method id="method-_2Frest-POST" name="POST">
+   <method id="method-2f72657374-504f5354" name="POST">
     <pd:doc>Creates a new entry.</pd:doc>
     <request>
-     <param id="param-_2Frest_3F_5Fmethod_3DPOST-size" name="size" type="xsd:integer" required="false" default="4096">
+     <param id="param-2f726573743f5f6d6574686f643d504f5354-73697a65" name="size" type="xsd:integer" required="false" default="4096">
       <pd:doc>The anticipated maximum size</pd:doc>
      </param>
-     <param id="param-_2Frest_3F_5Fmethod_3DPOST-text" name="text" type="xsd:string" required="true">
+     <param id="param-2f726573743f5f6d6574686f643d504f5354-74657874" name="text" type="xsd:string" required="true">
       <pd:doc>The text content for the posting</pd:doc>
      </param>
     </request>
     <response>
-     <representation id="return-_2Frest_3F_5Fmethod_3DPOST-0-str" element="xsd:string">
+     <representation id="return-2f726573743f5f6d6574686f643d504f5354-30-737472" element="xsd:string">
       <pd:doc>The ID of the new posting</pd:doc>
      </representation>
-     <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-0-HTTPUnauthorized" element="HTTPUnauthorized">
+     <fault id="raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564" element="HTTPUnauthorized">
       <pd:doc>Authenticated access is required</pd:doc>
      </fault>
-     <fault id="raise-_2Frest_3F_5Fmethod_3DPOST-1-HTTPForbidden" element="HTTPForbidden">
+     <fault id="raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e" element="HTTPForbidden">
       <pd:doc>The user does not have posting privileges</pd:doc>
      </fault>
     </response>
    </method>
-   <method id="method-_2Frest-PUT" name="PUT">
+   <method id="method-2f72657374-505554" name="PUT">
     <pd:doc>Updates the value.</pd:doc>
    </method>
   </resource>
-  <resource id="endpoint-_2Fsub_2Fmethod" path="sub/method">
+  <resource id="endpoint-2f7375622f6d6574686f64" path="sub/method">
    <pd:doc>This method outputs a JSON list.</pd:doc>
-   <method id="method-_2Fsub_2Fmethod-GET" name="GET"/>
+   <method id="method-2f7375622f6d6574686f64-474554" name="GET"/>
   </resource>
-  <resource id="endpoint-_2Fswi" path="swi">
+  <resource id="endpoint-2f737769" path="swi">
    <pd:doc>A sub-controller providing only an index.</pd:doc>
-   <method id="method-_2Fswi-GET" name="GET"/>
+   <method id="method-2f737769-474554" name="GET"/>
   </resource>
-  <resource id="endpoint-_2Funknown" path="unknown">
+  <resource id="endpoint-2f756e6b6e6f776e" path="unknown">
    <pd:doc>A dynamically generated sub-controller.</pd:doc>
-   <method id="method-_2Funknown-GET" name="GET"/>
+   <method id="method-2f756e6b6e6f776e-474554" name="GET"/>
   </resource>
  </resources>
 </application>
