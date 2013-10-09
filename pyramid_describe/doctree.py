@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-from docutils import utils, nodes
+from docutils import utils, nodes, core
 from docutils.parsers.rst.directives.html import MetaBody
 from pyramid_controllers.util import getVersion
 from .i18n import _
@@ -30,7 +30,17 @@ def rmeta(*args, **kw):
 def rst2fragments(text):
   if not text:
     return []
-  return [rpara(rtext(text))]
+  # todo: this generates error output to STDERR, eg:
+  #   <string>:12: (WARNING/2) Inline strong start-string without end-string.
+  # it would be *great* if '<string>' were replaced with the actual error
+  # source, i.e. controller/method/docstring/etc.
+
+  # TODO: optional failure behaviour: convert the entire
+  #       text to a paragraph via:
+  #         return [rpara(rtext(text))]
+  #       ==> requires error detection.
+
+  return list(core.publish_doctree(text))
 
 # TODO: perhaps all these functions would be much simpler if rstMax was
 #       checked once, at exit, and if false, all classes and ids were
