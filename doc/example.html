@@ -6,7 +6,7 @@
 <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
 <title>Contents of &quot;/&quot;</title>
 <meta content="Contents of &quot;/&quot;" name="title" />
-<meta content="pyramid-describe/0.1.23 [format=html]" name="generator" />
+<meta content="pyramid-describe/0.1.25 [format=html]" name="generator" />
 <meta content="http://localhost/" name="location" />
 <meta content="A4" name="pdfkit-page-size" />
 <meta content="Portrait" name="pdfkit-orientation" />
@@ -20,20 +20,23 @@ body {
   padding: 2em;
 }
 
-#section-endpoints > h1 {
+.section {
+  padding-left: 30px;
+}
+
+.section > *:first-child {
+  margin-left: -30px;
+}
+
+.document > .section > h1 {
   margin-top: 0;
 }
 
-.section > * {
-  margin-left: 30px;
+.document > .section {
+  padding-left: 0;
 }
 
-.section > h1,
-.section > h2,
-.section > h3,
-.section > h4,
-.section > h5,
-.section > h6 {
+.document > .section > *:first-child {
   margin-left: 0;
 }
 
@@ -47,75 +50,77 @@ body {
 </head>
 <body>
 <div class="document">
+
+
 <div class="endpoints section" id="section-endpoints">
 <h1>Contents of &quot;/&quot;</h1>
-<div class="endpoint section" id="endpoint-_2F">
+<div class="endpoint section" id="endpoint-2f">
 <h2>/</h2>
 <p>The application root.</p>
 </div>
-<div class="endpoint section" id="endpoint-_2Fcontact">
+<div class="endpoint section" id="endpoint-2f636f6e74616374">
 <h2>/contact</h2>
 <p>Contact manager.</p>
-<div class="methods section" id="methods-endpoint-_2Fcontact">
+<div class="methods section" id="methods-endpoint-2f636f6e74616374">
 <h3>Methods</h3>
-<div class="method section" id="method-_2Fcontact-POST">
-<h4><strong>POST</strong></h4>
+<div class="method section" id="method-2f636f6e74616374-504f5354">
+<h4>POST</h4>
 <p>Creates a new 'contact' object.</p>
 </div>
 </div>
 </div>
-<div class="endpoint section" id="endpoint-_2Fcontact_2FCONTACTID">
+<div class="endpoint section" id="endpoint-2f636f6e746163742f434f4e544143544944">
 <h2>/contact/{CONTACTID}</h2>
 <p>RESTful access to a specific contact.</p>
-<div class="methods section" id="methods-endpoint-_2Fcontact_2FCONTACTID">
+<div class="methods section" id="methods-endpoint-2f636f6e746163742f434f4e544143544944">
 <h3>Methods</h3>
-<div class="method section" id="method-_2Fcontact_2FCONTACTID-DELETE">
-<h4><strong>DELETE</strong></h4>
+<div class="method section" id="method-2f636f6e746163742f434f4e544143544944-44454c455445">
+<h4>DELETE</h4>
 <p>Delete this contact.</p>
 </div>
-<div class="method section" id="method-_2Fcontact_2FCONTACTID-GET">
-<h4><strong>GET</strong></h4>
+<div class="method section" id="method-2f636f6e746163742f434f4e544143544944-474554">
+<h4>GET</h4>
 <p>Get this contact's details.</p>
 </div>
-<div class="method section" id="method-_2Fcontact_2FCONTACTID-PUT">
-<h4><strong>PUT</strong></h4>
+<div class="method section" id="method-2f636f6e746163742f434f4e544143544944-505554">
+<h4>PUT</h4>
 <p>Update this contact's details.</p>
 </div>
 </div>
 </div>
-<div class="endpoint section" id="endpoint-_2Flogin">
+<div class="endpoint section" id="endpoint-2f6c6f67696e">
 <h2>/login</h2>
 <p>Authenticate against the server.</p>
 </div>
-<div class="endpoint section" id="endpoint-_2Flogout">
+<div class="endpoint section" id="endpoint-2f6c6f676f7574">
 <h2>/logout</h2>
 <p>Remove authentication tokens.</p>
 </div>
 </div>
 <div class="legend section" id="section-legend">
 <h1>Legend</h1>
-<div class="legend-item section" id="legend-item-_7BNAME_7D">
-<h2><cite>{NAME}</cite></h2>
+<div class="legend-item section" id="legend-item-7b4e414d457d">
+<h2>{NAME}</h2>
 <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.</p>
 </div>
-<div class="legend-item section" id="legend-item-_3CNAME_3E">
-<h2><cite>&lt;NAME&gt;</cite></h2>
+<div class="legend-item section" id="legend-item-3c4e414d453e">
+<h2>&lt;NAME&gt;</h2>
 <p>Not an actual endpoint, but the HTTP method to use.</p>
 </div>
-<div class="legend-item section" id="legend-item-NAME_2F_3F">
-<h2><cite>NAME/?</cite></h2>
+<div class="legend-item section" id="legend-item-4e414d452f3f">
+<h2>NAME/?</h2>
 <p>Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.</p>
 </div>
-<div class="legend-item section" id="legend-item-_2A">
-<h2><cite>*</cite></h2>
+<div class="legend-item section" id="legend-item-2a">
+<h2>*</h2>
 <p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>
 </div>
-<div class="legend-item section" id="legend-item-_2E_2E_2E">
-<h2><cite>...</cite></h2>
+<div class="legend-item section" id="legend-item-2e2e2e">
+<h2>...</h2>
 <p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>

@@ -1,28 +1,31 @@
 application:
   endpoints:
-  - {decoratedName: '', decoratedPath: /, doc: The application root., id: endpoint-_2F,
+  - {decoratedName: '', decoratedPath: /, doc: The application root., id: endpoint-2f,
     name: '', path: /}
   - decoratedName: contact
     decoratedPath: /contact
     doc: Contact manager.
-    id: endpoint-_2Fcontact
+    id: endpoint-2f636f6e74616374
     methods:
-    - {doc: Creates a new 'contact' object., id: method-_2Fcontact-POST, name: POST}
+    - {doc: Creates a new 'contact' object., id: method-2f636f6e74616374-504f5354,
+      name: POST}
     name: contact
     path: /contact
   - decoratedName: '{CONTACTID}'
     decoratedPath: /contact/{CONTACTID}
     doc: RESTful access to a specific contact.
-    id: endpoint-_2Fcontact_2FCONTACTID
+    id: endpoint-2f636f6e746163742f434f4e544143544944
     methods:
-    - {doc: Delete this contact., id: method-_2Fcontact_2FCONTACTID-DELETE, name: DELETE}
-    - {doc: Get this contact's details., id: method-_2Fcontact_2FCONTACTID-GET, name: GET}
-    - {doc: Update this contact's details., id: method-_2Fcontact_2FCONTACTID-PUT,
+    - {doc: Delete this contact., id: method-2f636f6e746163742f434f4e544143544944-44454c455445,
+      name: DELETE}
+    - {doc: Get this contact's details., id: method-2f636f6e746163742f434f4e544143544944-474554,
+      name: GET}
+    - {doc: Update this contact's details., id: method-2f636f6e746163742f434f4e544143544944-505554,
       name: PUT}
     name: CONTACTID
     path: /contact/CONTACTID
   - {decoratedName: login, decoratedPath: /login, doc: Authenticate against the server.,
-    id: endpoint-_2Flogin, name: login, path: /login}
+    id: endpoint-2f6c6f67696e, name: login, path: /login}
   - {decoratedName: logout, decoratedPath: /logout, doc: Remove authentication tokens.,
-    id: endpoint-_2Flogout, name: logout, path: /logout}
+    id: endpoint-2f6c6f676f7574, name: logout, path: /logout}
   url: http://localhost
