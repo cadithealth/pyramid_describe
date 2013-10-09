@@ -888,7 +888,7 @@ class Describer(object):
     for endpoint in data['application']['endpoints']:
       if not endpoint.get('methods'):
         endpoint['methods'] = [dict(
-          id='method-{}-GET'.format(tag(endpoint['path'])),
+          id='method-{}-{}'.format(tag(endpoint['path']), tag('GET')),
           name='GET')]
     data = dict2node(data)
     data = self.et2wadl(options, data)
