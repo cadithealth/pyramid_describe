@@ -84,6 +84,10 @@ class Entry(adict):
     an instantiated method, and is dynamically instantiated when
     handling a request.
 
+  isIndex : bool
+    True IFF this is a forceSlash-only endpoint (i.e. a suffixed
+    '/' when sending requests to this endpoint).
+
   :Extension Attributes:
 
   The following attributes are *recognized*, but not produced, by the

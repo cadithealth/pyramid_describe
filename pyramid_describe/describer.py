@@ -478,6 +478,15 @@ class Describer(object):
     else:
       meta = options.dispatcher.getMeta(controller)
       ret.isEndpoint = bool(meta.index)
+      if ret.isEndpoint:
+        # todo: this violates the pyramid-controllers boundary... fix!
+        ret.isIndex = bool([
+          spec
+          for handler in meta.index
+          for spec in getattr(handler, options.dispatcher.PCATTR).index
+          if spec.forceSlash or ( spec.forceSlash is not False
+                                  and options.dispatcher.defaultForceSlash )
+          ])
     return ret
 
   #----------------------------------------------------------------------------
