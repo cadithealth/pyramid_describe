@@ -49,15 +49,15 @@ def render(data):
   # todo: test this bullet_list stuff (i.e. set showInfo to false)
 
   endpoints = rcont(rtitle(rtext(title)))
+  epcont = endpoints
   if data.options.rstMax:
     endpoints['ids'] = ['section-endpoints']
     endpoints['classes'] = ['endpoints']
   if not data.options.showInfo:
-    tmp = endpoints
-    endpoints = nodes.bullet_list('')
-    tmp.append(endpoints)
+    epcont = nodes.bullet_list('', bullet='*')
+    endpoints.append(epcont)
   for endpoint in data.endpoints:
-    endpoints.append(render_entry(data, endpoint))
+    epcont.append(render_entry(data, endpoint))
   doc.append(endpoints)
 
   if data.options.showLegend:
