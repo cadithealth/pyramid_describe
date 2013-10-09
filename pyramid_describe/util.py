@@ -46,11 +46,8 @@ def tolist(obj):
   return [obj]
 
 #------------------------------------------------------------------------------
-tag_re = re.compile('[^a-zA-Z0-9]')
-def tag_repl(match):
-  return '_' + binascii.hexlify(match.group(0)).upper()
 def tag(text):
-  return tag_re.sub(tag_repl, text)
+  return binascii.hexlify(text).lower()
 
 #------------------------------------------------------------------------------
 # end of $Id$
