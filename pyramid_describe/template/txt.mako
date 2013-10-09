@@ -37,9 +37,10 @@ for entry in entries:
   else:
     cur += indent + data.root
   cur += entry.dname
-  folder = ( not entry.isEndpoint and not entry.isMethod ) or \
-    len([c for c in entry._dchildren or []
-         if not ( c.isRest and not c.isController )]) > 0
+  folder = ( not entry.isEndpoint and not entry.isMethod ) \
+    or len([c for c in entry._dchildren or []
+            if not ( c.isRest and not c.isController )]) > 0 \
+    or ( entry.isEndpoint and entry.isController and entry.isIndex )
   if folder and not cur.endswith('/'):
     cur += '/'
   # cur += ' [' + str(len(entry._dchildren or [])) + ']'
