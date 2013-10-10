@@ -10,6 +10,8 @@ import re, textwrap
 from docutils import core, utils, nodes, writers
 import docutils.writers
 
+# TODO: all calls to `rstEscape` need to be revisited...
+
 #------------------------------------------------------------------------------
 def rstEscape(text, context=None):
   if context in ('`',):
@@ -118,13 +120,18 @@ class Output:
     self.lines.append(data)
   def extend(self, data):
     self.lines.extend(data)
-  def data(self, indent=None, notrail=False):
+  def data(self, indent=None, first_indent=None, notrail=False):
     ret = ''.join(reduce(collapseLines, self.lines, []))
     if notrail and ret.endswith('\n'):
       ret = ret[:-1]
     if indent is None:
       return ret
-    return indent + newline_re.sub('\n' + indent.replace('\\', '\\\\') + '\\1', ret)
+    ret = newline_re.sub('\n' + indent.replace('\\', '\\\\') + '\\1', ret)
+    if first_indent is False:
+      return ret
+    if first_indent is None:
+      first_indent = indent
+    return first_indent + ret
 
 #------------------------------------------------------------------------------
 class RstTranslator(nodes.GenericNodeVisitor):
@@ -150,6 +157,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output   = Output()
     self.stack    = []
     self.level    = 0
+    self.cache    = None
+    self.cstack   = []
 
   #----------------------------------------------------------------------------
   def _pushStack(self):
@@ -339,8 +348,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
         cmd += ' ' + ' '.join(sorted(classes))
     self.output.append(cmd)
     self.output.emptyline()
-    self.output.append(self.settings.indent
-                       + text.replace('\n', '\n' + self.settings.indent))
+    self.output.append(
+      self.settings.indent + text.replace('\n', '\n' + self.settings.indent))
     self.output.newline()
 
   #----------------------------------------------------------------------------
@@ -410,9 +419,10 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def depart_list_item(self, node):
     blt  = node.parent.get('bullet', '*')
-    text = self._popStack().data(indent=' ' * ( len(blt) + 1 ), notrail=True)
+    text = self._popStack().data(
+      indent=' ' * ( len(blt) + 1 ), first_indent=False, notrail=True)
     self.output.emptyline()
-    self.output.append(blt + ' ' + rstEscape(text[len(blt) + 1:]))
+    self.output.append(blt + ' ' + rstEscape(text))
     self.output.newline()
 
   #----------------------------------------------------------------------------
@@ -439,6 +449,106 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output.emptyline()
     self.output.append(text)
     self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_comment(self, node):
+    self._pushStack()
+
+  #----------------------------------------------------------------------------
+  def depart_comment(self, node):
+    text = self._popStack().data(
+      indent=self.settings.indent, first_indent=False, notrail=True)
+    self.output.emptyline()
+    self.output.append('.. ' + rstEscape(text))
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def _pushCache(self, cache):
+    self.cstack.append(self.cache)
+    self.cache = cache
+
+  #----------------------------------------------------------------------------
+  def _popCache(self):
+    ret = self.cache
+    self.cache = self.cstack.pop()
+    return ret
+
+  #----------------------------------------------------------------------------
+  # TODO: this table rendering needs to be considerable improved!...
+  #----------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------
+  def _getTableColspecs(self, node):
+    while not isinstance(node, nodes.tgroup):
+      node = node.parent
+    return [n for n in node if isinstance(n, nodes.colspec)]
+
+  #----------------------------------------------------------------------------
+  def visit_table(self, node):
+    self.output.emptyline()
+
+  #----------------------------------------------------------------------------
+  def depart_table(self, node):
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_thead(self, node):
+    cspecs = self._getTableColspecs(node)
+    self.output.newline()
+    self.output.append(' '.join(['=' * c['colwidth'] for c in cspecs]))
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def depart_thead(self, node):
+    pass
+
+  #----------------------------------------------------------------------------
+  def visit_tbody(self, node):
+    return self.visit_thead(node)
+
+  #----------------------------------------------------------------------------
+  def depart_tbody(self, node):
+    return self.visit_thead(node)
+
+  #----------------------------------------------------------------------------
+  def visit_row(self, node):
+    self._pushCache(list())
+
+  #----------------------------------------------------------------------------
+  def depart_row(self, node):
+    entries = self._popCache()
+    self.output.newline()
+    cspecs = self._getTableColspecs(node)
+    if len(cspecs) != len(entries):
+      # TODO: tables can be more complex than this...
+      # TODO: sound the alarm in a more docutils-ish way...
+      raise ValueError('column count mismatch (colspecs: %r, row: %r)',
+                       len(cspecs), len(entries))
+    for idx, entry in enumerate(entries):
+      spec = cspecs[idx]
+      entry = entry.strip()
+      if '\n' in entry:
+        # TODO: tables can be more complex than this...
+        # TODO: sound the alarm in a more docutils-ish way...
+        raise ValueError('table cell entry contains a newline')
+      if len(entry) > spec['colwidth']:
+        # TODO: tables can be more complex than this...
+        # TODO: sound the alarm in a more docutils-ish way...
+        raise ValueError('table cell entry contents exceeds colwidth')
+      self.output.append(entry)
+      if idx + 1 < len(entries):
+        self.output.append(' ' * ( spec['colwidth'] - len(entry) ))
+        self.output.append(' ')
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def visit_entry(self, node):
+    self._pushStack()
+
+  #----------------------------------------------------------------------------
+  def depart_entry(self, node):
+    text = self._popStack().data()
+    self.cache.append(text)
 
 #------------------------------------------------------------------------------
 # end of $Id$

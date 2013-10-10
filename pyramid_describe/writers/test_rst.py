@@ -275,6 +275,40 @@ Inline strong start-string without end-string.
     chk = '.. class:: beta test\n\na paragraph.\n'
     self.assertMultiLineEqual(self.rt(src), chk)
 
+  #----------------------------------------------------------------------------
+  def test_table(self):
+    src = '''\
+some text.
+
+====================  =============================================
+Cell 1                Column 2
+====================  =============================================
+``item 1.1``          item 1.2: **foo**
+item 2.1              ``item 2.2``
+====================  =============================================
+
+some more text.
+'''
+    chk = '''\
+some text.
+
+==================== =============================================
+Cell 1               Column 2
+==================== =============================================
+``item 1.1``         item 1.2: **foo**
+item 2.1             ``item 2.2``
+==================== =============================================
+
+some more text.
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_comment(self):
+    src = 'some text.\n\n.. a comment: non-descript, eh?\n\nsome more text.'
+    chk = 'some text.\n\n.. a comment: non-descript, eh?\n\nsome more text.\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------
