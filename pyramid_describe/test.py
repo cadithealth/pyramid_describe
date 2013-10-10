@@ -997,7 +997,7 @@ Handler: pyramid_describe.test.Rest().get [method]
 
 Gets the current value.
 
-.. class:: method post-is-not-put fake-docs-here
+.. class:: fake-docs-here method post-is-not-put
 
 .. _`method-2f72657374-504f5354`:
 
@@ -1446,106 +1446,106 @@ body {{
  <body>
   <div class="document">
    <div class="endpoints section" id="section-endpoints">
-    <h1>Application API</h1>
+    <h1 class="section-title">Application API</h1>
     <div class="endpoint section" id="endpoint-2f">
-     <h2>/</h2>
+     <h2 class="section-title">/</h2>
      <p>The default root.</p>
     </div>
     <div class="endpoint section" id="endpoint-2f64657363">
-     <h2>/desc</h2>
+     <h2 class="section-title">/desc</h2>
      <p>URL tree description.</p>
     </div>
     <div class="endpoint section" id="endpoint-2f72657374">
-     <h2>/rest</h2>
+     <h2 class="section-title">/rest</h2>
      <p>A RESTful entry.</p>
      <div class="methods section" id="methods-endpoint-2f72657374">
-      <h3>Methods</h3>
+      <h3 class="section-title">Methods</h3>
       <div class="method section" id="method-2f72657374-44454c455445">
-       <h4>DELETE</h4>
+       <h4 class="section-title">DELETE</h4>
        <p>Deletes the entry.</p>
       </div>
       <div class="method section" id="method-2f72657374-474554">
-       <h4>GET</h4>
+       <h4 class="section-title">GET</h4>
        <p>Gets the current value.</p>
       </div>
       <div class="fake-docs-here method post-is-not-put section" id="method-2f72657374-504f5354">
-       <h4>POST</h4>
+       <h4 class="section-title">POST</h4>
        <p>Creates a new entry.</p>
        <div class="params section" id="params-method-2f72657374-504f5354">
-        <h5>Parameters</h5>
+        <h5 class="section-title">Parameters</h5>
         <div class="param section" id="param-method-2f72657374-504f5354-73697a65">
-         <h6>size</h6>
+         <h6 class="section-title">size</h6>
          <p class="spec">int, optional, default 4096</p>
          <p>The anticipated maximum size</p>
         </div>
         <div class="param section" id="param-method-2f72657374-504f5354-74657874">
-         <h6>text</h6>
+         <h6 class="section-title">text</h6>
          <p class="spec">str</p>
          <p>The text content for the posting</p>
         </div>
        </div>
        <div class="returns section" id="returns-method-2f72657374-504f5354">
-        <h5>Returns</h5>
+        <h5 class="section-title">Returns</h5>
         <div class="return section" id="return-method-2f72657374-504f5354-737472">
-         <h6>str</h6>
+         <h6 class="section-title">str</h6>
          <p>The ID of the new posting</p>
         </div>
        </div>
        <div class="raises section" id="raises-method-2f72657374-504f5354">
-        <h5>Raises</h5>
+        <h5 class="section-title">Raises</h5>
         <div class="raise section" id="raise-method-2f72657374-504f5354-48545450556e617574686f72697a6564">
-         <h6>HTTPUnauthorized</h6>
+         <h6 class="section-title">HTTPUnauthorized</h6>
          <p>Authenticated access is required</p>
         </div>
         <div class="raise section" id="raise-method-2f72657374-504f5354-48545450466f7262696464656e">
-         <h6>HTTPForbidden</h6>
+         <h6 class="section-title">HTTPForbidden</h6>
          <p>The user does not have posting privileges</p>
         </div>
        </div>
       </div>
       <div class="method section" id="method-2f72657374-505554">
-       <h4>PUT</h4>
+       <h4 class="section-title">PUT</h4>
        <p>Updates the value.</p>
       </div>
      </div>
     </div>
     <div class="endpoint section" id="endpoint-2f7375622f6d6574686f64">
-     <h2>/sub/method</h2>
+     <h2 class="section-title">/sub/method</h2>
      <p>This method outputs a JSON list.</p>
     </div>
     <div class="endpoint section sub-with-index" id="endpoint-2f737769">
-     <h2>/swi</h2>
+     <h2 class="section-title">/swi</h2>
      <p>A sub-controller providing only an index.</p>
     </div>
     <div class="endpoint section" id="endpoint-2f756e6b6e6f776e">
-     <h2>/unknown/?</h2>
+     <h2 class="section-title">/unknown/?</h2>
      <p>A dynamically generated sub-controller.</p>
     </div>
    </div>
    <div class="legend section" id="section-legend">
-    <h1>Legend</h1>
+    <h1 class="section-title">Legend</h1>
     <div class="legend-item section" id="legend-item-7b4e414d457d">
-     <h2>{{NAME}}</h2>
+     <h2 class="section-title">{{NAME}}</h2>
      <p>Placeholder -- usually replaced with an ID or other identifier of a RESTful
 object.</p>
     </div>
     <div class="legend-item section" id="legend-item-3c4e414d453e">
-     <h2>&lt;NAME&gt;</h2>
+     <h2 class="section-title">&lt;NAME&gt;</h2>
      <p>Not an actual endpoint, but the HTTP method to use.</p>
     </div>
     <div class="legend-item section" id="legend-item-4e414d452f3f">
-     <h2>NAME/?</h2>
+     <h2 class="section-title">NAME/?</h2>
      <p>Dynamically evaluated endpoint; no further information can be determined
 without request-specific details.</p>
     </div>
     <div class="legend-item section" id="legend-item-2a">
-     <h2>*</h2>
+     <h2 class="section-title">*</h2>
      <p>This endpoint is a <cite>default</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>
     </div>
     <div class="legend-item section" id="legend-item-2e2e2e">
-     <h2>...</h2>
+     <h2 class="section-title">...</h2>
      <p>This endpoint is a <cite>lookup</cite> handler, and is therefore free to interpret path
 arguments dynamically; no further information can be determined without
 request-specific details.</p>

@@ -88,6 +88,10 @@ class HtmlDoctreeFixer():
   def dispatch_visit(self, node):
     if not hasattr(node, 'attributes'):
       return
+    if isinstance(node, nodes.title) \
+        and isinstance(node.parent, nodes.section) \
+        and 'section-title' not in node['classes']:
+      node['classes'].append('section-title')
     ids = node.get('ids', [])
     if len(ids) > 1:
       node['ids'] = node['ids'][1:]
