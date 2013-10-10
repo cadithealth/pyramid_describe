@@ -1419,11 +1419,11 @@ body {{
   padding-left: 30px;
 }}
 
-.section > *:first-child {{
+.section > .section-title {{
   margin-left: -30px;
 }}
 
-.document > .section > h1 {{
+.document > .section > .section-title {{
   margin-top: 0;
 }}
 
@@ -1431,7 +1431,7 @@ body {{
   padding-left: 0;
 }}
 
-.document > .section > *:first-child {{
+.document > .section > .section-title {{
   margin-left: 0;
 }}
 
@@ -1439,6 +1439,7 @@ body {{
   font-size: 70%;
   margin-top: 5em;
   border-top: 2px solid #e0e0e0;
+  padding-top: 1em;
 }}
 
 </style>
