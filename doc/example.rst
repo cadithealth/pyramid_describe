@@ -106,5 +106,5 @@ request-specific details.
 
 .. meta::
     :title: Contents of "/"
-    :generator: pyramid-describe/0.1.25 [format=rst]
+    :generator: pyramid-describe/0.1.26 [format=rst]
     :location: http://localhost/
