@@ -303,6 +303,66 @@ some more text.
 '''
     self.assertMultiLineEqual(self.rt(src), chk)
 
+## TODO: add support for grid tables...
+#   #----------------------------------------------------------------------------
+#   def test_table_grid(self):
+#     src = '''\
+# +------------+------------+-----------+
+# | Header 1   | Header 2   | Header 3  |
+# +============+============+===========+
+# | body row 1 | column 2   | column 3  |
+# +------------+------------+-----------+
+# | body row 2 | Cells may span columns.|
+# +------------+------------+-----------+
+# | body row 3 | Cells may  | - Cells   |
+# +------------+ span rows. | - contain |
+# | body row 4 |            | - blocks. |
+# +------------+------------+-----------+
+# '''
+#     chk = '''\
+# +------------+------------+-----------+
+# | Header 1   | Header 2   | Header 3  |
+# +============+============+===========+
+# | body row 1 | column 2   | column 3  |
+# +------------+------------+-----------+
+# | body row 2 | Cells may span columns.|
+# +------------+------------+-----------+
+# | body row 3 | Cells may  | - Cells   |
+# +------------+ span rows. | - contain |
+# | body row 4 |            | - blocks. |
+# +------------+------------+-----------+
+# '''
+#     self.assertMultiLineEqual(self.rt(src), chk)
+
+## TODO: add support for multi-row colspecs...
+#   #----------------------------------------------------------------------------
+#   def test_table_grid(self):
+#     src = '''\
+# =====  =====  ======
+#    Inputs     Output
+# ------------  ------
+#   A      B    A or B
+# =====  =====  ======
+# False  False  False
+# True   False  True
+# False  True   True
+# True   True   True
+# =====  =====  ======
+# '''
+#     chk = '''\
+# ===== ===== ======
+# Inputs      Output
+# ----------- ------
+# A     B     A or B
+# ===== ===== ======
+# False False False
+# True  False True
+# False True  True
+# True  True  True
+# ===== ===== ======
+# '''
+#     self.assertMultiLineEqual(self.rt(src), chk)
+
   #----------------------------------------------------------------------------
   def test_comment(self):
     src = 'some text.\n\n.. a comment: non-descript, eh?\n\nsome more text.'
