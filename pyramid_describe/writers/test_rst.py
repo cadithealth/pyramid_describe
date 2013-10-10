@@ -98,6 +98,12 @@ a `link with space`_.
     self.assertMultiLineEqual(self.rt(src), chk)
 
   #----------------------------------------------------------------------------
+  def test_link_embedded_with_caps(self):
+    src = 'a `Link With Space <http://example.com>`_.'
+    chk = 'a `Link With Space <http://example.com>`_.\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
   def test_literal_block(self):
     src = 'A literal example::\n\n  Code Line 1\n  ==> code line 2\n'
     chk = 'A literal example:\n\n::\n\n    Code Line 1\n    ==> code line 2\n'

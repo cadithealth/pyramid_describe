@@ -366,9 +366,11 @@ class RstTranslator(nodes.GenericNodeVisitor):
     #       instead, there should be a helper method.
     sibs = list(node.parent)
     idx  = sibs.index(node)
+    # todo: the ".lower()" is a little disconcerting here... is there
+    #       a better way?...
     if idx + 1 < len(sibs) \
         and isinstance(sibs[idx + 1], nodes.target) \
-        and node['name'] in sibs[idx + 1]['names'] \
+        and node['name'].lower() in sibs[idx + 1]['names'] \
         and sibs[idx + 1].referenced == 1:
       text = self._popStack().data(notrail=True)
       self._pushStack()
