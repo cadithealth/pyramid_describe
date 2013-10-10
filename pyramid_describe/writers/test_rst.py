@@ -269,6 +269,12 @@ Inline strong start-string without end-string.
     #   <string>:1: (WARNING/2) Inline strong start-string without end-string.
     self.assertMultiLineEqual(self.rt(src), chk)
 
+  #----------------------------------------------------------------------------
+  def test_paragraph_with_class(self):
+    src = '.. class:: test beta\n\na paragraph.'
+    chk = '.. class:: beta test\n\na paragraph.\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------

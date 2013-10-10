@@ -191,7 +191,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
         self.output.emptyline()
     if node['classes']:
       self.output.emptyline()
-      self.output.append('.. class:: ' + ' '.join(node['classes']))
+      self.output.append('.. class:: ' + ' '.join(sorted(node['classes'])))
       self.output.emptyline()
     if node['ids']:
       # note: only generating an `id` node IFF they are not generated
@@ -310,6 +310,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_paragraph(self, node):
+    self._putAttributes(node)
     self._pushStack()
 
   #----------------------------------------------------------------------------
