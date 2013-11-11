@@ -120,6 +120,9 @@ class Entry(adict):
     default : str, optional
       The default value for this parameter, if `optional` is true.
 
+    classes : list(str), optional
+      Similar to Entry.classes, but parameter-specific.
+
     doc : str, optional
       Parameter-specific documentation.
 
@@ -132,6 +135,9 @@ class Entry(adict):
     type : str
       The return type.
 
+    classes : list(str), optional
+      Similar to Entry.classes, but return value-specific.
+
     doc : str, optional
       Documentation about this return type.
 
@@ -142,6 +148,9 @@ class Entry(adict):
 
     type : str
       The exception/error type.
+
+    classes : list(str), optional
+      Similar to Entry.classes, but exception/error-specific.
 
     doc : str, optional
       Documentation about this exception/error type.
