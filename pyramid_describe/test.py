@@ -147,7 +147,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_autodescribe_format_txt(self):
-    'The Describer can render a plain-text hierarchy'
+    ## The Describer can render a plain-text hierarchy
     root = SimpleRoot()
     # todo: yaml and pdf are not always there...
     root.desc = DescribeController(
@@ -179,7 +179,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_autodescribe_format_txt_asciisettings(self):
-    'The Describer can limit plain-text to 7-bit ASCII characters only (via global settings)'
+    ## The Describer can limit plain-text to 7-bit ASCII characters only (via global settings)
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -203,7 +203,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_autodescribe_format_txt_asciiquerystring(self):
-    'The Describer can limit plain-text to 7-bit ASCII characters only (via query-string)'
+    ## The Describer can limit plain-text to 7-bit ASCII characters only (via query-string)
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -227,7 +227,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_filename(self):
-    'The DescribeController can use a URL path other than "application.{EXT}"'
+    ## The DescribeController can use a URL path other than "application.{EXT}"
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -252,7 +252,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_other_paths_404(self):
-    'The DescribeController responds with 404 for unknown path requests'
+    ## The DescribeController responds with 404 for unknown path requests
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -264,7 +264,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_redirect(self):
-    'The DescribeController can expose a persistent path that redirects to the "real" location'
+    ## The DescribeController can expose a persistent path that redirects to the "real" location
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -296,7 +296,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_indexredirect_nobasename(self):
-    'The DescribeController redirects the index request to the fullname when no basename'
+    ## The DescribeController redirects the index request to the fullname when no basename
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -318,7 +318,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_indexredirect_301(self):
-    'The DescribeController index redirect option allows 301'
+    ## The DescribeController index redirect option allows 301
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -333,7 +333,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_indexredirect_expliciturl(self):
-    'The DescribeController index redirect option allows explicit URL'
+    ## The DescribeController index redirect option allows explicit URL
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -348,7 +348,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_indexredirect_expliciturl_301(self):
-    'The DescribeController index redirect option allows explicit URL'
+    ## The DescribeController index redirect option allows explicit URL
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -363,7 +363,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_option_indexredirect_expliciturl_relative(self):
-    'The DescribeController index redirect option allows explicit URL'
+    ## The DescribeController index redirect option allows explicit URL
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL \t  tree\n    description.',
@@ -378,7 +378,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_include(self):
-    'Setting the Describer `include` parameter is exclusive'
+    ## Setting the Describer `include` parameter is exclusive
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -395,7 +395,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_exclude(self):
-    'Setting the Describer `exclude` parameter is inclusive'
+    ## Setting the Describer `exclude` parameter is inclusive
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -417,7 +417,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_request_option_control_default(self):
-    'By default, no request options are honored during rendering'
+    ## By default, no request options are honored during rendering
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -440,7 +440,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_request_option_control_enable_all_txt(self):
-    'The rendering options pulled from the request parameters can be set to all options (txt)'
+    ## The rendering options pulled from the request parameters can be set to all options (txt)
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -459,7 +459,7 @@ class DescribeTest(TestHelper):
 
   #----------------------------------------------------------------------------
   def test_request_option_control_enable_all_rst(self):
-    'The rendering options pulled from the request parameters can be set to all options (rst)'
+    ## The rendering options pulled from the request parameters can be set to all options (rst)
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -491,7 +491,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_request_option_control_enable_all_html(self):
-    'The rendering options pulled from the request parameters can be set to all options (html)'
+    ## The rendering options pulled from the request parameters can be set to all options (html)
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -530,7 +530,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_request_option_control_enable_list(self):
-    'The rendering options pulled from the request parameters can be a list of specific options'
+    ## The rendering options pulled from the request parameters can be a list of specific options
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -554,7 +554,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_mixed_restful_and_dispatch_txt(self):
-    'The Describer supports mixing RESTful and URL component methods in "txt" format'
+    ## The Describer supports mixing RESTful and URL component methods in "txt" format
     class Access(Controller):
       @index(forceSlash=False)
       def index(self, request):
@@ -589,7 +589,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_format_txt_differentiates_forced_slash_index(self):
-    'The Describer can differentiate a forced-slash index'
+    ## The Describer can differentiate a forced-slash index
     class SubIndexForceSlash(Controller):
       @index(forceSlash=True)
       def myindex(self, request):
@@ -619,7 +619,7 @@ Contents of "/"
 
   #----------------------------------------------------------------------------
   def test_format_rst_standard(self):
-    'The Describer can render a reStructuredText description'
+    ## The Describer can render a reStructuredText description
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -813,7 +813,7 @@ request-specific details.
 
   #----------------------------------------------------------------------------
   def test_format_rst_title(self):
-    'The Describer can change the reStructuredText title based on options'
+    ## The Describer can change the reStructuredText title based on options
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -886,7 +886,7 @@ request-specific details.
 
   #----------------------------------------------------------------------------
   def test_format_rst_maximum(self):
-    'The Describer renders reStructuredText with maximum decorations'
+    ## The Describer renders reStructuredText with maximum decorations
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -1237,7 +1237,7 @@ request-specific details.
 
   #----------------------------------------------------------------------------
   def test_mixed_restful_and_dispatch_rst(self):
-    'The Describer supports mixing RESTful and URL component methods in "rst" format'
+    ## The Describer supports mixing RESTful and URL component methods in "rst" format
     class Access(Controller):
       @index
       def index(self, request):
@@ -1294,7 +1294,7 @@ Return the groups for this object
 
   #----------------------------------------------------------------------------
   def test_prune_index(self):
-    'The Describer can collapse up index docs'
+    ## The Describer can collapse up index docs
     class Root(Controller):
       'The Root'
       @index
@@ -1319,7 +1319,7 @@ The index method
 
   #----------------------------------------------------------------------------
   def test_restructuredtext_in_documentation(self):
-    'The Describer can integrate reStructuredText from docstrings'
+    ## The Describer can integrate reStructuredText from docstrings
     class Root(Controller):
       @index
       def index(self, request):
@@ -1380,7 +1380,7 @@ The following `skill` levels exist:
 
   #----------------------------------------------------------------------------
   def test_format_html(self):
-    'The Describer can render HTML'
+    ## The Describer can render HTML
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -1563,7 +1563,7 @@ request-specific details.</p>
 
   #----------------------------------------------------------------------------
   def test_AsIs(self):
-    'The Describer honors the format-specific `filters` option'
+    ## The Describer honors the format-specific `filters` option
     from docutils import nodes
     def fiddler(doc, options):
       doc['classes'].append('fiddled')
@@ -1624,7 +1624,7 @@ request-specific details.</p>
 
   #----------------------------------------------------------------------------
   def test_format_json(self):
-    'The Describer can render JSON'
+    ## The Describer can render JSON
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -1740,7 +1740,7 @@ request-specific details.</p>
 
   #----------------------------------------------------------------------------
   def test_format_yaml(self):
-    'The Describer can render YAML'
+    ## The Describer can render YAML
     try:
       import yaml
     except ImportError:
@@ -1840,7 +1840,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_yaml_dedent(self):
-    'The Describer renders YAML with dedented documentation'
+    ## The Describer renders YAML with dedented documentation
     try:
       import yaml
     except ImportError:
@@ -1885,7 +1885,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_xml(self):
-    'The Describer can render XML'
+    ## The Describer can render XML
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
@@ -1947,7 +1947,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_wadl(self):
-    'The Describer can render WADL'
+    ## The Describer can render WADL
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -2035,7 +2035,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_format_pdf(self):
-    'The Describer can render PDF'
+    ## The Describer can render PDF
     try:
       import pdfkit
     except ImportError:
@@ -2057,7 +2057,7 @@ application:
 
   #----------------------------------------------------------------------------
   def test_renderer_override(self):
-    'Format-specific rendering options can be overriden and cascaded through format chains'
+    ## Format-specific rendering options can be overriden and cascaded through format chains
     try:
       import pdfkit
     except ImportError:
