@@ -1,8 +1,5 @@
-test:
-	nosetests --verbose
-
-upload:
-	python setup.py sdist upload
+PKGNAME = pyramid_describe
+include Makefile.python
 
 examples:
 	rm -f doc/example.*
@@ -13,7 +10,3 @@ examples:
 	@echo "creating 'txt' (ascii) example..."
 	@pdescribe example.ini --txt --setting format.default.ascii=true \
 	  > doc/example.txt.asc
-
-tag:
-	@echo "tagging as version `cat VERSION.txt`..."
-	git tag -a "v`cat VERSION.txt`" -m "released v`cat VERSION.txt`"
