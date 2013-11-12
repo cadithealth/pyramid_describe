@@ -104,12 +104,14 @@ def rst2html(data, text):
     for e in aslist(data.options.cssPath or '')]
   # todo: add the docutils default css as well...
 
-  settings = {
-    # 'input_encoding': 'UTF-8',
-    'output_encoding':  data.options.encoding,
-    'embed_stylesheet': data.options.cssEmbed,
-    'stylesheet_path':  css,
-    }
+  settings = dict(
+    # input_encoding     = 'UTF-8',
+    output_encoding      = data.options.encoding,
+    embed_stylesheet     = data.options.cssEmbed,
+    stylesheet_path      = css,
+    doctitle_xform       = False,
+    sectsubtitle_xform   = False,
+    )
 
   pub = core.Publisher(None, None, None,
                        source_class=io.StringInput,
