@@ -511,14 +511,16 @@ Contents of "/"
   <title>Contents of &quot;/&quot;</title>
  </head>
  <body>
-  <div class="document endpoints" id="section-endpoints">
-   <h1 class="title">Contents of &quot;/&quot;</h1>
-   <ul class="simple">
-    <li>/</li>
-    <li>/rest</li>
-    <li>/swi</li>
-    <li>/unknown/?</li>
-   </ul>
+  <div class="document">
+   <div class="endpoints section" id="section-endpoints">
+    <h1 class="section-title">Contents of &quot;/&quot;</h1>
+    <ul class="simple">
+     <li>/</li>
+     <li>/rest</li>
+     <li>/swi</li>
+     <li>/unknown/?</li>
+    </ul>
+   </div>
   </div>
  </body>
 </html>
@@ -1570,8 +1572,7 @@ request-specific details.</p>
       def specials(node):
         return [n for n in node.children if isinstance(n, nodes.Special)] \
           + [sn for n in node.children for sn in specials(n)]
-      keep = [n for n in doc.children if isinstance(n, nodes.title)] \
-        + specials(doc)
+      keep = specials(doc)
       doc.children = []
       doc.extend(keep)
       doc.append(nodes.paragraph('', '', nodes.Text('some text.')))
@@ -1607,8 +1608,7 @@ request-specific details.</p>
   <meta content="http://localhost/desc" name="location" />
  </head>
  <body>
-  <div class="document endpoints fiddled" id="section-endpoints">
-   <h1 class="title">Contents of &quot;/&quot;</h1>
+  <div class="document fiddled">
    <p>some text.</p>
 <script>
   alert('hello, world!');
