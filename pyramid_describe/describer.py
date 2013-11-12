@@ -748,8 +748,12 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_rst(self, data):
     doc = self.doctree_render(data)
+    doc = runFilters(data.options.filters, doc, data)
     writer = resolve(data.options.rstWriter)()
-    settings = {}
+    settings = dict(
+      doctitle_xform       = False,
+      sectsubtitle_xform   = False,
+      )
     if data.options.rstMax:
       settings['explicit_title'] = True
     return publish_from_doctree(

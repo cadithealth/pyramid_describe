@@ -2110,6 +2110,62 @@ application:
          })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
 
+  #----------------------------------------------------------------------------
+  def test_format_rst_and_html_filters(self):
+    ## It is possible to filter both the RST and the HTML separately
+    from docutils import nodes
+    def rst_fiddler(doc, stage):
+      doc.children = []
+      sect = nodes.section('', nodes.title('', '', nodes.Text('the title')))
+      sect.append(nodes.paragraph('', '', nodes.Text('some rst text.')))
+      sect['classes'].append('rst-fiddled')
+      doc.append(sect)
+      return doc
+    def html_fiddler(doc, options):
+      for node in doc:
+        if isinstance(node, nodes.section):
+          node['classes'].append('html-fiddled')
+          node.append(nodes.paragraph('', '', nodes.Text('some html text.')))
+      return doc
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'entries.filters': docsEnhancer,
+        'index-redirect': 'false',
+        'exclude': '|^/desc/.*$|',
+        'format.default.showLegend': 'false',
+        'format.default.rstPdfkit': 'false',
+        'format.rst.default.filters': rst_fiddler,
+        'format.html.default.cssPath': None,
+        'format.html.default.filters': html_fiddler,
+        })
+    res = self.send(root, '/desc')
+    chk = '''\
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+  <title>Contents of &quot;/&quot;</title>
+ </head>
+ <body>
+  <div class="document">
+   <div class="html-fiddled rst-fiddled section" id="the-title">
+    <h1 class="section-title">the title</h1>
+    <p>some rst text.</p>
+    <p>some html text.</p>
+   </div>
+  </div>
+ </body>
+</html>
+'''.format(version=getVersion('pyramid_describe'))
+
+    chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
+    res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
+    self.assertResponse(res, 200, chk, xml=True)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------

@@ -603,24 +603,27 @@ Format Options
   Describer.structure_render. Each filter is expected to return that
   object (enhanced in some way), or a new object to replace it.
 
-  For HTML, the filters are provided the result of calling
-  `docutils.core.publish_parts
-  <http://docutils.sourceforge.net/docs/api/publisher.html#publish-parts-details>`_
-  during the transformation of rST to HTML. The following "parts" are
-  then joined to form the downstream content, in order:
+  For RST and HTML, the filters are provided a
+  `docutils.nodes.document` object (as is returned by
+  `docutils.core.publish_doctree
+  <http://docutils.sourceforge.net/docs/api/publisher.html#publish-doctree>`_).
 
-  * head_prefix
-  * head
-  * stylesheet
-  * body_prefix
-  * body_pre_docinfo
-  * docinfo
-  * body
-  * body_suffix
+  For PDF, rendering is accomplished from entries to RST to HTML to
+  PDF. Therefore, the filtering occurs during the RST to HTML
+  transformation -- there is no separate PDF-only filtering. If
+  filtering is needed at one of the previous stages that is required
+  only during PDF generation (but not, for example, to HTML), then the
+  `formatstack` option can be inspected, which will include ``'pdf'``
+  during the HTML filtering. For example:
 
-  For PDF, rendering is accomplished from entries to rST to HTML to
-  PDF. Therefore, the filtering occurs during the rST to HTML
-  transformation.
+  .. code-block:: python
+
+    def html_filter(doc, stage):
+      if 'pdf' in stage.options.formatstack:
+        # do PDF-specific filtering...
+      else:
+        # do filtering for everything except PDF...
+      return doc
 
   TODO: add documentation about `data` and `options`.
 
