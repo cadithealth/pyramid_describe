@@ -1,5 +1,3 @@
-include *.txt *.ini *.cfg *.rst *.json *.yaml
-recursive-include pyramid_describe *.ico *.png *.gif *.jpg
-recursive-include pyramid_describe *.less *.css *.js *.html *.pt *.mak *.mako
-recursive-include pyramid_describe *.json *.yaml *.xml
-recursive-include doc example.*
+include *.txt *.ini *.cfg *.rst
+recursive-include pyramid_describe *.css *.mako
+graft doc
