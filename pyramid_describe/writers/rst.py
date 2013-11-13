@@ -172,7 +172,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.settings = document.settings
     self.output   = Output()
     self.stack    = []
-    self.level    = 0
+    self.tlevel   = 0
     self.cache    = None
     self.cstack   = []
 
@@ -295,6 +295,15 @@ class RstTranslator(nodes.GenericNodeVisitor):
     pass
 
   #----------------------------------------------------------------------------
+  def visit_document(self, node):
+    for subnode in node:
+      if isinstance(subnode, nodes.title):
+        self.tlevel = 1
+      if isinstance(subnode, nodes.subtitle):
+        self.tlevel = 2
+    return self.default_visit(node)
+
+  #----------------------------------------------------------------------------
   def depart_document(self, node):
     self.output.newline()
 
@@ -309,8 +318,17 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def depart_title(self, node):
     sclen = len(self.settings.section_chars)
-    over  = self.level < sclen
-    lsym  = self.settings.section_chars[self.level % sclen]
+    level = self.tlevel - 1
+    # special handling if lone section titles were promoted to doc-level
+    if node and isinstance(node.parent, nodes.document):
+      if isinstance(node, nodes.title):
+        level = 0
+      else:
+        level = 1
+    if level < 0:
+      level = 0
+    over  = level < sclen
+    lsym  = self.settings.section_chars[level % sclen]
     text  = self._popStack().data(notrail=True)
     if len(text) > 0 and text == text[0] * len(text) and re.match('[^a-zA-Z0-9]', text[0]):
       text = re.sub('([^a-zA-Z0-9])', '\\\\\\1', text)
@@ -325,13 +343,17 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output.newline()
 
   #----------------------------------------------------------------------------
+  visit_subtitle = visit_title
+  depart_subtitle = depart_title
+
+  #----------------------------------------------------------------------------
   def visit_section(self, node):
     self._putAttributes(node)
-    self.level += 1
+    self.tlevel += 1
 
   #----------------------------------------------------------------------------
   def depart_section(self, node):
-    self.level -= 1
+    self.tlevel -= 1
 
   #----------------------------------------------------------------------------
   def visit_paragraph(self, node):

@@ -7,6 +7,7 @@
 #------------------------------------------------------------------------------
 
 import sys, unittest
+
 from . import rst
 
 #------------------------------------------------------------------------------
@@ -402,6 +403,119 @@ MCMLXX\) foo
   def test_email(self):
     src = 'send your comments to asdf@example.com.\n'
     self.assertMultiLineEqual(self.rt(src), src)
+
+  #----------------------------------------------------------------------------
+  def test_toplevel_promoted(self):
+    src = '''\
+Level 1
+=======
+
+Level 2
+-------
+
+Level 3
+~~~~~~~
+
+text 1.2.3
+'''
+    chk = '''\
+=======
+Level 1
+=======
+
+-------
+Level 2
+-------
+
+```````
+Level 3
+```````
+
+text 1.2.3
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_toplevel_notpromoted(self):
+    src = '''\
+Level 1
+=======
+
+Level 2
+-------
+
+Level 1
+=======
+
+Level 2
+-------
+'''
+
+    ## TODO: is there anything that can be done about these IDs
+    ##       that were automatically added?...
+
+    chk = '''\
+.. _`level-1`:
+
+=======
+Level 1
+=======
+
+.. _`level-2`:
+
+-------
+Level 2
+-------
+
+.. _id1:
+
+=======
+Level 1
+=======
+
+.. _id2:
+
+-------
+Level 2
+-------
+'''
+
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+#   # TODO: re-enable this when it is fixed...
+#   #--------------------------------------------------------------------------
+#   def test_multiIDs(self):
+
+#     ## TODO: is there anything that can be done about these IDs
+#     ##       that were automatically added?...
+
+#     src = '''\
+# .. _`level-1`:
+
+# =======
+# Level 1
+# =======
+
+# .. _`level-2`:
+
+# -------
+# Level 2
+# -------
+
+# .. _id1:
+
+# =======
+# Level 1
+# =======
+
+# .. _id2:
+
+# -------
+# Level 2
+# -------
+# '''
+
+#     self.assertMultiLineEqual(self.rt(src), src)
 
 #------------------------------------------------------------------------------
 # end of $Id$
