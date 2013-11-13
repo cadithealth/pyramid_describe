@@ -748,6 +748,10 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_rst(self, data):
     doc = self.doctree_render(data)
+    # todo: should this runFilters be moved int doctree_render?...
+    #       currently it is only being called from here, so not much
+    #       of an issue, but if ever it isn't, then this behaviour might
+    #       not be expected.
     doc = runFilters(data.options.filters, doc, data)
     writer = resolve(data.options.rstWriter)()
     settings = dict(
