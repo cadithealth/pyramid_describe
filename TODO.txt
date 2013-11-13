@@ -36,6 +36,3 @@
 
 - rename `data`, `context`, `proc` ==> `stage` (it's the best i could
   come up with)
-
-- add the ability to filter the "rst" output (in addition to separate
-  "html" filters) when rendering html.
