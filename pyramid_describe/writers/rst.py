@@ -9,13 +9,23 @@
 import re, textwrap
 from docutils import core, utils, nodes, writers
 import docutils.writers
+from docutils.utils.urischemes import schemes
 
-# TODO: all calls to `rstEscape` need to be revisited...
+#------------------------------------------------------------------------------
+# TODO: these regex's... their necessity needs to be re-evaluated...
 
 enumlistfmt_re = re.compile(
   r'^\(?([0-9]+|[a-z]|[ivxlcdm]+)[.)]\s', flags=re.IGNORECASE)
 
+plaintexturi_re = re.compile(
+  r'^('
+  + '|'.join([re.escape(s) for s in schemes.keys()])
+  + '):'
+  + r'([A-Za-z0-9_.~!*\'();:@&=+$,/?#[\]-]*)'
+  + '$')
+
 #------------------------------------------------------------------------------
+# TODO: all calls to `rstEscape` need to be revisited...
 def rstEscape(text, context=None):
   if context in ('`',):
     if re.match('^[a-zA-Z0-9]+$', text):
@@ -362,7 +372,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
   def visit_target(self, node):
     if isinstance(node.parent, nodes.TextElement) and node.referenced <= 1:
       # note: this is a little weird, but `target`s exist both when a link
-      # is inlined AND when generated as 
+      # is inlined AND when generated as
       return
     self.output.emptyline()
     self.output.append('.. _{name}: {uri}'.format(
@@ -393,6 +403,16 @@ class RstTranslator(nodes.GenericNodeVisitor):
       self.output.append('{text} <{uri}>'.format(
         text = text,
         uri  = rstEscape(node['refuri'])))
+    else:
+      if plaintexturi_re.match(node['refuri']):
+        text = self._popStack().data()
+        if node['refuri'] in (text, 'mailto:' + text):
+          self.output.append(text)
+          return
+        # doh! something else! revert!...
+        # todo: there *must* be a better explanation.
+        self._pushStack()
+        self.output.append(text)
     return self.default_departure(node)
 
   #----------------------------------------------------------------------------

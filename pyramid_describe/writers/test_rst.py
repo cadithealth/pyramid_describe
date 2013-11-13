@@ -398,6 +398,11 @@ MCMLXX\) foo
 '''
     self.assertMultiLineEqual(self.rt(src), chk)
 
+  #----------------------------------------------------------------------------
+  def test_email(self):
+    src = 'send your comments to asdf@example.com.\n'
+    self.assertMultiLineEqual(self.rt(src), src)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------
