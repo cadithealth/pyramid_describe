@@ -58,7 +58,7 @@ def render(data):
 
   # todo: test this bullet_list stuff (i.e. set showInfo to false)
 
-  endpoints = rcont(rtitle(rtext(title)))
+  endpoints = rsect(rtext(title))
   epcont = endpoints
   if data.options.rstMax:
     endpoints['ids'] = ['section-endpoints']
@@ -71,7 +71,7 @@ def render(data):
   doc.append(endpoints)
 
   if data.options.showLegend:
-    legend = rcont(rtitle(rtext(_('Legend'))))
+    legend = rsect(rtext(_('Legend')))
     if data.options.rstMax:
       legend['ids'] = ['section-legend']
       legend['classes'] = ['legend']
