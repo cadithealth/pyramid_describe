@@ -369,6 +369,35 @@ some more text.
     chk = 'some text.\n\n.. a comment: non-descript, eh?\n\nsome more text.\n'
     self.assertMultiLineEqual(self.rt(src), chk)
 
+  #----------------------------------------------------------------------------
+  def test_nonlist_text(self):
+    src = r'''
+\(a) foo
+
+\(1) foo
+
+\(MCMLXX) foo
+
+a\) foo
+
+1\. foo
+
+MCMLXX\) foo
+'''
+    chk = r'''\(a) foo
+
+\(1) foo
+
+\(MCMLXX) foo
+
+\a) foo
+
+\1. foo
+
+\MCMLXX) foo
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------

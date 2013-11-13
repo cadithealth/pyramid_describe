@@ -12,6 +12,9 @@ import docutils.writers
 
 # TODO: all calls to `rstEscape` need to be revisited...
 
+enumlistfmt_re = re.compile(
+  r'^\(?([0-9]+|[a-z]|[ivxlcdm]+)[.)]\s', flags=re.IGNORECASE)
+
 #------------------------------------------------------------------------------
 def rstEscape(text, context=None):
   if context in ('`',):
@@ -33,10 +36,13 @@ def rstEscape(text, context=None):
   #         Unexpected possible title overline or transition.
   #         Treating it as ordinary text because it's so short.
 
-  if len(text) > 0 \
+  if context != 'para' and len(text) > 0 \
       and text == text[0] * len(text) \
       and not re.match('a-zA-Z0-9', text[0]):
     text = ( '\\' + text[0] ) * len(text)
+  else:
+    if enumlistfmt_re.match(text):
+      text = '\\' + text
   return text
 
 #------------------------------------------------------------------------------
@@ -284,7 +290,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_Text(self, node):
-    self.output.append(node.astext())
+    self.output.append(rstEscape(node.astext(), 'para'))
 
   #----------------------------------------------------------------------------
   def visit_title(self, node):
