@@ -3,9 +3,12 @@ ChangeLog
 =========
 
 
-v0.1.29
+v0.1.30
 =======
 
+* Added "rst2rst.py" script
+* Added substitution support (for RST writer)
+* Improved separation token serialization (for RST writer)
 * Corrected reStructuredText section title rendering
 * Corrected DocTree structure (switch "container" to "section" node)
 * Removed non-matching extensions from manifest
