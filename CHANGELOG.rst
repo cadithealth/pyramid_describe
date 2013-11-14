@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.1.29
+=======
+
+* Corrected reStructuredText section title rendering
+* Corrected DocTree structure (switch "container" to "section" node)
+* Removed non-matching extensions from manifest
+
+
 v0.1.28
 =======
 
