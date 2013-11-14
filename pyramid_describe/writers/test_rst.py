@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, unittest
+import sys, unittest, six
 
 from . import rst
 
@@ -254,7 +254,7 @@ The following `skill` levels exist:
   def test_problematic(self):
     src = 'this paragraph is not **clean.\n'
     chk = '''\
-this paragraph is not  `** <#id1>`__ clean.
+this paragraph is not `** <#id1>`__\\ clean.
 
 .. class:: system-message
 
@@ -266,9 +266,11 @@ WARNING/2 (<string>, line 1)
 
 Inline strong start-string without end-string.
 '''
-    # TODO: it would be great to remove the error being printed out...
-    #   <string>:1: (WARNING/2) Inline strong start-string without end-string.
-    self.assertMultiLineEqual(self.rt(src), chk)
+    out = six.StringIO()
+    self.assertMultiLineEqual(self.rt(src, settings={'warning_stream': out}), chk)
+    self.assertMultiLineEqual(out.getvalue(), '''\
+<string>:1: (WARNING/2) Inline strong start-string without end-string.
+''')
 
   #----------------------------------------------------------------------------
   def test_paragraph_with_class(self):
@@ -516,6 +518,49 @@ Level 2
 # '''
 
 #     self.assertMultiLineEqual(self.rt(src), src)
+
+  #----------------------------------------------------------------------------
+  def test_substitution(self):
+    src = '''\
+It is 5mm thick |---| |plusmn|\ 0.5mm).
+
+.. |plusmn| unicode:: U+000B1
+
+.. |---| unicode:: U+02014 .. &mdash;
+'''
+    chk = '''\
+It is 5mm thick |---| |plusmn|\ 0.5mm).
+
+.. |plusmn| unicode:: u+000b1
+
+.. |---| unicode:: u+02014
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_substitution_trims(self):
+    src = '.. |blue| replace:: moon\n  :trim:\n'
+    chk = '.. |blue| replace:: moon\n    :trim:\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+    src = '.. |blue| replace:: moon\n  :ltrim:\n'
+    chk = '.. |blue| replace:: moon\n    :ltrim:\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+    src = '.. |blue| replace:: moon\n  :rtrim:\n'
+    chk = '.. |blue| replace:: moon\n    :rtrim:\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+    src = '''\
+The AcmeCo |trade|.
+
+.. |trade|  unicode:: U+02122 .. TRADE MARK SIGN
+  :ltrim:
+'''
+    chk = '''\
+The AcmeCo\ |trade|.
+
+.. |trade| unicode:: u+02122
+    :ltrim:
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
 
 #------------------------------------------------------------------------------
 # end of $Id$

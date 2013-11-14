@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, textwrap
+import re, textwrap, curses.ascii
 from docutils import core, utils, nodes, writers
 import docutils.writers
 from docutils.utils.urischemes import schemes
@@ -45,6 +45,10 @@ def rstEscape(text, context=None):
   #       which generates the warning:
   #         Unexpected possible title overline or transition.
   #         Treating it as ordinary text because it's so short.
+
+  # todo: is this where the check for the need for backslash-escaped
+  #       whitespace should be (to protect marked-up nodes that aren't
+  #       surrounded by whitespace or punctuation)?...
 
   if context != 'para' and len(text) > 0 \
       and text == text[0] * len(text) \
@@ -107,37 +111,110 @@ class Writer(writers.Writer):
     # todo: translate EOL's here?...
     self.output = visitor.output.data()
 
+TOKEN_NL   = '{\n}'
+TOKEN_LINE = '{\n\n}'
+TOKEN_SEP  = '{ }'
+TOKENS     = (TOKEN_NL, TOKEN_LINE, TOKEN_SEP)
+
+PUNCT_START = '''-:/'"<([{'''
+PUNCT_END   = '''-.,:;!?\/'")]}>'''
+PUNCT_BOTH  = ''.join(set(PUNCT_START + PUNCT_END))
+
 #------------------------------------------------------------------------------
-def collapseLines(value, step):
+def collapseTokens(value, step):
   if not step:
     return value
-  if step != '\n':
-    return value + [step]
   if not value:
-    return value
-  if len(value) > 2 and value[-1] == '\n' and value[-2] == '\n':
-    return value
-  return value + [step]
+    return [step]
+  prev = value.pop()
+  ptok = prev in TOKENS
+  stok = step in TOKENS
+  # if both are text
+  if not ( ptok or stok ):
+    return value + [prev + step]
+  # if either one is text
+  if not ( ptok and stok ):
+    return value + [prev, step]
+  # both are tokens -- collapse
+  if prev == step:
+    return value + [prev]
+  if TOKEN_LINE in (prev, step):
+    return value + [TOKEN_LINE]
+  # one is a NL and one a SEP
+  return value [TOKEN_NL]
 
 #------------------------------------------------------------------------------
 newline_re = re.compile('\n([^\n])')
 class Output:
   def __init__(self):
-    self.lines = []
+    self.tokens = []
   def emptyline(self):
-    # todo: improve this
-    self.lines.append('\n')
-    self.lines.append('\n')
+    self.tokens.append(TOKEN_LINE)
+    # # todo: improve this
+    # self.tokens.append('\n')
+    # self.tokens.append('\n')
   def newline(self):
-    # todo: improve this
-    if len(self.lines) > 0 and self.lines[-1] != '\n':
-      self.lines.append('\n')
+    self.tokens.append(TOKEN_NL)
+    # # todo: improve this
+    # if len(self.tokens) > 0 and self.tokens[-1] != '\n':
+    #   self.tokens.append('\n')
+  def separator(self):
+    self.tokens.append(TOKEN_SEP)
   def append(self, data):
-    self.lines.append(data)
+    self.tokens.append(data)
   def extend(self, data):
-    self.lines.extend(data)
+    self.tokens.extend(data)
   def data(self, indent=None, first_indent=None, notrail=False):
-    ret = ''.join(reduce(collapseLines, self.lines, []))
+    tmp = reduce(collapseTokens, self.tokens, [])
+    ret = []
+    for idx, cur in enumerate(tmp):
+      if cur not in TOKENS:
+        ret.append(cur)
+        continue
+      bef = tmp[idx - 1] if idx > 0 else None
+      aft = tmp[idx + 1] if idx + 1 < len(tmp) else None
+      if cur in (TOKEN_NL, TOKEN_LINE):
+        if bef is None:
+          continue
+        count = 0
+        if bef and bef[-1] == '\n':
+          count += 1
+          if len(bef) > 1 and bef[-2] == '\n':
+            count += 1
+        if aft and aft[0] == '\n':
+          count += 1
+          if len(aft) > 1 and aft[1] == '\n':
+            count += 1
+        if cur == TOKEN_NL:
+          count -= 1
+        else:
+          count -= 2
+        if count >= 0:
+          continue
+        ret.append('\n' * ( 0 - count ))
+        continue
+      if cur == TOKEN_SEP:
+        if not bef or not aft:
+          continue
+        bef = bef[-1]
+        aft = aft[0]
+        try:
+          if bef == str(bef):
+            bef = str(bef)
+        except: pass
+        try:
+          if aft == str(aft):
+            aft = str(aft)
+        except: pass
+        # todo: perhaps the separator direction also needs to be specified...
+        #       (i.e. before or after)
+        if curses.ascii.isspace(bef) or curses.ascii.isspace(aft) \
+            or bef in PUNCT_BOTH or aft in PUNCT_BOTH:
+          continue
+        ret.append('\\ ')
+        continue
+      raise ValueError('unexpected output token "%r"' % (cur,))
+    ret = ''.join(ret)
     if notrail and ret.endswith('\n'):
       ret = ret[:-1]
     if indent is None:
@@ -171,20 +248,22 @@ class RstTranslator(nodes.GenericNodeVisitor):
     nodes.NodeVisitor.__init__(self, document)
     self.settings = document.settings
     self.output   = Output()
-    self.stack    = []
+    self.ostack   = []
     self.tlevel   = 0
     self.cache    = None
     self.cstack   = []
+    self.subs     = {node.astext(): node
+                     for node in document.substitution_defs.values()}
 
   #----------------------------------------------------------------------------
-  def _pushStack(self):
-    self.stack.append(self.output)
+  def _pushOutput(self):
+    self.ostack.append(self.output)
     self.output = Output()
 
   #----------------------------------------------------------------------------
-  def _popStack(self):
+  def _popOutput(self):
     ret = self.output
-    self.output = self.stack.pop()
+    self.output = self.ostack.pop()
     return ret
 
   #----------------------------------------------------------------------------
@@ -247,14 +326,14 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def default_visit(self, node):
     if isinstance(node, nodes.Inline):
-      self._pushStack()
+      self._pushOutput()
     else:
       self._putAttributes(node)
 
   #----------------------------------------------------------------------------
   def default_departure(self, node):
     if isinstance(node, nodes.Inline):
-      text = self._popStack().data()
+      text = self._popOutput().data()
       fmt = self.inline_format[node.__class__.__name__]
       if fmt[1]:
         text = fmt[1](text)
@@ -262,22 +341,22 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_problematic(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_problematic(self, node):
-    self._popStack()
+    self._popOutput()
     text = rstTicks(node.astext())
     if text.startswith('`'):
       text = text[1:-1]
     # note: wrapping the link with newlines to protect
     # from other surrounding words.
-    self.output.newline()
+    self.output.separator()
     self.output.append('`{text} <#{refuri}>`__'.format(
       text   = text,
       refuri = node['refid'],
       ))
-    self.output.newline()
+    self.output.separator()
 
   #----------------------------------------------------------------------------
   def visit_system_message(self, node):
@@ -285,10 +364,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
     node['classes'] = kls + ['system-message']
     self._putAttributes(node)
     node['classes'] = kls
+    self.tlevel += 1
     self.visit_title(None)
     self.output.append(
       '{type}/{level} ({source}, line {line})'.format(**node.attributes))
     self.depart_title(None)
+    self.tlevel -= 1
 
   #----------------------------------------------------------------------------
   def depart_system_message(self, node):
@@ -309,11 +390,17 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_Text(self, node):
-    self.output.append(rstEscape(node.astext(), 'para'))
+    text = node.astext()
+    sub  = self.subs.get(text, None)
+    if sub is None:
+      return self.output.append(rstEscape(text, 'para'))
+    self.output.separator()
+    self.output.append('|' + sub['names'][0] + '|')
+    self.output.separator()
 
   #----------------------------------------------------------------------------
   def visit_title(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_title(self, node):
@@ -329,7 +416,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
       level = 0
     over  = level < sclen
     lsym  = self.settings.section_chars[level % sclen]
-    text  = self._popStack().data(notrail=True)
+    text  = self._popOutput().data(notrail=True)
     if len(text) > 0 and text == text[0] * len(text) and re.match('[^a-zA-Z0-9]', text[0]):
       text = re.sub('([^a-zA-Z0-9])', '\\\\\\1', text)
     width = max(6, len(text))
@@ -358,11 +445,11 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def visit_paragraph(self, node):
     self._putAttributes(node)
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_paragraph(self, node):
-    text = self._popStack().data(notrail=True)
+    text = self._popOutput().data(notrail=True)
     self.output.emptyline()
     # todo: do textwrapping rules change in rST?...
     self.output.append(
@@ -371,11 +458,11 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_literal_block(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_literal_block(self, node):
-    text = self._popStack().data(notrail=True)
+    text = self._popOutput().data(notrail=True)
     self.output.emptyline()
     cmd = '::'
     if 'code' in node['classes']:
@@ -420,20 +507,20 @@ class RstTranslator(nodes.GenericNodeVisitor):
         and isinstance(sibs[idx + 1], nodes.target) \
         and node['name'].lower() in sibs[idx + 1]['names'] \
         and sibs[idx + 1].referenced == 1:
-      text = self._popStack().data(notrail=True)
-      self._pushStack()
+      text = self._popOutput().data(notrail=True)
+      self._pushOutput()
       self.output.append('{text} <{uri}>'.format(
         text = text,
         uri  = rstEscape(node['refuri'])))
     else:
       if plaintexturi_re.match(node['refuri']):
-        text = self._popStack().data()
+        text = self._popOutput().data()
         if node['refuri'] in (text, 'mailto:' + text):
           self.output.append(text)
           return
         # doh! something else! revert!...
         # todo: there *must* be a better explanation.
-        self._pushStack()
+        self._pushOutput()
         self.output.append(text)
     return self.default_departure(node)
 
@@ -462,12 +549,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_list_item(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_list_item(self, node):
     blt  = node.parent.get('bullet', '*')
-    text = self._popStack().data(
+    text = self._popOutput().data(
       indent=' ' * ( len(blt) + 1 ), first_indent=False, notrail=True)
     self.output.emptyline()
     self.output.append(blt + ' ' + rstEscape(text))
@@ -489,22 +576,22 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_definition(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_definition(self, node):
-    text = self._popStack().data(indent=self.settings.indent, notrail=True)
+    text = self._popOutput().data(indent=self.settings.indent, notrail=True)
     self.output.emptyline()
     self.output.append(text)
     self.output.newline()
 
   #----------------------------------------------------------------------------
   def visit_comment(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_comment(self, node):
-    text = self._popStack().data(
+    text = self._popOutput().data(
       indent=self.settings.indent, first_indent=False, notrail=True)
     self.output.emptyline()
     self.output.append('.. ' + rstEscape(text))
@@ -520,6 +607,50 @@ class RstTranslator(nodes.GenericNodeVisitor):
     ret = self.cache
     self.cache = self.cstack.pop()
     return ret
+
+  #----------------------------------------------------------------------------
+  # SUBSTITUTIONS
+  #----------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------
+  def visit_substitution_definition(self, node):
+    self._pushOutput()
+    self._pushCache(self.subs)
+    self.subs = {}
+
+  #----------------------------------------------------------------------------
+  def depart_substitution_definition(self, node):
+    text = self._popOutput().data(
+      indent=self.settings.indent, first_indent=False, notrail=True)
+    self.subs = self._popCache()
+    for name in node['names']:
+      # TODO: this special-casing is a bit ridiculous...
+      if len(text) == 1 and not curses.ascii.isalnum(text):
+        text = 'unicode:: u+{:0>5x}'.format(ord(text),)
+      else:
+        text = 'replace:: ' + rstEscape(text)
+      self.output.emptyline()
+      self.output.append('.. |' + name + '| ' + text)
+      self.output.newline()
+
+      ltrim = bool(node.get('ltrim', False))
+      rtrim = bool(node.get('rtrim', False))
+
+      if ltrim or rtrim:
+        if ltrim and rtrim:
+          trim = ':trim:'
+        elif ltrim:
+          trim = ':ltrim:'
+        else:
+          trim = ':rtrim:'
+        self.output.append(self.settings.indent + trim)
+        self.output.newline()
+
+      # print 'TEXT:', repr(text)
+
+  # todo: these don't seem to get called...
+  # def visit_substitution_reference(self, node): ...
+  # def depart_substitution_reference(self, node): ...
 
   #----------------------------------------------------------------------------
   # TODO: this table rendering needs to be considerable improved!...
@@ -591,11 +722,11 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def visit_entry(self, node):
-    self._pushStack()
+    self._pushOutput()
 
   #----------------------------------------------------------------------------
   def depart_entry(self, node):
-    text = self._popStack().data()
+    text = self._popOutput().data()
     self.cache.append(text)
 
 #------------------------------------------------------------------------------
