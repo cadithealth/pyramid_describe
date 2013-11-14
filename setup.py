@@ -45,6 +45,7 @@ extras_dependencies = {
 entrypoints = {
   'console_scripts': [
     'pdescribe          = pyramid_describe.cli:main',
+    'rst2rst.py         = pyramid_describe.writers.tools_rst2rst:main',
     ],
   }
 
