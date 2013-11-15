@@ -507,19 +507,31 @@ class RstTranslator(nodes.GenericNodeVisitor):
         and isinstance(sibs[idx + 1], nodes.target) \
         and node['name'].lower() in sibs[idx + 1]['names'] \
         and sibs[idx + 1].referenced == 1:
-      text = self._popOutput().data(notrail=True)
+      text = self._popOutput().data().strip()
       self._pushOutput()
       self.output.append('{text} <{uri}>'.format(
         text = text,
-        uri  = rstEscape(node['refuri'])))
+        uri  = rstEscape(node.get('refuri', node.get('refid', '')))))
     else:
-      if plaintexturi_re.match(node['refuri']):
-        text = self._popOutput().data()
-        if node['refuri'] in (text, 'mailto:' + text):
+      if 'refuri' in node:
+        if plaintexturi_re.match(node['refuri']):
+          text = self._popOutput().data()
+          if node['refuri'] in (text, 'mailto:' + text):
+            self.output.append(text)
+            return
+          # doh! something else! revert!...
+          # todo: there *must* be a better explanation.
+          self._pushOutput()
           self.output.append(text)
-          return
-        # doh! something else! revert!...
-        # todo: there *must* be a better explanation.
+      elif 'refid' in node:
+        text = self._popOutput().data().strip()
+        if text != node.get('name', ''):
+          self.document.reporter.warning(
+            'implicit reference text does not match reference name... ignoring ref-name')
+        if nodes.fully_normalize_name(text) \
+            not in self.document.ids[node['refid']].get('names', []):
+          self.document.reporter.error(
+            'implicit reference text does not match target name... ignoring')
         self._pushOutput()
         self.output.append(text)
     return self.default_departure(node)
