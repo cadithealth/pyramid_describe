@@ -1,3 +1,6 @@
+- make rst.Writer support substitution_definitions with multi-character
+  strings with embedded unicode characters.
+
 - tree hierarchy: when rendering non-"/" tree, it should start at that
   point, not from "/". eg. `pdescribe config.ini -T /path/to/foo` should
   result in:
