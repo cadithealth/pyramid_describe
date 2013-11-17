@@ -775,7 +775,7 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def render_pdf(self, data):
-    html = self.render(data, format='html')
+    html = self.render(data, format='html').decode('UTF-8')
     return pdfkit.from_string(html, False, options={'quiet': ''})
 
   #----------------------------------------------------------------------------
