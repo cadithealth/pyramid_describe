@@ -2071,38 +2071,38 @@ application:
     # confirm that pdf renderings stay consistent
     root = SimpleRoot()
     root.desc = DescribeController(
-       root, doc='URL tree description.',
-       settings={
-         'format.default': 'pdf',
-         'index-redirect': 'false',
-         'entries.filters': docsEnhancer,
-         'exclude': '|^/desc/.*|',
-         })
+      root, doc='URL tree description.',
+      settings={
+        'format.default': 'pdf',
+        'index-redirect': 'false',
+        'entries.filters': docsEnhancer,
+        'exclude': '|^/desc/.*|',
+        })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
     # confirm that fiddling with html css rendering changes pdf
     root = SimpleRoot()
     root.desc = DescribeController(
-       root, doc='URL tree description.',
-       settings={
-         'format.default': 'pdf',
-         'index-redirect': 'false',
-         'entries.filters': docsEnhancer,
-         'exclude': '|^/desc/.*|',
-         'format.html.default.cssPath': None,
-         })
+      root, doc='URL tree description.',
+      settings={
+        'format.default': 'pdf',
+        'index-redirect': 'false',
+        'entries.filters': docsEnhancer,
+        'exclude': '|^/desc/.*|',
+        'format.html.default.cssPath': None,
+        })
     self.assertNotEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
     # confirm that fiddling with html css cascading can be controlled
     root = SimpleRoot()
     root.desc = DescribeController(
-       root, doc='URL tree description.',
-       settings={
-         'format.default': 'pdf',
-         'index-redirect': 'false',
-         'entries.filters': docsEnhancer,
-         'exclude': '|^/desc/.*|',
-         'format.html.default.cssPath': None,
-         'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
-         })
+      root, doc='URL tree description.',
+      settings={
+        'format.default': 'pdf',
+        'index-redirect': 'false',
+        'entries.filters': docsEnhancer,
+        'exclude': '|^/desc/.*|',
+        'format.html.default.cssPath': None,
+        'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
+        })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
 
   #----------------------------------------------------------------------------
