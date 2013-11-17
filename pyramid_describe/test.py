@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, re, unittest, json, unittest, six
+import sys, re, unittest, json, unittest, six, pkg_resources
 import xml.etree.ElementTree as ET
 from webtest import TestApp
 
@@ -26,6 +26,15 @@ from pyramid_describe.util import adict
 from pyramid_describe.rst import AsIs
 from pyramid_describe.controller import DescribeController
 
+#------------------------------------------------------------------------------
+def extrafeature(name):
+  dist = pkg_resources.get_distribution('pyramid_describe')
+  for pkg in dist.requires(extras=[name]):
+    if not pkg_resources.working_set.find(pkg):
+      return unittest.skip('"{}" feature requires package "{}"'.format(name, pkg))
+  return lambda func: func
+
+#------------------------------------------------------------------------------
 # make the XML namespace output a bit easier to grok...
 ET.register_namespace('wadl', 'http://research.sun.com/wadl/2006/10')
 ET.register_namespace('xsd',  'http://www.w3.org/2001/XMLSchema')
@@ -1739,13 +1748,10 @@ request-specific details.</p>
     self.assertResponse(res, 200, chk)
 
   #----------------------------------------------------------------------------
+  @extrafeature('yaml')
   def test_format_yaml(self):
     ## The Describer can render YAML
-    try:
-      import yaml
-    except ImportError:
-      sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
-      return
+    import yaml
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -1839,13 +1845,10 @@ application:
     self.assertResponse(res, 200, chk)
 
   #----------------------------------------------------------------------------
+  @extrafeature('yaml')
   def test_format_yaml_dedent(self):
     ## The Describer renders YAML with dedented documentation
-    try:
-      import yaml
-    except ImportError:
-      sys.stderr.write('*** YAML LIBRARY NOT PRESENT - SKIPPING *** ')
-      return
+    import yaml
     class Root(Controller):
       @expose
       def describe(self, request):
@@ -2034,13 +2037,9 @@ application:
     self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
+  @extrafeature('pdf')
   def test_format_pdf(self):
     ## The Describer can render PDF
-    try:
-      import pdfkit
-    except ImportError:
-      sys.stderr.write('*** PDFKIT LIBRARY NOT PRESENT - SKIPPING *** ')
-      return
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -2056,13 +2055,9 @@ application:
     # todo: anything else that can be checked?... can pdfkit perhaps parse PDFs?...
 
   #----------------------------------------------------------------------------
+  @extrafeature('pdf')
   def test_renderer_override(self):
     ## Format-specific rendering options can be overriden and cascaded through format chains
-    try:
-      import pdfkit
-    except ImportError:
-      sys.stderr.write('*** PDFKIT LIBRARY NOT PRESENT - SKIPPING *** ')
-      return
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
