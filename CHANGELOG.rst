@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.1.31
+=======
+
+* Added support for implicit target references
+* Added unicode character support for PDF generation
+
+
 v0.1.30
 =======
 
