@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, re, unittest, json, unittest, six, pkg_resources
+import sys, re, unittest, json, unittest, six, pkg_resources, pxml
 import xml.etree.ElementTree as ET
 from webtest import TestApp
 
@@ -120,7 +120,7 @@ def pdfclean(pdf):
   return re.sub('^/CreationDate \(D:[0-9\'-]+\)$', '', pdf, flags=re.MULTILINE)
 
 #------------------------------------------------------------------------------
-class DescribeTest(TestHelper):
+class DescribeTest(TestHelper, pxml.XmlTestMixin):
 
   maxDiff = None
 
@@ -1573,6 +1573,43 @@ request-specific details.</p>
     self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
+  def test_format_html_unicode(self):
+    from docutils import nodes, utils
+    def rst_fiddler(doc, stage):
+      doc = utils.new_document('<fiddled-document>')
+      doc.append(
+        nodes.paragraph(
+          '', '',
+          nodes.Text(u'a – b.')))
+      return doc
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'index-redirect': 'false',
+        'format.rst.default.filters': rst_fiddler,
+        'format.html.default.cssPath': None,
+        })
+    res = self.send(root, '/desc')
+    chk = '''\
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+  <title/>
+ </head>
+ <body>
+  <div class="document">
+   <p>a – b.</p>
+  </div>
+ </body>
+</html>
+'''.format(version=getVersion('pyramid_describe'))
+    self.assertXmlEqual(res.body, chk)
+
+  #----------------------------------------------------------------------------
   def test_AsIs(self):
     ## The Describer honors the format-specific `filters` option
     from docutils import nodes
@@ -2053,6 +2090,31 @@ application:
     # todo: check content-type...
     self.assertTrue(res.body.startswith('%PDF-1.4\n'))
     # todo: anything else that can be checked?... can pdfkit perhaps parse PDFs?...
+
+  #----------------------------------------------------------------------------
+  @extrafeature('pdf')
+  def test_format_pdf_unicode(self):
+    from docutils import nodes, utils
+    def rst_fiddler(doc, stage):
+      doc = utils.new_document('<fiddled-document>')
+      doc.append(
+        nodes.paragraph(
+          '', '',
+          nodes.Text(u'a – b.')))
+      return doc
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'format.default': 'pdf',
+        'index-redirect': 'false',
+        'format.rst.default.filters': rst_fiddler,
+        'format.html.default.cssPath': None,
+        })
+    # note: just making sure that it *can* be rendered...
+    # todo: better, would be to parse the PDF and ensure that
+    #       'a – b.' is in there...
+    res = self.send(root, '/desc')
 
   #----------------------------------------------------------------------------
   @extrafeature('pdf')
