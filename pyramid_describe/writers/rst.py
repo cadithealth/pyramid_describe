@@ -644,10 +644,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
       self.output.emptyline()
       self.output.append('.. |' + name + '| ' + text)
       self.output.newline()
-
       ltrim = bool(node.get('ltrim', False))
       rtrim = bool(node.get('rtrim', False))
-
       if ltrim or rtrim:
         if ltrim and rtrim:
           trim = ':trim:'
@@ -657,8 +655,6 @@ class RstTranslator(nodes.GenericNodeVisitor):
           trim = ':rtrim:'
         self.output.append(self.settings.indent + trim)
         self.output.newline()
-
-      # print 'TEXT:', repr(text)
 
   # todo: these don't seem to get called...
   # def visit_substitution_reference(self, node): ...
