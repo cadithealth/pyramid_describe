@@ -25,6 +25,7 @@ test_dependencies = [
   'WebTest              >= 1.4.0',
   'PyYAML               >= 3.10',
   'pdfkit               >= 0.4.1',
+  'pxml                 >= 0.2.10',
   ]
 
 dependencies = [
