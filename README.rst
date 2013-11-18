@@ -579,14 +579,35 @@ Format Options
 * ``dynamicFormat`` : str, default: '{}/?'
 * ``restFormat`` : str, default: '<{}>'
 
-* ``showOutline`` : bool, default: true
-* ``pageGrayscale`` : bool, default: false
-* ``pageSize`` : str, default: 'A4'
-* ``pageOrientation`` : str, default: 'Portrait'
-* ``pageMarginTop`` : str, default: '10mm'
-* ``pageMarginRight`` : str, default: '10mm'
-* ``pageMarginBottom`` : str, default: '10mm'
-* ``pageMarginLeft`` : str, default: '10mm'
+* ``pdfkit.options`` : str
+
+  This option is YAML-parsed, and then sets the options that are
+  inserted into the HTML meta tags that are instructions to the pdfkit
+  processor. The default values specified by pyramid-describe are:
+
+  .. code-block:: text
+
+    {
+      margin-top: 10mm,
+      margin-right: 10mm,
+      margin-bottom: 10mm,
+      margin-left: 10mm,
+    }
+
+  Options not specified revert to the defaults specified by pdfkit.
+  For details, see `pdfkit <https://pypi.python.org/pypi/pdfkit>`_
+  and `wkhtmltopdf <http://code.google.com/p/wkhtmltopdf/>`_. Options
+  that may be of interest:
+
+  * grayscale
+  * page-size
+  * orientation
+  * no-outline
+  * print-media-type
+  * disable-plugins
+  * zoom
+  * javascript-delay
+  * disable-javascript
 
 * ``restVerbs`` : list(str), default: pyramid_controllers.restcontroller.HTTP_METHODS
 

@@ -6,9 +6,11 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
+import yaml
 from docutils import utils, nodes, core
 from docutils.parsers.rst.directives.html import MetaBody
 from pyramid_controllers.util import getVersion
+
 from .i18n import _
 
 #------------------------------------------------------------------------------
@@ -102,22 +104,10 @@ def render(data):
     if data.options.showLocation and data.options.context.request.url:
       meta.append(rmeta(name='location', content=data.options.context.request.url))
     if data.options.rstMax and data.options.rstPdfkit:
-      meta.append(rmeta(name='pdfkit-page-size', content=data.options.pageSize))
-      meta.append(rmeta(name='pdfkit-orientation', content=data.options.pageOrientation))
-      if not data.options.showOutline:
-        meta.append(rmeta(name='pdfkit-no-outline', content=''))
-      meta.append(rmeta(name='pdfkit-margin-top', content=data.options.pageMarginTop))
-      meta.append(rmeta(name='pdfkit-margin-right', content=data.options.pageMarginRight))
-      meta.append(rmeta(name='pdfkit-margin-bottom', content=data.options.pageMarginBottom))
-      meta.append(rmeta(name='pdfkit-margin-left', content=data.options.pageMarginLeft))
-      if data.options.pageGrayscale:
-        meta.append(rmeta(name='pdfkit-grayscale', content=''))
-      # todo: other pdfkit meta tags:
-      #  meta.append(rmeta(name='pdfkit-print-media-type', content=''))
-      #  meta.append(rmeta(name='pdfkit-disable-plugins', content=''))
-      #  meta.append(rmeta(name='pdfkit-zoom', content='1.0'))
-      #  meta.append(rmeta(name='pdfkit-javascript-delay', content='1000'))
-      #  meta.append(rmeta(name='pdfkit-disable-javascript', content=''))
+      options = yaml.load(data.options.get('pdfkit.options', '{}'))
+      for key in sorted(options.keys()):
+        value = options.get(key)
+        meta.append(rmeta(name='pdfkit-' + key, content=str(value)))
     doc.append(meta)
 
   return doc

@@ -6,13 +6,9 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, logging, inspect, binascii, types, json, six, collections
+import re, logging, inspect, binascii, types, json, six, collections, yaml
 from six.moves import urllib
 import xml.etree.ElementTree as ET
-try:
-  import yaml
-except ImportError:
-  yaml = None
 from docutils.core import publish_doctree, publish_from_doctree
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, truthy
@@ -29,12 +25,7 @@ from .i18n import _
 log = logging.getLogger(__name__)
 
 DEFAULT = 'pyramid_describe:DEFAULT'
-FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'xml')
-
-try:
-  import yaml
-  FORMATS += ('yaml',)
-except ImportError: pass
+FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'yaml', 'xml')
 
 try:
   import pdfkit
@@ -223,8 +214,6 @@ class Describer(object):
     ('showGenVersion', True),
     ('showLocation',   True),
     ('ascii',          False),
-    ('showOutline',    True),
-    ('pageGrayscale',  False),
     ('rstMax',         False),
     ('rstPdfkit',      True),
     ('cssEmbed',       True),
@@ -249,15 +238,17 @@ class Describer(object):
     ('stubFormat',       '{{{}}}'),     # /path/to/{NAME}/and/more
     ('dynamicFormat',    '{}/?'),       # /path/to/NAME/?
     ('restFormat',       '<{}>'),       # /path/to/<NAME>
-    ('pageSize',         'A4'),
-    ('pageOrientation',  'Portrait'),
-    ('pageMarginTop',    '10mm'),
-    ('pageMarginRight',  '10mm'),
-    ('pageMarginBottom', '10mm'),
-    ('pageMarginLeft',   '10mm'),
     ('cssPath',          'pyramid_describe:template/rst2html.css'),
     ('encoding',         'UTF-8'),
     ('rstWriter',        'pyramid_describe.writers.rst.Writer'),
+    ('pdfkit.options',   '''\
+{
+  margin-top: 10mm,
+  margin-right: 10mm,
+  margin-bottom: 10mm,
+  margin-left: 10mm,
+}
+'''),
     )
 
   # TODO: support per-format system defaults...
@@ -786,8 +777,6 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def render_yaml(self, data):
-    if yaml is None:
-      raise ValueError('no yaml encoder library available')
     return yaml.dump(self.structure_render(data))
 
   #----------------------------------------------------------------------------

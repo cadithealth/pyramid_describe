@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, re, unittest, json, unittest, six, pkg_resources, pxml
+import sys, re, unittest, json, unittest, six, pkg_resources, pxml, yaml
 import xml.etree.ElementTree as ET
 from webtest import TestApp
 
@@ -1265,12 +1265,10 @@ request-specific details.
     :title: Contents of "/"
     :generator: pyramid-describe/{version} [format=rst]
     :location: http://localhost/desc
-    :pdfkit-page-size: A4
-    :pdfkit-orientation: Portrait
-    :pdfkit-margin-top: 10mm
-    :pdfkit-margin-right: 10mm
     :pdfkit-margin-bottom: 10mm
     :pdfkit-margin-left: 10mm
+    :pdfkit-margin-right: 10mm
+    :pdfkit-margin-top: 10mm
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
@@ -1453,12 +1451,10 @@ The following `skill` levels exist:
   <meta content="Application API" name="title" />
   <meta content="pyramid-describe/{version} [format=html]" name="generator" />
   <meta content="http://localhost/desc" name="location" />
-  <meta content="A4" name="pdfkit-page-size" />
-  <meta content="Portrait" name="pdfkit-orientation" />
-  <meta content="10mm" name="pdfkit-margin-top" />
-  <meta content="10mm" name="pdfkit-margin-right" />
   <meta content="10mm" name="pdfkit-margin-bottom" />
   <meta content="10mm" name="pdfkit-margin-left" />
+  <meta content="10mm" name="pdfkit-margin-right" />
+  <meta content="10mm" name="pdfkit-margin-top" />
   <style type="text/css">
 
 body {{
@@ -1609,10 +1605,8 @@ request-specific details.</p>
  </body>
 </html>
 '''.format(version=getVersion('pyramid_describe'))
-
-    chk = re.sub('>\s*<', '><', chk, flags=re.MULTILINE)
-    res.body = re.sub('>\s*<', '><', res.body, flags=re.MULTILINE)
-    self.assertResponse(res, 200, chk, xml=True)
+    self.assertEqual(res.status_code, 200)
+    self.assertXmlEqual(res.body, chk)
 
   #----------------------------------------------------------------------------
   def test_format_html_unicode(self):
@@ -1827,10 +1821,8 @@ request-specific details.</p>
     self.assertResponse(res, 200, chk)
 
   #----------------------------------------------------------------------------
-  @extrafeature('yaml')
   def test_format_yaml(self):
     ## The Describer can render YAML
-    import yaml
     root = SimpleRoot()
     root.desc = DescribeController(
        root, doc='URL tree description.',
@@ -1918,16 +1910,13 @@ application:
       decoratedPath: /unknown/?
       doc: A dynamically generated sub-controller.
 '''
-    import yaml
     chk = yaml.dump(yaml.load(chk), default_flow_style=False)
     res.body = yaml.dump(yaml.load(res.body), default_flow_style=False)
     self.assertResponse(res, 200, chk)
 
   #----------------------------------------------------------------------------
-  @extrafeature('yaml')
   def test_format_yaml_dedent(self):
     ## The Describer renders YAML with dedented documentation
-    import yaml
     class Root(Controller):
       @expose
       def describe(self, request):
