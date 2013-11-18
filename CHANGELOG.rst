@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.1.32
+=======
+
+* Restructured doctree to include global "main" section
+
+
 v0.1.31
 =======
 
