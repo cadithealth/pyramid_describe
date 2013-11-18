@@ -36,10 +36,10 @@ dependencies = [
   'pyramid-iniherit     >= 0.1.7',
   'six                  >= 1.4.1',
   'docutils             >= 0.10',
+  'PyYAML               >= 3.10',
   ]
 
 extras_dependencies = {
-  'yaml': 'PyYAML       >= 3.10',
   'pdf':  'pdfkit       >= 0.4.1',
   }
 
