@@ -769,7 +769,11 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_pdf(self, data):
     html = self.render(data, format='html').decode('UTF-8')
-    return pdfkit.from_string(html, False, options={'quiet': ''})
+    pdf  = pdfkit.from_string(html, False, options={'quiet': ''})
+    if len(pdf.strip()) <= 0:
+      raise ValueError(
+        'pdfkit failed to generate a PDF - usually a "pdfkit.options" problem')
+    return pdf
 
   #----------------------------------------------------------------------------
   def render_json(self, data):
