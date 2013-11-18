@@ -196,6 +196,7 @@ some more text
     doc.append(MetaBody('').meta('', name='title', content='Title'))
     doc.append(MetaBody('').meta('', name='generator', content='pyramid_describe/0.0.0'))
     doc.append(MetaBody('').meta('', name='location', content='http://example.com/'))
+    doc.append(MetaBody('').meta('', name='one-digit', content='3'))
     chk = '''\
 ======
 Title
@@ -207,6 +208,7 @@ some text.
     :title: Title
     :generator: pyramid_describe/0.0.0
     :location: http://example.com/
+    :one-digit: 3
 '''
     out = publish_from_doctree(
       doc, writer=rst.Writer(), settings_overrides={'explicit_title': False})

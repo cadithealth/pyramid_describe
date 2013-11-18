@@ -927,6 +927,7 @@ request-specific details.
         'format.default.showImpl': 'true',
         'format.default.rstMax': 'true',
         'entries.filters': docsEnhancer,
+        'format.default.pdfkit.options': '{footer-spacing: "3"}',
         })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 .. title:: Contents of "/"
@@ -1265,10 +1266,7 @@ request-specific details.
     :title: Contents of "/"
     :generator: pyramid-describe/{version} [format=rst]
     :location: http://localhost/desc
-    :pdfkit-margin-bottom: 10mm
-    :pdfkit-margin-left: 10mm
-    :pdfkit-margin-right: 10mm
-    :pdfkit-margin-top: 10mm
+    :pdfkit-footer-spacing: 3
 '''.format(version=getVersion('pyramid_describe')))
 
   #----------------------------------------------------------------------------
