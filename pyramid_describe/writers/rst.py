@@ -547,7 +547,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output.append('{indent}:{name}: {content}'.format(
       indent  = self.settings.indent,
       name    = rstEscape(node['name'], context=':'),
-      content = rstEscape(node['content']),
+      # todo: revisit rstEscape!... (and def. this 'para' context...)
+      content = rstEscape(node['content'], context='para'),
       ))
     self.output.newline()
 
