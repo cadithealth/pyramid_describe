@@ -1,6 +1,10 @@
 - make rst.Writer support substitution_definitions with multi-character
   strings with embedded unicode characters.
 
+- consider moving directly from rST to PDF instead of generating HTML
+  as a middle-step...
+  ==> perhaps make that an option.
+
 - tree hierarchy: when rendering non-"/" tree, it should start at that
   point, not from "/". eg. `pdescribe config.ini -T /path/to/foo` should
   result in:
