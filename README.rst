@@ -542,6 +542,10 @@ PDF, or SWF:
 Format Options
 ==============
 
+* ``title`` : str, default: 'Contents of "{PATH}"'
+* ``endpoints.title`` : str, default: 'Endpoints'
+* ``legend.title`` : str, default: 'Legend'
+
 * ``showUnderscore`` : bool, default: false
 * ``showUndoc`` : bool, default: true
 * ``showLegend`` : bool, default: true

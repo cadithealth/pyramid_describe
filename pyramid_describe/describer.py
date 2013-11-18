@@ -244,6 +244,8 @@ class Describer(object):
 
   str_options = (
     ('title',            None),
+    ('endpoints.title',  None),
+    ('legend.title',     None),
     ('stubFormat',       '{{{}}}'),     # /path/to/{NAME}/and/more
     ('dynamicFormat',    '{}/?'),       # /path/to/NAME/?
     ('restFormat',       '<{}>'),       # /path/to/<NAME>
