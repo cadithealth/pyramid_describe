@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.1.33
+=======
+
+* Moved to open-ended configuration of `pdfkit` options
+* Added "stop-gap" catch for failed PDF rendering
+* Added work-around for single-character meta content
+
+
 v0.1.32
 =======
 
