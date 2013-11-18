@@ -3,7 +3,7 @@ ChangeLog
 =========
 
 
-v0.1.33
+v0.1.34
 =======
 
 * Moved to open-ended configuration of `pdfkit` options
