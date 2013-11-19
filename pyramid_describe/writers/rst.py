@@ -297,39 +297,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
       self.output.emptyline()
       self.output.append('.. class:: ' + ' '.join(sorted(node['classes'])))
       self.output.emptyline()
-    if node['ids']:
-      # note: only generating an `id` node IFF they are not generated
-      # todo: this is *not* the best way to determine whether or not
-      #       the node['ids'] is completely generated!...
-      dids = self.document.ids.copy()
-      nids = node['ids']
-      node['ids'] = []
-      for id in nids:
-        # todo: there is a weirdness that if the id references the document,
-        #       then self.document.ids lookup points to a `section` node...
-        #       look into what i misunderstood here.
-        rnode = self.document.ids.get(id)
-        if isinstance(node, nodes.document) and isinstance(rnode, nodes.section):
-          rnode = node
-        if rnode is node:
-          del self.document.ids[id]
-      self.document.set_id(node)
-      for snode in node:
-        if isinstance(snode, nodes.title):
-          tid = nodes.make_id(snode.astext())
-          break
-      else:
-        tid = None
-      nids_ng = [nid
-                 for nid in ( set(nids) - set(node['ids']) )
-                 if nid != tid]
-      if nids_ng:
+    tids = node.get('target-ids', None)
+    if tids:
+      self.output.emptyline()
+      for nid in sorted(tids):
+        self.output.append('.. _{id}:'.format(id=rstTicks(nid)))
         self.output.emptyline()
-        for nid in sorted(nids_ng):
-          self.output.append('.. _{id}:'.format(id=rstTicks(nid)))
-          self.output.emptyline()
-      self.document.ids = dids
-      node['ids'] = nids
 
   #----------------------------------------------------------------------------
   def default_visit(self, node):
@@ -492,9 +465,15 @@ class RstTranslator(nodes.GenericNodeVisitor):
       # is inlined AND when generated as
       return
     self.output.emptyline()
-    self.output.append('.. _{name}: {uri}'.format(
-      name = rstEscape(node['names'][0], context='`'),
-      uri  = rstEscape(node['refuri'])))
+    if node.get('names') and node.get('refuri'):
+      self.output.append('.. _{name}: {uri}'.format(
+        name = rstEscape(node['names'][0], context='`'),
+        uri  = rstEscape(node['refuri'])))
+    elif node.get('refid'):
+      self.output.append('.. _{id}:'.format(
+        id=rstEscape(node['refid'], context='`')))
+    else:
+      raise ValueError('target without names+refuri or refid')
     self.output.newline()
 
   #----------------------------------------------------------------------------

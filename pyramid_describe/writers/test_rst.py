@@ -156,15 +156,56 @@ some text.
     from docutils import utils, nodes
     from docutils.core import publish_from_doctree
     doc = utils.new_document('<program>')
-    doc['classes'] = ('c1 c2',)
-    doc['ids'] = ('my-test-id',)
-    doc.append(nodes.title('', '', nodes.Text('Title')))
-    doc.append(nodes.paragraph('', '', nodes.Text('some text.')))
-    doc.append(
+    docsect = nodes.section('')
+    docsect['classes'] = ('c1 c2',)
+    docsect['ids'] = ('my-test-id',)
+    docsect.append(nodes.title('', '', nodes.Text('Title')))
+    docsect.append(nodes.paragraph('', '', nodes.Text('some text.')))
+    docsect.append(
       nodes.section(
         '',
         nodes.title('', '', nodes.Text('Sub-Title')),
         nodes.paragraph('', '', nodes.Text('some more text'))))
+    doc.append(nodes.target(refid='my-test-id'))
+    doc.append(docsect)
+    chk = '''\
+.. _`my-test-id`:
+
+.. class:: c1 c2
+
+======
+Title
+======
+
+some text.
+
+---------
+Sub-Title
+---------
+
+some more text
+'''
+    out = publish_from_doctree(doc, writer=rst.Writer())
+    self.assertMultiLineEqual(out, chk)
+    self.assertMultiLineEqual(self.rt(out, settings={'doctitle_xform': False}), chk)
+
+  #----------------------------------------------------------------------------
+  def test_ids_generated(self):
+    from docutils import utils, nodes
+    from docutils.core import publish_from_doctree
+    doc = utils.new_document('<program>')
+    docsect = nodes.section('')
+    docsect['classes'] = ('c1 c2',)
+    docsect['ids'] = ('my-test-id',)
+    docsect['target-ids'] = ('my-test-id',)
+    docsect.append(nodes.title('', '', nodes.Text('Title')))
+    docsect.append(nodes.paragraph('', '', nodes.Text('some text.')))
+    docsect.append(
+      nodes.section(
+        '',
+        nodes.title('', '', nodes.Text('Sub-Title')),
+        nodes.paragraph('', '', nodes.Text('some more text'))))
+    doc.append(docsect)
     chk = '''\
 .. class:: c1 c2
 
@@ -280,8 +321,6 @@ The following `skill` levels exist:
 this paragraph is not `** <#id1>`__\\ clean.
 
 .. class:: system-message
-
-.. _id1:
 
 ============================
 WARNING/2 (<string>, line 1)
@@ -475,10 +514,6 @@ Level 1
 Level 2
 -------
 '''
-
-    ## TODO: is there anything that can be done about these IDs
-    ##       that were automatically added?...
-
     chk = '''\
 =======
 Level 1
@@ -488,13 +523,9 @@ Level 1
 Level 2
 -------
 
-.. _id1:
-
 =======
 Level 1
 =======
-
-.. _id2:
 
 -------
 Level 2
@@ -578,8 +609,6 @@ section 1.1.
 =======
 Level 2
 =======
-
-.. _id1:
 
 ---------
 Some Name
