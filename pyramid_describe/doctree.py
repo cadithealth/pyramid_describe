@@ -77,12 +77,14 @@ def render(data):
   mainsect = rsect(rtext(title))
   if data.options.rstMax:
     mainsect['ids'] = ['section-contents']
+    mainsect['target-ids'] = mainsect['ids']
     mainsect['classes'] = ['contents']
 
   endpoints = rsect(rtext(data.options.get('endpoints.title') or _('Endpoints')))
   epcont = endpoints
   if data.options.rstMax:
     endpoints['ids'] = ['section-endpoints']
+    endpoints['target-ids'] = endpoints['ids']
     endpoints['classes'] = ['endpoints']
   if not data.options.showInfo:
     epcont = nodes.bullet_list('', bullet='*')
@@ -95,11 +97,13 @@ def render(data):
     legend = rsect(rtext(data.options.get('legend.title') or _('Legend')))
     if data.options.rstMax:
       legend['ids'] = ['section-legend']
+      legend['target-ids'] = legend['ids']
       legend['classes'] = ['legend']
     for item, desc in data.legend:
       section = rsect(item, rpara(rtext(desc)))
       if data.options.rstMax:
         section['ids'] = ['legend-item-' + data.options.idEncoder(item)]
+        section['target-ids'] = section['ids']
         section['classes'] = ['legend-item']
       legend.append(section)
     mainsect.append(legend)
@@ -124,10 +128,6 @@ def render(data):
         meta.append(rmeta(name='pdfkit-' + key, content=str(value)))
     doc.append(meta)
 
-  for node in walktree(doc, classes=(nodes.section, nodes.paragraph)):
-    if node.get('ids', []):
-      node['target-ids'] = node['ids']
-
   return doc
 
 #------------------------------------------------------------------------------
@@ -137,6 +137,7 @@ def render_entry(data, entry):
   section = rsect(entry.dpath)
   if data.options.rstMax:
     section['ids'] = [entry.id]
+    section['target-ids'] = section['ids']
     section['classes'] = ['endpoint']
     if entry.classes:
       section['classes'] += entry.classes
@@ -153,6 +154,7 @@ def render_entry_body(data, entry):
     impl = rpara(rtext(impl))
     if data.options.rstMax:
       impl['ids'] = ['handler-' + entry.id]
+      impl['target-ids'] = impl['ids']
       impl['classes'] = ['handler']
     ret.append(impl)
   ret.extend(rst2fragments(entry.doc))
@@ -169,11 +171,13 @@ def render_entry_methods(data, entry):
   section = rsect(_('Methods'))
   if data.options.rstMax:
     section['ids'] = ['methods-' + entry.id]
+    section['target-ids'] = section['ids']
     section['classes'] = ['methods']
   for meth in entry.methods:
     msect = rsect(meth.method or meth.name)
     if data.options.rstMax:
       msect['ids'] = [meth.id]
+      msect['target-ids'] = msect['ids']
       msect['classes'] = ['method']
       if meth.classes:
         msect['classes'] += meth.classes
@@ -188,11 +192,13 @@ def render_entry_params(data, entry):
   section = rsect(_('Parameters'))
   if data.options.rstMax:
     section['ids'] = ['params-' + entry.id]
+    section['target-ids'] = section['ids']
     section['classes'] = ['params']
   for node in entry.params:
     rnode = rsect(node.name)
     if data.options.rstMax:
       rnode['ids'] = ['param-' + entry.id + '-' + data.options.idEncoder(node.name)]
+      rnode['target-ids'] = rnode['ids']
       rnode['classes'] = ['param']
       if node.classes:
         rnode['classes'] += node.classes
@@ -220,11 +226,13 @@ def render_entry_returns(data, entry):
   section = rsect(_('Returns'))
   if data.options.rstMax:
     section['ids'] = ['returns-' + entry.id]
+    section['target-ids'] = section['ids']
     section['classes'] = ['returns']
   for node in entry.returns:
     rnode = rsect(node.type)
     if data.options.rstMax:
       rnode['ids'] = ['return-' + entry.id + '-' + data.options.idEncoder(node.type)]
+      rnode['target-ids'] = rnode['ids']
       rnode['classes'] = ['return']
       if node.classes:
         rnode['classes'] += node.classes
@@ -239,11 +247,13 @@ def render_entry_raises(data, entry):
   section = rsect(_('Raises'))
   if data.options.rstMax:
     section['ids'] = ['raises-' + entry.id]
+    section['target-ids'] = section['ids']
     section['classes'] = ['raises']
   for node in entry.raises:
     rnode = rsect(node.type)
     if data.options.rstMax:
       rnode['ids'] = ['raise-' + entry.id + '-' + data.options.idEncoder(node.type)]
+      rnode['target-ids'] = rnode['ids']
       rnode['classes'] = ['raise']
       if node.classes:
         rnode['classes'] += node.classes
