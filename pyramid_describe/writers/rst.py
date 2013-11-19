@@ -314,7 +314,15 @@ class RstTranslator(nodes.GenericNodeVisitor):
         if rnode is node:
           del self.document.ids[id]
       self.document.set_id(node)
-      nids_ng = set(nids) - set(node['ids'])
+      for snode in node:
+        if isinstance(snode, nodes.title):
+          tid = nodes.make_id(snode.astext())
+          break
+      else:
+        tid = None
+      nids_ng = [nid
+                 for nid in ( set(nids) - set(node['ids']) )
+                 if nid != tid]
       if nids_ng:
         self.output.emptyline()
         for nid in sorted(nids_ng):

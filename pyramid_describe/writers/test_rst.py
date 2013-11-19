@@ -480,13 +480,9 @@ Level 2
     ##       that were automatically added?...
 
     chk = '''\
-.. _`level-1`:
-
 =======
 Level 1
 =======
-
-.. _`level-2`:
 
 -------
 Level 2
@@ -504,43 +500,7 @@ Level 1
 Level 2
 -------
 '''
-
     self.assertMultiLineEqual(self.rt(src), chk)
-
-#   # TODO: re-enable this when it is fixed...
-#   #--------------------------------------------------------------------------
-#   def test_multiIDs(self):
-
-#     ## TODO: is there anything that can be done about these IDs
-#     ##       that were automatically added?...
-
-#     src = '''\
-# .. _`level-1`:
-
-# =======
-# Level 1
-# =======
-
-# .. _`level-2`:
-
-# -------
-# Level 2
-# -------
-
-# .. _id1:
-
-# =======
-# Level 1
-# =======
-
-# .. _id2:
-
-# -------
-# Level 2
-# -------
-# '''
-
-#     self.assertMultiLineEqual(self.rt(src), src)
 
   #----------------------------------------------------------------------------
   def test_substitution(self):
@@ -582,6 +542,50 @@ The AcmeCo\ |trade|.
 
 .. |trade| unicode:: u+02122
     :ltrim:
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_idcompression(self):
+    src = '''\
+Level 1
+-------
+
+Some Name
+~~~~~~~~~
+
+section 1.1.
+
+Level 2
+-------
+
+Some Name
+~~~~~~~~~
+
+section 1.2.
+'''
+    chk = '''\
+=======
+Level 1
+=======
+
+---------
+Some Name
+---------
+
+section 1.1.
+
+=======
+Level 2
+=======
+
+.. _id1:
+
+---------
+Some Name
+---------
+
+section 1.2.
 '''
     self.assertMultiLineEqual(self.rt(src), chk)
 
