@@ -134,7 +134,6 @@ def render_entry_body(data, entry):
       entry.ipath,'()' if entry.itype == 'instance' else '', entry.itype)
     impl = rpara(rtext(impl))
     if data.options.rstMax:
-      impl = rcont(impl)
       impl['ids'] = ['handler-' + entry.id]
       impl['classes'] = ['handler']
     ret.append(impl)
@@ -190,7 +189,6 @@ def render_entry_params(data, entry):
     if spec:
       spec = rpara(rtext(spec))
       if data.options.rstMax:
-        spec = rcont(spec)
         spec['classes'] = ['spec']
       rnode.append(spec)
     rnode.extend(rst2fragments(node.doc))
