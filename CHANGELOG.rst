@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.1.35
+=======
+
+* Improved handling of targetable node IDs in rST writer
+
+
 v0.1.34
 =======
 
@@ -28,8 +34,8 @@ v0.1.30
 =======
 
 * Added "rst2rst.py" script
-* Added substitution support (for RST writer)
-* Improved separation token serialization (for RST writer)
+* Added substitution support (for rST writer)
+* Improved separation token serialization (for rST writer)
 * Corrected reStructuredText section title rendering
 * Corrected DocTree structure (switch "container" to "section" node)
 * Removed non-matching extensions from manifest
