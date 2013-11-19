@@ -301,7 +301,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
       # note: only generating an `id` node IFF they are not generated
       # todo: this is *not* the best way to determine whether or not
       #       the node['ids'] is completely generated!...
-      dids = self.document.ids
+      dids = self.document.ids.copy()
       nids = node['ids']
       node['ids'] = []
       for id in nids:
