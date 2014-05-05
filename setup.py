@@ -26,7 +26,7 @@ test_dependencies = [
   'PyYAML               >= 3.10',
   'pdfkit               >= 0.4.1',
   'pxml                 >= 0.2.10',
-  ]
+]
 
 dependencies = [
   'distribute           >= 0.6.24',
@@ -37,18 +37,18 @@ dependencies = [
   'six                  >= 1.4.1',
   'docutils             >= 0.10',
   'PyYAML               >= 3.10',
-  ]
+]
 
 extras_dependencies = {
   'pdf':  'pdfkit       >= 0.4.1',
-  }
+}
 
 entrypoints = {
   'console_scripts': [
     'pdescribe          = pyramid_describe.cli:main',
     'rst2rst.py         = pyramid_describe.writers.tools_rst2rst:main',
-    ],
-  }
+  ],
+}
 
 classifiers = [
   'Development Status :: 4 - Beta',
@@ -59,7 +59,7 @@ classifiers = [
   'Natural Language :: English',
   'License :: OSI Approved :: MIT License',
   'License :: Public Domain',
-  ]
+]
 
 setup(
   name                  = 'pyramid_describe',
@@ -81,7 +81,7 @@ setup(
   test_suite            = 'pyramid_describe',
   entry_points          = entrypoints,
   license               = 'MIT (http://opensource.org/licenses/MIT)',
-  )
+)
 
 #------------------------------------------------------------------------------
 # end of $Id$
