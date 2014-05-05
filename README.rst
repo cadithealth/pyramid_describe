@@ -2,12 +2,6 @@
 Self-Documentation for Pyramid Apps
 ===================================
 
-.. warning::
-
-  2013/09/13: though functional, this package is pretty new... Come
-  back in a couple of weeks if you don't like living on the
-  beta-edge!
-
 A pyramid plugin that describes a pyramid application URL hierarchy,
 either by responding to an HTTP request or on the command line, via
 application inspection and reflection. It has built-in support for
@@ -114,7 +108,7 @@ in the INI file or directly in your `main` function. For example:
 
 When using pyramid inclusion, pyramid-describe expects to find
 configuration options in the application settings. See the `Options`_
-section for a listed of all supported options, with a short example
+section for a list of all supported options, with a short example
 here:
 
 .. code-block:: ini
@@ -336,12 +330,9 @@ constructors, the prefix is left off. The following options exist:
 
   Specifies the top-level URL to start the application inspection at.
 
-  TODO: this does not work.
-
-  WARNING: this does not work.
-
-  SERIOUSLY: this does not work, it only adds the specified path as a
-  URL prefix... doh!
+  IMPORTANT: this is not currently implemented the way that it should
+  be... the current workaround simply adds the specified path (and its
+  descendants) to the `include` list.
 
 * ``{PREFIX}.include`` : list(regex-spec), default: null
 
