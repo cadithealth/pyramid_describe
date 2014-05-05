@@ -7,6 +7,7 @@
 #------------------------------------------------------------------------------
 
 import os, six
+import re
 from six.moves import urllib
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.settings import asbool, aslist
@@ -22,13 +23,35 @@ class DescribeController(Controller):
     super(DescribeController, self).__init__(*args, **kw)
     if doc is not None:
       self.__doc__ = doc
-    self.describer = Describer(settings=settings)
     self.settings  = adict(settings or {})
+    # todo: note that below there are several mentions of
+    #       "settings.inspect" being improperly implemented... that is
+    #       correct. the idea of `settings.inspect` is that it defines
+    #       the path to begin traversal during reflection. instead, we
+    #       are using a `settings.include` workaround. the problem
+    #       with this workaround is performance...
     self.params    = adict(
-      view = view or self.settings.get('inspect') or '/',
-      # todo: enforce that `root` be a str...
-      root = root or self.settings.get('inspect') or '/',
-      )
+      # todo: revert this when settings.inspect is properly implemented:
+      #   view = view or self.settings.get('inspect') or '/',
+      view = view or '/',
+      # todo: revert this when settings.inspect is properly implemented:
+      #   root = root or self.settings.get('inspect') or '/',
+      root = root or '/',
+    )
+    # todo: enforce that `self.params.root` be a str...
+    # todo: enforce that `self.params.inspect` be a str...
+    # todo: remove this when settings.inspect is properly implemented:
+    if self.settings.get('inspect') and self.settings.inspect != '/':
+      path = self.settings.inspect
+      if 'include' in self.settings:
+        raise NotImplementedError()
+      else:
+        self.settings['include'] = []
+      if path.endswith('/'):
+        path = path[:-1]
+      self.settings['include'].append(
+        re.compile('^' + re.escape(path) + '(/.*)?$'))
+    self.describer = Describer(settings=self.settings)
     # setup which extensions to handle
     self.fullname  = self.settings.get('fullname', 'application')
     self.handle_full = expose(

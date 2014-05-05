@@ -386,6 +386,24 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
                         location='http://localhost/another/location')
 
   #----------------------------------------------------------------------------
+  def test_inspect(self):
+    ## Setting the Describer `inspect` parameter selects specified path
+    ## (and descendants) for inclusion.
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats': 'txt',
+        'index-redirect': 'false',
+        'inspect': '/sub',
+        })
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+/
+└── sub/
+    └── method    # This method outputs a JSON list.
+''')
+
+  #----------------------------------------------------------------------------
   def test_include(self):
     ## Setting the Describer `include` parameter is exclusive
     root = SimpleRoot()
