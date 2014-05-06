@@ -683,7 +683,7 @@ Endpoints
 \/
 ``````
 
-Handler: pyramid_describe.test.SimpleRoot() [instance]
+Handler: pyramid_describe.test_describe.SimpleRoot() [instance]
 
 The default root.
 
@@ -699,7 +699,7 @@ URL tree description.
 /rest
 ``````
 
-Handler: pyramid_describe.test.Rest() [instance]
+Handler: pyramid_describe.test_describe.Rest() [instance]
 
 A RESTful entry.
 
@@ -711,7 +711,7 @@ Methods
 DELETE
 ''\'''\'
 
-Handler: pyramid_describe.test.Rest().delete [method]
+Handler: pyramid_describe.test_describe.Rest().delete [method]
 
 Deletes the entry.
 
@@ -719,7 +719,7 @@ Deletes the entry.
 GET
 ''\'''\'
 
-Handler: pyramid_describe.test.Rest().get [method]
+Handler: pyramid_describe.test_describe.Rest().get [method]
 
 Gets the current value.
 
@@ -727,7 +727,7 @@ Gets the current value.
 POST
 ''\'''\'
 
-Handler: pyramid_describe.test.Rest().post [method]
+Handler: pyramid_describe.test_describe.Rest().post [method]
 
 Creates a new entry.
 
@@ -781,7 +781,7 @@ The user does not have posting privileges
 PUT
 ''\'''\'
 
-Handler: pyramid_describe.test.Rest().put [method]
+Handler: pyramid_describe.test_describe.Rest().put [method]
 
 Updates the value.
 
@@ -789,7 +789,7 @@ Updates the value.
 /sub/method
 ```````````
 
-Handler: pyramid_describe.test.Sub().method [method]
+Handler: pyramid_describe.test_describe.Sub().method [method]
 
 This method outputs a JSON list.
 
@@ -797,7 +797,7 @@ This method outputs a JSON list.
 /swi
 ``````
 
-Handler: pyramid_describe.test.SubIndex() [instance]
+Handler: pyramid_describe.test_describe.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
@@ -805,7 +805,7 @@ A sub-controller providing only an index.
 /unknown/?
 ``````````
 
-Handler: pyramid_describe.test.Unknown [class]
+Handler: pyramid_describe.test_describe.Unknown [class]
 
 A dynamically generated sub-controller.
 
@@ -882,7 +882,7 @@ Endpoints
 /swi
 ``````
 
-Handler: pyramid_describe.test.SubIndex() [instance]
+Handler: pyramid_describe.test_describe.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
@@ -978,7 +978,7 @@ Endpoints
 
 .. _`handler-endpoint-2f`:
 
-Handler: pyramid_describe.test.SimpleRoot() [instance]
+Handler: pyramid_describe.test_describe.SimpleRoot() [instance]
 
 The default root.
 
@@ -1010,7 +1010,7 @@ URL tree description.
 
 .. _`handler-endpoint-2f72657374`:
 
-Handler: pyramid_describe.test.Rest() [instance]
+Handler: pyramid_describe.test_describe.Rest() [instance]
 
 A RESTful entry.
 
@@ -1034,7 +1034,7 @@ DELETE
 
 .. _`handler-method-2f72657374-44454c455445`:
 
-Handler: pyramid_describe.test.Rest().delete [method]
+Handler: pyramid_describe.test_describe.Rest().delete [method]
 
 Deletes the entry.
 
@@ -1050,7 +1050,7 @@ GET
 
 .. _`handler-method-2f72657374-474554`:
 
-Handler: pyramid_describe.test.Rest().get [method]
+Handler: pyramid_describe.test_describe.Rest().get [method]
 
 Gets the current value.
 
@@ -1066,7 +1066,7 @@ POST
 
 .. _`handler-method-2f72657374-504f5354`:
 
-Handler: pyramid_describe.test.Rest().post [method]
+Handler: pyramid_describe.test_describe.Rest().post [method]
 
 Creates a new entry.
 
@@ -1164,7 +1164,7 @@ PUT
 
 .. _`handler-method-2f72657374-505554`:
 
-Handler: pyramid_describe.test.Rest().put [method]
+Handler: pyramid_describe.test_describe.Rest().put [method]
 
 Updates the value.
 
@@ -1180,7 +1180,7 @@ Updates the value.
 
 .. _`handler-endpoint-2f7375622f6d6574686f64`:
 
-Handler: pyramid_describe.test.Sub().method [method]
+Handler: pyramid_describe.test_describe.Sub().method [method]
 
 This method outputs a JSON list.
 
@@ -1196,7 +1196,7 @@ This method outputs a JSON list.
 
 .. _`handler-endpoint-2f737769`:
 
-Handler: pyramid_describe.test.SubIndex() [instance]
+Handler: pyramid_describe.test_describe.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
@@ -1212,7 +1212,7 @@ A sub-controller providing only an index.
 
 .. _`handler-endpoint-2f756e6b6e6f776e`:
 
-Handler: pyramid_describe.test.Unknown [class]
+Handler: pyramid_describe.test_describe.Unknown [class]
 
 A dynamically generated sub-controller.
 
