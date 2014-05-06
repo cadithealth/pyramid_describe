@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, re, unittest, json, unittest, six, pkg_resources, pxml, yaml
+import sys, re, json, unittest, six, pkg_resources, pxml, yaml
 import xml.etree.ElementTree as ET
 from webtest import TestApp
 
@@ -96,7 +96,7 @@ def docsEnhancer(entry, options):
           default=4096, optional=True, doc='The anticipated maximum size'),
     adict(id='param-2f726573743f5f6d6574686f643d504f5354-74657874', name='text', type='str',
           optional=False, doc='The text content for the posting'),
-    )
+  )
   entry.returns = (adict(id='return-2f726573743f5f6d6574686f643d504f5354-30-737472', type='str',
                          doc='The ID of the new posting'),)
   entry.raises  = (
@@ -104,7 +104,7 @@ def docsEnhancer(entry, options):
           type='HTTPUnauthorized', doc='Authenticated access is required'),
     adict(id='raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e',
           type='HTTPForbidden', doc='The user does not have posting privileges'),
-    )
+  )
   return entry
 
 settings_minRst = {
@@ -113,7 +113,7 @@ settings_minRst = {
   'format.default': 'rst',
   'format.default.showLegend': 'false',
   'format.default.showMeta': 'false',
-  }
+}
 
 #------------------------------------------------------------------------------
 def pdfclean(pdf):
@@ -282,7 +282,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
         'basename': 'app',
-        })
+      })
     self.assertResponse(self.send(root, '/desc/app.txt'),  302,
                         location='http://localhost/desc/app-v0.3.txt')
     self.assertResponse(self.send(root, '/desc/app.yaml'), 302,
@@ -313,7 +313,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'exclude': '|^/desc(/.*)?$|',
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'),  302,
                         location='http://localhost/desc/app-v0.3.txt')
     self.assertResponse(self.send(root, '/desc/'),  302,
@@ -336,7 +336,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
         'index-redirect': '301',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'),  301,
                         location='http://localhost/desc/app-v0.3.txt')
 
@@ -351,7 +351,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
         'index-redirect': 'https://example.com/path/filename#anchor',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'),  302,
                         location='https://example.com/path/filename#anchor')
 
@@ -366,7 +366,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
         'index-redirect': '301 https://example.com/path/filename#anchor',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'),  301,
                         location='https://example.com/path/filename#anchor')
 
@@ -381,7 +381,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt yaml wadl',
         'fullname': 'app-v0.3',
         'index-redirect': '../another/location',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 302,
                         location='http://localhost/another/location')
 
@@ -396,7 +396,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'inspect': '/sub',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
 └── sub/
@@ -413,7 +413,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'include': '|^/sub/method$|',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
 └── sub/
@@ -430,7 +430,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
@@ -453,7 +453,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|',
                     '|^/desc(/.*)?$|'),
-        })
+      })
     self.assertResponse(self.send(root, '/desc?format=html&showRest=false&showInfo=false'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
@@ -476,7 +476,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
-        })
+      })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
 ├── rest
@@ -495,7 +495,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
-        })
+      })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false&showLegend=false&showMeta=false&rstMax=true'), 200, '''\
 .. title:: Contents of "/"
 
@@ -535,7 +535,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
-        })
+      })
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -579,7 +579,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'format showInfo',
-        })
+      })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
 ├── rest
@@ -618,7 +618,7 @@ Endpoints
         'formats': 'txt',
         'index-redirect': 'false',
         'exclude': '|^/desc(/.*)?$|',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
 └── rest/         # RESTful access, with sub-component
@@ -644,7 +644,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'format showInfo',
-        })
+      })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
 ├── rest
@@ -669,7 +669,7 @@ Endpoints
         'format.default': 'rst',
         'format.default.showImpl': 'true',
         'entries.filters': docsEnhancer,
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 ===============
 Contents of "/"
@@ -868,7 +868,7 @@ request-specific details.
         'format.default.title': 'Application API Details',
         'format.default.showImpl': 'true',
         'entries.filters': docsEnhancer,
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 =======================
 Application API Details
@@ -946,7 +946,7 @@ request-specific details.
         'format.default.rstMax': 'true',
         'entries.filters': docsEnhancer,
         'format.default.pdfkit.options': '{footer-spacing: "3"}',
-        })
+      })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 .. title:: Contents of "/"
 
@@ -1454,7 +1454,7 @@ The following `skill` levels exist:
         'entries.filters': docsEnhancer,
         'format.default.title': 'Application API',
         'format.default.rstMax': 'true',
-        })
+      })
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -1641,7 +1641,7 @@ request-specific details.</p>
         'index-redirect': 'false',
         'format.rst.default.filters': rst_fiddler,
         'format.html.default.cssPath': None,
-        })
+      })
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -1691,7 +1691,7 @@ request-specific details.</p>
         'format.default.rstPdfkit': 'false',
         'format.html.default.cssPath': None,
         'format.html.default.filters': fiddler,
-        })
+      })
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -1731,7 +1731,7 @@ request-specific details.</p>
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+       })
     res = self.send(root, '/desc')
     chk = '''{
   "application": {
@@ -1847,7 +1847,7 @@ request-specific details.</p>
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+       })
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -1949,7 +1949,7 @@ application:
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+       })
     res = self.send(root, '/desc')
     chk = '''
 application:
@@ -1981,7 +1981,7 @@ application:
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+      })
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2043,7 +2043,7 @@ application:
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+       })
     res = self.send(root, '/desc')
     chk = '''
 <application
@@ -2132,7 +2132,7 @@ application:
          'index-redirect': 'false',
          'entries.filters': docsEnhancer,
          'exclude': '|^/desc/.*|',
-         })
+       })
     res = self.send(root, '/desc')
     # todo: check content-type...
     self.assertTrue(res.body.startswith('%PDF-1.4\n'))
@@ -2157,7 +2157,7 @@ application:
         'index-redirect': 'false',
         'format.rst.default.filters': rst_fiddler,
         'format.html.default.cssPath': None,
-        })
+      })
     # note: just making sure that it *can* be rendered...
     # todo: better, would be to parse the PDF and ensure that
     #       'a – b.' is in there...
@@ -2175,7 +2175,7 @@ application:
          'index-redirect': 'false',
          'entries.filters': docsEnhancer,
          'exclude': '|^/desc/.*|',
-         })
+       })
     pdf_orig = pdfclean(self.send(root, '/desc').body)
     # confirm that pdf renderings stay consistent
     root = SimpleRoot()
@@ -2186,7 +2186,7 @@ application:
         'index-redirect': 'false',
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
-        })
+      })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
     # confirm that fiddling with html css rendering changes pdf
     root = SimpleRoot()
@@ -2198,7 +2198,7 @@ application:
         'entries.filters': docsEnhancer,
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
-        })
+      })
     self.assertNotEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
     # confirm that fiddling with html css cascading can be controlled
     root = SimpleRoot()
@@ -2211,7 +2211,7 @@ application:
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
         'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
-        })
+      })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
 
   #----------------------------------------------------------------------------
@@ -2243,7 +2243,7 @@ application:
         'format.rst.default.filters': rst_fiddler,
         'format.html.default.cssPath': None,
         'format.html.default.filters': html_fiddler,
-        })
+      })
     res = self.send(root, '/desc')
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
