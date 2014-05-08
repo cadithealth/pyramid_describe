@@ -739,7 +739,7 @@ Parameters
 size
 ~~~~~~
 
-int, optional, default 4096
+int, optional, default: 4096
 
 The anticipated maximum size
 
@@ -1088,7 +1088,7 @@ size
 
 .. class:: spec
 
-int, optional, default 4096
+int, optional, default: 4096
 
 The anticipated maximum size
 
@@ -1540,7 +1540,7 @@ body {{
          <h6 class="section-title">Parameters</h6>
          <div class="param section" id="param-method-2f72657374-504f5354-73697a65">
           <h7 class="section-title">size</h7>
-          <p class="spec">int, optional, default 4096</p>
+          <p class="spec">int, optional, default: 4096</p>
           <p>The anticipated maximum size</p>
          </div>
          <div class="param section" id="param-method-2f72657374-504f5354-74657874">

@@ -6,6 +6,11 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
+'''
+This module helps with converting a pyramid-describe data structure to
+a docutils "doctree".
+'''
+
 import yaml
 from docutils import utils, nodes, core
 from docutils.parsers.rst.directives.html import MetaBody
@@ -213,7 +218,7 @@ def render_entry_params(data, entry):
     if node.optional:
       spec.append(_('optional'))
     if node.default:
-      spec.append(_('default {}', node.default))
+      spec.append(_('default: {}', node.default))
     spec = _(', ').join(spec)
     if spec:
       spec = rpara(rtext(spec))
