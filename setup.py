@@ -37,6 +37,7 @@ dependencies = [
   'six                  >= 1.4.1',
   'docutils             >= 0.10',
   'PyYAML               >= 3.10',
+  'numpydoc             >= 0.4',        # => Sphinx Jinja2
 ]
 
 extras_dependencies = {
