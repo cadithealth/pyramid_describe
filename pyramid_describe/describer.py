@@ -155,14 +155,14 @@ class Describer(object):
     xsd  = 'http://www.w3.org/2001/XMLSchema',
     xsi  = 'http://www.w3.org/2001/XMLSchema-instance',
     doc  = 'http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc',
-    )
+  )
 
   wadl_type_remap = {
     'bool':  'xsd:boolean',
     'int':   'xsd:integer',
     'float': 'xsd:float',
     'str':   'xsd:string',
-    }
+  }
 
   legend = (
     ('STUB',
@@ -181,7 +181,7 @@ class Describer(object):
      _('This endpoint is a `lookup` handler, and is therefore free to interpret'
        ' path arguments dynamically; no further information can be determined'
        ' without request-specific details.')),
-    )
+  )
 
   content_types = {
     'html': ('text/html', 'UTF-8'),
@@ -192,7 +192,7 @@ class Describer(object):
     'wadl': ('text/xml', 'UTF-8'),
     'xml':  ('text/xml', 'UTF-8'),
     'yaml': ('application/yaml', 'UTF-8'),
-    }
+  }
 
   bool_options = (
     ('showUnderscore', False),
@@ -217,19 +217,19 @@ class Describer(object):
     ('rstMax',         False),
     ('rstPdfkit',      True),
     ('cssEmbed',       True),
-    )
+  )
 
   int_options = (
     ('maxdepth',       1024),
     ('width',          79),
     ('maxDocColumn',   None),
     ('minDocLength',   20),
-    )
+  )
 
   list_options = (
     ('restVerbs',      HTTP_METHODS),
     ('filters',        None),
-    )
+  )
 
   str_options = (
     ('title',            None),
@@ -249,7 +249,7 @@ class Describer(object):
   margin-left: 10mm,
 }
 '''),
-    )
+  )
 
   # TODO: support per-format system defaults...
   # todo: then, change cssPath to be html-only.
@@ -319,7 +319,7 @@ class Describer(object):
       options   = options,
       endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
       legend    = legend,
-      )
+    )
     ctdef = self.content_types.get(format)
     return adict(content=self.render(data), content_type=ctdef[0], charset=ctdef[1])
 
@@ -750,7 +750,7 @@ class Describer(object):
     settings = dict(
       doctitle_xform       = False,
       sectsubtitle_xform   = False,
-      )
+    )
     if data.options.rstMax:
       settings['explicit_title'] = True
     return publish_from_doctree(
@@ -815,7 +815,7 @@ class Describer(object):
       'endpoint':  'resource',
       'return':    'representation',
       'raise':     'fault',
-      }
+    }
     resources = ET.Element('resources')
     for elem in list(root):
       root.remove(elem)
