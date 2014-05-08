@@ -294,6 +294,9 @@ class Describer(object):
         except TypeError:
           self.efilters = [self.efilters]
       self.efilters = [resolve(e) for e in self.efilters]
+      self.efilters = [
+        e if callable(e) else getattr(e, 'filter')
+        for e in self.efilters]
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
