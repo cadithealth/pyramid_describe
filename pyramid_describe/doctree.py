@@ -146,11 +146,13 @@ def render_entry(data, entry):
     return nodes.list_item('', rpara(rtext(entry.dpath)))
   section = rsect(entry.dpath)
   if data.options.rstMax:
-    section['ids'] = [entry.id]
+    section['ids']        = [entry.id]
     section['target-ids'] = section['ids']
-    section['classes'] = ['endpoint']
+    section['classes']    = ['endpoint']
+    section['path']       = entry.path
+    section['dpath']      = entry.dpath
     if entry.classes:
-      section['classes'] += entry.classes
+      section['classes']  += entry.classes
   section.extend(render_entry_body(data, entry))
   return section
 
