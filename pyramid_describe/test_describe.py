@@ -443,6 +443,34 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
 ''')
 
   #----------------------------------------------------------------------------
+  def test_filters(self):
+    ## Test the Describer `entries.filters`
+    def test_filter(entry, options):
+      if entry.path.startswith('/sub/method') or entry.path.startswith('/desc'):
+        return None
+      if entry.isMethod and entry.name == 'get' and entry.parent.path == '/rest':
+        entry.doc = 'Returns the entry\'s attributes.'
+      return entry
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats'           : 'txt',
+        'index-redirect'    : 'false',
+        'entries.filters'   : test_filter,
+      })
+    self.assertResponse(self.send(root, '/desc'), 200, '''\
+/                   # The default root.
+├── rest            # A RESTful entry.
+│   ├── <DELETE>    # Deletes the entry.
+│   ├── <GET>       # Returns the entry's attributes.
+│   ├── <POST>      # Creates a new entry.
+│   └── <PUT>       # Updates the value.
+├── swi             # A sub-controller providing only an index.
+└── unknown/?       # A dynamically generated sub-controller.
+''')
+
+  #----------------------------------------------------------------------------
   def test_request_option_control_default(self):
     ## By default, no request options are honored during rendering
     root = SimpleRoot()
@@ -668,7 +696,7 @@ Endpoints
         'index-redirect': 'false',
         'format.default': 'rst',
         'format.default.showImpl': 'true',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 ===============
@@ -867,7 +895,7 @@ request-specific details.
         'format.default': 'rst',
         'format.default.title': 'Application API Details',
         'format.default.showImpl': 'true',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 =======================
@@ -944,7 +972,7 @@ request-specific details.
         'format.default': 'rst',
         'format.default.showImpl': 'true',
         'format.default.rstMax': 'true',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'format.default.pdfkit.options': '{footer-spacing: "3"}',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
@@ -1451,7 +1479,7 @@ The following `skill` levels exist:
       settings={
         'exclude': '|^/desc/.*$|',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'format.default.title': 'Application API',
         'format.default.rstMax': 'true',
       })
@@ -1684,7 +1712,7 @@ request-specific details.</p>
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'index-redirect': 'false',
         'exclude': '|^/desc/.*$|',
         'format.default.showLegend': 'false',
@@ -1729,7 +1757,7 @@ request-specific details.</p>
        settings={
         'format.default': 'json',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -1845,7 +1873,7 @@ request-specific details.</p>
        settings={
         'format.default': 'yaml',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -1947,7 +1975,7 @@ application:
        settings={
         'format.default': 'yaml',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -1979,7 +2007,7 @@ application:
       settings={
         'format.default': 'xml',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
       })
     res = self.send(root, '/desc')
@@ -2041,7 +2069,7 @@ application:
        settings={
         'format.default': 'wadl',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -2130,7 +2158,7 @@ application:
        settings={
          'format.default': 'pdf',
          'index-redirect': 'false',
-         'entries.filters': docsEnhancer,
+         'entries.parsers': docsEnhancer,
          'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -2173,7 +2201,7 @@ application:
        settings={
          'format.default': 'pdf',
          'index-redirect': 'false',
-         'entries.filters': docsEnhancer,
+         'entries.parsers': docsEnhancer,
          'exclude': '|^/desc/.*|',
        })
     pdf_orig = pdfclean(self.send(root, '/desc').body)
@@ -2184,7 +2212,7 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
       })
     self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
@@ -2195,7 +2223,7 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
       })
@@ -2207,7 +2235,7 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
         'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
@@ -2235,7 +2263,7 @@ application:
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
-        'entries.filters': docsEnhancer,
+        'entries.parsers': docsEnhancer,
         'index-redirect': 'false',
         'exclude': '|^/desc/.*$|',
         'format.default.showLegend': 'false',

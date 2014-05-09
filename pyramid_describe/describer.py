@@ -148,6 +148,15 @@ def extract(settings, prefix):
                 if name.startswith(prefix)})
 
 #------------------------------------------------------------------------------
+def tocallables(spec, attr):
+  if not spec:
+    return None
+  ret = [resolve(e) for e in tolist(spec)]
+  return [
+    e if callable(e) else getattr(e, attr)
+    for e in ret]
+
+#------------------------------------------------------------------------------
 class Describer(object):
 
   xmlns = dict(
@@ -283,20 +292,11 @@ class Describer(object):
         self.renderers[fmt] = rndr
       self.options[fmt]  = extract(self.settings, 'format.' + fmt + '.default')
       self.override[fmt] = extract(self.settings, 'format.' + fmt + '.override')
-    # and now load the entry filters
-    self.efilters   = self.settings.get('entries.filters', [])
-    if self.efilters:
-      try:
-        self.efilters = tolist(self.efilters)
-      except TypeError:
-        try:
-          self.efilters = [filt for filt in self.efilters]
-        except TypeError:
-          self.efilters = [self.efilters]
-      self.efilters = [resolve(e) for e in self.efilters]
-      self.efilters = [
-        e if callable(e) else getattr(e, 'filter')
-        for e in self.efilters]
+    # and now load the entry parsers and filters
+    self.eparsers = tocallables(self.settings.get(
+      'entries.parsers', None), 'parser')
+    self.efilters = tocallables(self.settings.get(
+      'entries.filters', None), 'filter')
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
@@ -320,7 +320,7 @@ class Describer(object):
       root      = root,
       format    = format,
       options   = options,
-      endpoints = sorted(self.get_endpoints(options), key=lambda e: e.path),
+      endpoints = sorted(self.getFilteredEndpoints(options), key=lambda e: e.path),
       legend    = legend,
     )
     ctdef = self.content_types.get(format)
@@ -360,6 +360,7 @@ class Describer(object):
     ret.formatstack = formatstack
     ret.dispatcher  = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs   = set([meth2action(e) for e in ret.restVerbs])
+    ret.eparsers    = self.eparsers
     ret.efilters    = self.efilters
     ret.renderer    = None
     for idx in range(len(formatstack)):
@@ -372,7 +373,24 @@ class Describer(object):
     return ret
 
   #----------------------------------------------------------------------------
-  def get_endpoints(self, options):
+  def getFilteredEndpoints(self, options):
+    for entry in self.getCachedEndpoints(options):
+      if entry.methods:
+        entry.methods = filter(None, [
+          runFilters(options.efilters, e, options)
+          for e in entry.methods])
+      entry = runFilters(options.efilters, entry, options)
+      if entry:
+        yield entry
+
+  #----------------------------------------------------------------------------
+  def getCachedEndpoints(self, options):
+    # TODO: implement caching...
+    for entry in self.getEndpoints(options):
+      yield entry
+
+  #----------------------------------------------------------------------------
+  def getEndpoints(self, options):
 
     if isstr(options.view) and self.settings.config:
       # TODO: is this the "right" way?...
@@ -401,9 +419,9 @@ class Describer(object):
     for entry in self._walkEntries(options, None):
       if entry.methods:
         entry.methods = filter(None, [
-          runFilters(options.efilters, e, options)
+          runFilters(options.eparsers, e, options)
           for e in entry.methods])
-      entry = runFilters(options.efilters, entry, options)
+      entry = runFilters(options.eparsers, entry, options)
       if entry:
         yield entry
 
@@ -707,7 +725,9 @@ class Describer(object):
         except AttributeError: pass
       app['endpoints'].append(endpoint)
 
-    # filter...
+    # todo: filter...
+    # todo: what about formatting `doc`...
+    #       ==> especially paragraph & title docorator extraction...
 
     return root
 
