@@ -59,20 +59,6 @@ def rst2fragments(text):
 #       removed?...
 
 #------------------------------------------------------------------------------
-def walktree(node, classes=None, maxdepth=None):
-  if not node or not isinstance(node, nodes.Node):
-    return
-  if classes is None or isinstance(node, classes):
-    yield node
-  if maxdepth is not None:
-    if maxdepth <= 0:
-      return
-    maxdepth -= 1
-  for snode in node:
-    for e in walktree(snode, classes=classes, maxdepth=maxdepth):
-      yield e
-
-#------------------------------------------------------------------------------
 def render(data):
   doc = utils.new_document('<pyramid_describe.document>')
   # todo:
