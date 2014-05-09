@@ -40,9 +40,16 @@ def tolist(obj):
   if not obj:
     return []
   if isstr(obj):
-    return aslist(obj)
+    try:
+      return aslist(obj)
+    except TypeError:
+      pass
   if isinstance(obj, (list, tuple)):
     return obj
+  try:
+    return [e for e in obj]
+  except TypeError:
+    pass
   return [obj]
 
 #------------------------------------------------------------------------------
