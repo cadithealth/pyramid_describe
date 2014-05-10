@@ -6,10 +6,8 @@
 # copy: (C) Copyright 2014-EOT Cadit Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-from .controller import DescribeController
-from .describer import Describer
-from .integration import includeme
-from . import syntax
+from . import docref
+from . import default
 
 #------------------------------------------------------------------------------
 # end of $Id$

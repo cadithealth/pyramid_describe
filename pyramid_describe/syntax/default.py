@@ -6,10 +6,17 @@
 # copy: (C) Copyright 2014-EOT Cadit Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-from .controller import DescribeController
-from .describer import Describer
-from .integration import includeme
-from . import syntax
+from . import title
+from . import numpydoc
+from . import docorator
+
+#------------------------------------------------------------------------------
+def parser(entry, options):
+  for subparser in (title.parser, numpydoc.parser, docorator.parser):
+    if not entry:
+      break
+    entry = subparser(entry, options)
+  return entry
 
 #------------------------------------------------------------------------------
 # end of $Id$

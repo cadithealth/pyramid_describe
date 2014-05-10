@@ -294,7 +294,7 @@ class Describer(object):
       self.override[fmt] = extract(self.settings, 'format.' + fmt + '.override')
     # and now load the entry parsers and filters
     self.eparsers = tocallables(self.settings.get(
-      'entries.parsers', None), 'parser')
+      'entries.parsers', 'pyramid_describe.syntax.default'), 'parser')
     self.efilters = tocallables(self.settings.get(
       'entries.filters', None), 'filter')
 
@@ -764,6 +764,18 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_rst(self, data):
     doc = self.doctree_render(data)
+
+    # <HACK-ALERT>
+    # TODO: remove this hack; basically, the docorator parsing is
+    #       being done here *again* in order to avoid needing to parse
+    #       (and thus render) the rST during `entries.parsers`
+    #       handling... ugh. see .syntax.docorator.postParser for more
+    #       details.
+    from .syntax import default, docorator
+    if default.parser in ( data.options.eparsers or [] ):
+      doc = docorator.postParser(doc)
+    # </HACK-ALERT>
+
     # todo: should this runFilters be moved int doctree_render?...
     #       currently it is only being called from here, so not much
     #       of an issue, but if ever it isn't, then this behaviour might
