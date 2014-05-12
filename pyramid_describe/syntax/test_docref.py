@@ -28,7 +28,7 @@ class TestDocref(test_helpers.TestHelper):
       })
     self.assertResponse(
       self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'), 200,
-      self.loadTestData('syntax-docref-output.rst'))
+      self.loadTestData('syntax_docref.output.rst'))
 
   #----------------------------------------------------------------------------
   def test_html(self):
@@ -44,7 +44,7 @@ class TestDocref(test_helpers.TestHelper):
       })
     self.assertResponse(
       self.send(root, '/desc?showLegend=false'), 200,
-      self.loadTestData('syntax-docref-output.html', {
+      self.loadTestData('syntax_docref.output.html', {
         'version' : getVersion('pyramid_describe'),
       }))
 

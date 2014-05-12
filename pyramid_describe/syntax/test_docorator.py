@@ -47,7 +47,7 @@ Some documentation.
     with warnings.catch_warnings(record=True) as warns:
       self.assertResponse(
         self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'), 200,
-        self.loadTestData('syntax-docorator-output.rst'))
+        self.loadTestData('syntax_docorator.output.rst'))
 
   #----------------------------------------------------------------------------
   def test_html(self):
@@ -68,7 +68,7 @@ Some documentation.
     with warnings.catch_warnings(record=True) as warns:
       self.assertResponse(
         self.send(root, '/desc?showLegend=false'), 200,
-        self.loadTestData('syntax-docorator-output.html', {
+        self.loadTestData('syntax_docorator.output.html', {
           'version' : getVersion('pyramid_describe'),
         }))
 

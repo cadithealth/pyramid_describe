@@ -28,7 +28,7 @@ class TestNumpydoc(test_helpers.TestHelper):
     #&showMeta=false
     self.assertResponse(
       self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'), 200,
-      self.loadTestData('syntax-numpydoc-output.rst'))
+      self.loadTestData('syntax_numpydoc.output.rst'))
 
 #------------------------------------------------------------------------------
 # end of $Id$
