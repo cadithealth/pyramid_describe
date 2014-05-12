@@ -257,7 +257,7 @@ def walk(node):
       yield sub
 
 #------------------------------------------------------------------------------
-def locatePath(node, path, up=True):
+def findPath(node, path, up=True):
   # TODO: doc.copy's should probably be de-referenced on the parse-side instead
   #       of the render-side, since that would centralize where that kind of
   #       processing needs to occur... *AND* it would remove the need for this
@@ -268,7 +268,7 @@ def locatePath(node, path, up=True):
     path = 'endpoint-' + tag(path)
     while node.parent:
       node = node.parent
-    return locatePath(node, path, False)
+    return findPath(node, path, False)
   for sub in walk(node):
     if isinstance(sub, nodes.section) \
         and 'endpoint' in getattr(sub, 'attributes', {}).get('classes', []) \
@@ -277,7 +277,7 @@ def locatePath(node, path, up=True):
   return None
 
 #------------------------------------------------------------------------------
-def locateMethod(node, path, method):
+def findMethod(node, path, method):
   if not node:
     return None
   if not method:
@@ -294,7 +294,7 @@ def locateMethod(node, path, method):
   return None
 
 #------------------------------------------------------------------------------
-def locateSection(node, path, method, section):
+def findSection(node, path, method, section):
   if not node:
     return None
   nid = section.lower() + '-method-' + tag(path) + '-' + tag(method)
@@ -309,14 +309,14 @@ def locateSection(node, path, method, section):
 def pyrdesc_doc_copy_html_visit(self, node):
   text  = node.astext()
   copy  = DocCopy(text, node)
-  cnode = locatePath(node, copy.path)
+  cnode = findPath(node, copy.path)
   if not cnode:
     raise ValueError(
-      'Could not locate "doc.copy" path target for "%s"' % (text,))
-  cnode = locateMethod(cnode, copy.path, copy.method)
+      'Could not find "doc.copy" path target for "%s"' % (text,))
+  cnode = findMethod(cnode, copy.path, copy.method)
   if not cnode:
     raise ValueError(
-      'Could not locate "doc.copy" method target for "%s"' % (text,))
+      'Could not find "doc.copy" method target for "%s"' % (text,))
   if not copy.sections:
     # TODO: should this just be ``for idx, child in enumerate(cnode):`` ?
     for idx, child in enumerate(cnode.children):
@@ -333,7 +333,7 @@ def pyrdesc_doc_copy_html_visit(self, node):
   #       shouldn't be the case, since order of sections is not
   #       preserved by the numpydoc parsing.
   for section in copy.sections:
-    snode = locateSection(cnode, copy.path, copy.method, section)
+    snode = findSection(cnode, copy.path, copy.method, section)
     if not snode:
       continue
     snode.walkabout(self)
