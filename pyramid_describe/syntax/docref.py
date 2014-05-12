@@ -118,8 +118,10 @@ def undecorate(path):
   return path
 
 #------------------------------------------------------------------------------
-def normalizeDecoratedPath(path, node):
-  curpath = '/'
+def absolutePath(path, node):
+  if path.startswith('/'):
+    return os.path.normpath(path)
+  curpath = None
   while node.parent:
     node = node.parent
     if isinstance(node, nodes.section) \
@@ -128,7 +130,15 @@ def normalizeDecoratedPath(path, node):
       curpath = node.attributes.get('dpath', '') \
         or node.attributes.get('path', '') \
         or curpath
+      if not curpath:
+        for nid in node.attributes['ids']:
+          if nid.startswith('endpoint-'):
+            curpath = nid.split('-')[1].decode('hex')
+            break
       break
+  if not curpath:
+    raise ValueError(
+      'Could not find current location for relative path "%s"' % (path,))
   return os.path.normpath(os.path.join(curpath, path))
 
 #------------------------------------------------------------------------------
@@ -146,6 +156,7 @@ class DocLink(object):
     '''
     Valid `spec` format EBNF := [ METHOD ':' ] PATH
     '''
+    self.spec = spec
     if not spec or not isinstance(spec, six.string_types):
       raise ValueError(
         'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
@@ -153,7 +164,7 @@ class DocLink(object):
     if len(specv) > 2:
       raise ValueError(
         'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
-    self.dpath  = normalizeDecoratedPath(specv.pop(), node)
+    self.dpath  = absolutePath(specv.pop(), node)
     self.path   = undecorate(self.dpath)
     self.method = specv.pop() if specv else None
   def _escapeTextRoleArg(self, text):
@@ -230,6 +241,7 @@ class DocCopy(DocLink):
         'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
     self.sections = specv.pop().split(',') if len(specv) > 2 else None
     super(DocCopy, self).__init__(':'.join(specv), node)
+    self.spec = spec
   @property
   def args(self):
     args = [self.dpath]
@@ -286,7 +298,7 @@ def findMethod(node, path, method):
   nid = 'method-' + tag(path) + '-' + tag(method)
   for sub in walk(node):
     # todo: the `method.lower()` feels a bit weird to me... it's a bit of
-    #       an abstraction barrier violation. i should 
+    #       an abstraction barrier violation. i should
     if isinstance(sub, nodes.section) \
         and 'method' in getattr(sub, 'attributes', {}).get('classes', []) \
         and nid in sub.attributes.get('ids', []):
