@@ -51,7 +51,9 @@ def resolveImport(spec, entry, options):
     except:
       return resolveImportSymbol(spec, entry, options)
   except:
-    raise ValueError('Invalid pyramid-describe "doc.import" target: %r' % (spec,))
+    raise ValueError(
+      'Invalid pyramid-describe "doc.import" target from %r: %r'
+      % (entry.dpath, spec,))
 
 #------------------------------------------------------------------------------
 def getModuleParent(modname):
@@ -145,10 +147,12 @@ class DocLink(object):
     Valid `spec` format EBNF := [ METHOD ':' ] PATH
     '''
     if not spec or not isinstance(spec, six.string_types):
-      raise ValueError('Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
+      raise ValueError(
+        'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
     specv = spec.split(':')
     if len(specv) > 2:
-      raise ValueError('Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
+      raise ValueError(
+        'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
     self.dpath  = normalizeDecoratedPath(specv.pop(), node)
     self.path   = undecorate(self.dpath)
     self.method = specv.pop() if specv else None
@@ -218,10 +222,12 @@ class DocCopy(DocLink):
     Valid `spec` format EBNF := [ METHOD ':' ] PATH [ ':' SECTION ]
     '''
     if not spec or not isinstance(spec, six.string_types):
-      raise ValueError('Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
+      raise ValueError(
+        'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
     specv = spec.split(':')
     if len(specv) > 3:
-      raise ValueError('Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
+      raise ValueError(
+        'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
     self.sections = specv.pop().split(',') if len(specv) > 2 else None
     super(DocCopy, self).__init__(':'.join(specv), node)
   @property
@@ -305,10 +311,12 @@ def pyrdesc_doc_copy_html_visit(self, node):
   copy  = DocCopy(text, node)
   cnode = locatePath(node, copy.path)
   if not cnode:
-    raise ValueError('Could not locate "doc.copy" path target for "%s"' % (text,))
+    raise ValueError(
+      'Could not locate "doc.copy" path target for "%s"' % (text,))
   cnode = locateMethod(cnode, copy.path, copy.method)
   if not cnode:
-    raise ValueError('Could not locate "doc.copy" method target for "%s"' % (text,))
+    raise ValueError(
+      'Could not locate "doc.copy" method target for "%s"' % (text,))
   if not copy.sections:
     # TODO: should this just be ``for idx, child in enumerate(cnode):`` ?
     for idx, child in enumerate(cnode.children):
