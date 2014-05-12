@@ -12,9 +12,86 @@ import docutils
 from docutils import nodes
 from docutils.parsers.rst import roles
 from docutils.writers.html4css1 import HTMLTranslator
+import re
+import pkg_resources
 
 from ..writers.rst import RstTranslator
 from ..describer import tag
+from ..resolve import resolve
+
+# TODO: remove the global-level polution of the `roles` registrations
+#       (of **all** roles)
+
+#------------------------------------------------------------------------------
+def parser(entry, options):
+  if not entry:
+    return entry
+  entry.doc = resolveImports(entry.doc, entry, options)
+  return entry
+
+#------------------------------------------------------------------------------
+docimport_cre = re.compile(':doc\.import:`([^`]+)`')
+def resolveImports(text, entry, options):
+  # note: not using rST to parse the text because it may not be "rST"
+  #       compliant yet... (docref.parser is called first in the
+  #       chain).
+  if not text:
+    return text
+  if ':doc.import:' not in text:
+    return text
+  def _resolve(match):
+    return resolveImport(match.group(1), entry, options)
+  return docimport_cre.sub(_resolve, text)
+
+#------------------------------------------------------------------------------
+def resolveImport(spec, entry, options):
+  try:
+    try:
+      return resolveImportAsset(spec, entry, options)
+    except:
+      return resolveImportSymbol(spec, entry, options)
+  except:
+    raise ValueError('Invalid pyramid-describe "doc.import" target: %r' % (spec,))
+
+#------------------------------------------------------------------------------
+def getModuleParent(modname):
+  mod = resolve(modname)
+  if not mod.__file__ or '/__init__.' in mod.__file__:
+    return modname
+  return '.'.join(modname.split('.')[:-1])
+
+#------------------------------------------------------------------------------
+pkg_cre = re.compile('^([a-z0-9._]+):', re.IGNORECASE)
+def resolveImportAsset(spec, entry, options):
+  pkg = pkg_cre.match(spec)
+  if not pkg:
+    pkg  = getModuleParent(entry.view.__module__)
+    path = ''
+    if '.' in pkg:
+      pkg, path = pkg.split('.', 1)
+    path = os.path.normpath(os.path.join(path.replace('.', '/'), spec))
+  else:
+    pkg  = pkg.group(1)
+    path = spec.split(':', 1)[1]
+  return pkg_resources.resource_string(pkg, path)
+
+#------------------------------------------------------------------------------
+def resolveImportSymbol(spec, entry, options):
+  # todo: ugh. this is yucky... there must be a better way of
+  #       resolving relative module names...
+  count = 0
+  while spec.startswith('.'):
+    spec  = spec[1:]
+    count += 1
+  if count > 0:
+    parent = getModuleParent(entry.view.__module__)
+    if count > 1:
+      parent = '.'.join(parent.split('.')[:1 - count])
+    if parent:
+      parent += '.'
+    spec = parent + spec
+  symbol = resolve(spec)
+  return symbol() if callable(symbol) else str(symbol)
 
 #------------------------------------------------------------------------------
 # TODO: provide a better implementation here...
