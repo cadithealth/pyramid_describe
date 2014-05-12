@@ -31,7 +31,7 @@ class ItemController(RestController):
     '''
     Update the item's current attributes.
 
-    :doc.copy:`GET:.:Returns,Raises`
+    :doc.copy:`GET:.:Returns`
     '''
 
   @expose

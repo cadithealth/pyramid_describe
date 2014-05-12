@@ -335,7 +335,9 @@ def pyrdesc_doc_copy_html_visit(self, node):
   for section in copy.sections:
     snode = findSection(cnode, copy.path, copy.method, section)
     if not snode:
-      continue
+      raise ValueError(
+        'Could not find "doc.copy" section target "%s" for "%s"'
+        % (section, text,))
     snode.walkabout(self)
   raise nodes.SkipNode
 def pyrdesc_doc_copy_html_depart(self, node):

@@ -82,4 +82,4 @@ PUT
 
 Update the item's current attributes.
 
-:doc.copy:`GET:/{ITEM_ID}:Returns,Raises`
+:doc.copy:`GET:/{ITEM_ID}:Returns`
