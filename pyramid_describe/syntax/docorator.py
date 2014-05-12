@@ -51,6 +51,10 @@ def parser(entry, options):
 #       encapsulated object that auto-renders itself if accessed as a
 #       string (and invalidates the doctree if set to a string). but
 #       that increases the roundtrips for all unaware callables. (ugh)
+#
+#       ===> NOTE: numpydoc's parser() is already parsing the
+#       document...  is there perhaps a way to share that here?...
+#
 # </HACK-ALERT>
 def postParser(doc):
   walktree(doc)
