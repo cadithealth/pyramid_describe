@@ -309,10 +309,13 @@ def findMethod(node, path, method):
 def findSection(node, path, method, section):
   if not node:
     return None
-  nid = section.lower() + '-method-' + tag(path) + '-' + tag(method)
+  klass = section.lower()
+  if klass == 'parameters':
+    klass = 'params'
+  nid = klass + '-method-' + tag(path) + '-' + tag(method)
   for sub in walk(node):
     if isinstance(sub, nodes.section) \
-        and section.lower() in getattr(sub, 'attributes', {}).get('classes', []) \
+        and klass in getattr(sub, 'attributes', {}).get('classes', []) \
         and nid in sub.attributes.get('ids', []):
       return sub
   return None
@@ -329,7 +332,8 @@ def pyrdesc_doc_copy_html_visit(self, node):
   if not cnode:
     raise ValueError(
       'Could not find "doc.copy" method target for "%s"' % (text,))
-  if not copy.sections:
+  if not copy.sections or '*' in copy.sections:
+    wild = copy.sections and '*' in copy.sections
     # TODO: should this just be ``for idx, child in enumerate(cnode):`` ?
     for idx, child in enumerate(cnode.children):
       # todo: why is this check for 'html.MetaBody.meta' necessary???
@@ -339,6 +343,9 @@ def pyrdesc_doc_copy_html_visit(self, node):
       if ( idx == 0 and isinstance(child, nodes.title) ) \
           or isinstance(child, html.MetaBody.meta):
         continue
+      if wild:
+        if 'section' not in child.attributes['classes']:
+          continue
       child.walkabout(self)
     raise nodes.SkipNode
   # todo: here, the :doc.copy: is controlling order, but that probably
