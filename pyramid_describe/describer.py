@@ -767,10 +767,13 @@ class Describer(object):
 
     # <HACK-ALERT>
     # TODO: remove this hack; basically, the docorator parsing is
-    #       being done here *again* in order to avoid needing to parse
-    #       (and thus render) the rST during `entries.parsers`
-    #       handling... ugh. see .syntax.docorator.postParser for more
-    #       details.
+    #       being done here as a "post-processing" step in order to
+    #       avoid needing to parse (and thus re-render) the rST during
+    #       `entries.parsers` handling... ugh. see
+    #       .syntax.docorator.postParser for more details.
+    #       ==> one of the **MAJOR** problems with this is that it
+    #       means that the structure_render() output is not
+    #       docoratorified!...
     from .syntax import default, docorator
     if default.parser in ( data.options.eparsers or [] ):
       doc = docorator.postParser(doc)
