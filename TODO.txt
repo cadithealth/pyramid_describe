@@ -43,3 +43,23 @@
 
 - rename `data`, `context`, `proc` ==> `stage` (it's the best i could
   come up with)
+
+- when a numpydoc section is :doc.copy:'d, the referenced sections
+  show up *before* any locally defined sections... oops. eg:
+
+     class Controller:
+       def get():
+         ':Returns: ...'
+       def put():
+         info... :Parameters: ... :doc.copy:`GET:.:Returns`
+
+  ==> put's documentation will be:
+    info...
+    Returns...
+    Paramaters...
+
+  fix that so that order is always 'summary => params => returns =>
+  raises'
+
+- resolve how :doc.*: linking works between endpoints that have/don't
+  have declared methods (i.e. Controller vs. RestController).
