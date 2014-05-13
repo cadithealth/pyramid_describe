@@ -2,11 +2,17 @@
 Self-Documentation for Pyramid Apps
 ===================================
 
-A pyramid plugin that describes a pyramid application URL hierarchy,
-either by responding to an HTTP request or on the command line, via
-application inspection and reflection. It has built-in support for
-plain-text hierachies, reStructuredText, HTML, PDF, JSON, YAML, WADL,
-and XML, however other custom formats can be added easily.
+A Pyramid plugin that makes a Pyramid application self-documenting via
+inspection/reflection to:
+
+1. Describe the application URL structure,
+2. Extract documentation from Python comments, and
+3. Generate formal syntax using commenting conventions.
+
+The resulting documentation can be served by the application to an
+HTTP request or displayed on the command line. It has built-in support
+for plain-text hierachies, reStructuredText, HTML, PDF, JSON, YAML,
+WADL, and XML, however other custom formats can be added easily.
 
 Exposing an application's structure via HTTP is useful to dynamically
 generate an API description (via WADL, JSON, or YAML) or to create
@@ -119,7 +125,7 @@ here:
   describe.formats                       = html json pdf
   describe.format.default.title          = My Application
   describe.format.html.default.cssPath   = myapp:static/doc.css
-  describe.entries.filters               = myapp.describe.entry_docify
+  describe.entries.filters               = myapp.describe.entry_filter
 
 Note that multiple describers, each with different configurations, can
 be added via pyramid inclusion by using the `describe.prefixes`
@@ -159,11 +165,11 @@ Example:
     config.include('pyramid_controllers')
 
     settings = {
-        'formats'                       : ['html', 'json', 'pdf'],
-        'format.default.title'          : 'My Application',
-        'format.html.default.cssPath'   : 'myapp:static/doc.css',
-        'entries.filters'               : 'myapp.describe.entry_docify',
-      }
+      'formats'                       : ['html', 'json', 'pdf'],
+      'format.default.title'          : 'My Application',
+      'format.html.default.cssPath'   : 'myapp:static/doc.css',
+      'entries.filters'               : 'myapp.describe.entry_filter',
+    }
 
     config.add_controller('MyAppDescriber', '/doc', DescribeController(settings))
 
@@ -203,11 +209,11 @@ Example:
   def my_describer(request):
 
     settings = {
-        'formats'                       : ['html', 'json', 'pdf'],
-        'format.default.title'          : 'My Application',
-        'format.html.default.cssPath'   : 'myapp:static/doc.css',
-        'entries.filters'               : 'myapp.describe.entry_docify',
-      }
+      'formats'                       : ['html', 'json', 'pdf'],
+      'format.default.title'          : 'My Application',
+      'format.html.default.cssPath'   : 'myapp:static/doc.css',
+      'entries.filters'               : 'myapp.describe.entry_filter',
+    }
 
     describer = Describer(settings=settings)
     context   = dict(request=request)
@@ -218,6 +224,238 @@ Example:
     request.response.body         = result['content']
 
     return request.response
+
+
+Documentation Conventions
+=========================
+
+By default, the documentation that is extracted from your handlers'
+pydocs is parsed and converted using:
+
+* Docorator extraction
+* Common text-role definitions
+* Field-list aliasing of numpydoc sections
+* Numpydoc parsing
+* Inter-endpoint linking and referencing
+
+This behavior can be disabled or extended by setting the
+`entries.parsers` setting (see Options_). Here is an example that
+employs each of these functions (see below for an in-depth
+explanation):
+
+.. code-block:: python
+
+  class MyController(RestController):
+
+    @expose
+    def deactivate(self, request):
+      '''
+      @PUBLIC, @DEPRECATED(1.3.23)
+
+      The current object is deleted. Please note that this endpoint is
+      deprecated; please use the more RESTful :doc.link:`DELETE:..`
+      endpoint instead.
+
+      @INTERNAL: OOPS! This method was accidentally carried over from
+      the Java implementation. The `soap-to-rest` tool needs to be
+      analyzed to figure out why this happened.
+
+      :doc.copy:`DELETE:..`
+      '''
+
+    @expose
+    def get(self, request):
+      '''
+      :doc.import:`myapp:doc/mycontroller.rst`
+      '''
+
+    @expose
+    def delete(self, request):
+      '''
+      @PUBLIC, @FROZEN
+
+      The current object is deleted.
+
+      :Parameters:
+
+      recursive : bool, optional, default: false
+
+        If true, recursively deletes any dependent objects too.
+
+      permanent : bool, optional, default: false, @INTERNAL
+
+        If true, the objects and all records are permanently purged
+        from the network. Reserved for internal administrators.
+
+      :Returns:
+
+      HTTPOk
+
+        The object(s) were successfully deleted.
+
+      :Raises:
+
+      HTTPForbidden
+
+        The current user does not have sufficient privileges.
+
+      HTTPNotFound
+
+        The specified object does not exist.
+      '''
+
+
+Docorator Extraction
+--------------------
+
+Docorators are decorators for documentation. For example, you may
+decorate a particular endpoint with ``@BETA`` to declare that this
+endpoint is not finalized yet.
+
+Pyramid-describe will inspect an entry's ``.doc`` text and convert
+them to class names. The class names are applied to different element
+levels depending on where they are found:
+
+* Docorators on the first line apply to the entire entry.
+
+* Docorators at the beginning of a paragraph apply to that paragraph
+  only.
+
+* Docorators at the beginning of a section title apply to that
+  section.
+
+* Docorators in the numpydoc `type` specification apply to that
+  parameter/return/raise or other formal numpydoc object.
+
+Docorators must follow one of the following syntaxes:
+
+* Simple tag style: ``@TAG``, where ``TAG`` can be any alphanumeric
+  sequence.
+
+* Parameterized declaration style: ``@TAG(PARAMS)``, where ``TAG`` can
+  be any alphanumeric sequence, and ``PARAMS`` can be anything except
+  the closing parenthesis.
+
+Docorators are converted to class names using the following rules:
+
+* Prefixed with ``doc-``.
+
+* All letters are lowercased.
+
+* All non-alphanumeric characters are replaced with a dash ("-").
+
+* Consecutive dashes are replaced with one dash.
+
+* Terminating dashes are dropped.
+
+Thus the docorator ``@DEPRECATED(1.3.23)`` becomes
+``doc-deprecated-1-3-23``.
+
+**IMPORTANT**: pyramid-describe does not apply any special processing
+to docorators beyond identifying them and applying the class names to
+the appropriate content. It is therefore up to the calling application
+to filter these in any way, for example hiding entries (or portions
+thereof) that have the ``doc-internal``, i.e. that were marked with
+``@INTERNAL``.
+
+
+Common Text-Role Definitions
+----------------------------
+
+The text-roles `class`, `meth`, and `func` are not by default defined
+by docutils_. Pyramid-describe gives a *very* bare-bones
+implementation (it just aliases them as "literal" style nodes). If
+these text-roles are used by the calling application, a more thorough
+implementation (that actually performs linking to API documentation)
+is probably desirable. Pyramid-describe does not have access to this
+information and is therefore outside of its scope.
+
+
+Field List Aliasing of Sections
+------------------------------
+
+All of the section headers that are specially processed by numpydoc
+can also be specified as lone "field list" elements. For example, the
+following two declarations are treated identically:
+
+.. code-block:: python
+
+   def function_name(self, request):
+     '''
+     Parameters
+     ----------
+
+     This endpoint does not take any parameters.
+     '''
+
+.. code-block:: python
+
+   def function_name(self, request):
+     '''
+     :Parameters:
+
+     This endpoint does not take any parameters.
+     '''
+
+The list of supported headers is extracted at runtime from
+``numpydoc.docscrape.NumpyDocString()._parsed_data.keys()``.
+
+
+Numpydoc
+--------
+
+By default, the pydoc text is parsed by numpydoc, and the Parameters,
+Other Parameters, Returns, and Raises sections are extracted and
+converted into formal structured properties of the entry. See
+numpydoc_ for format and syntax details.
+
+
+Inter-Endpoint Linking
+----------------------
+
+Pyramid-describe allows for entry documentation to refer and link to
+other endpoint documentation. Specifically, the following text-roles
+are provided:
+
+* ``:doc.link:\`[METHOD:]PATH\```:
+
+  Links to the specified endpoint. If ``METHOD`` is specified, then
+  the link points directly to that HTTP method. ``PATH`` can be either
+  absolute (i.e. starting with a slash ``/``) or relative
+  (i.e. starting with either ``./`` or ``../``). Note that unlike
+  "href" syntax, ``./`` refers to the current endpoint, not the
+  current endpoint's parent. Some examples, assuming the current
+  endpoint is ``/foo/bar``:
+
+  * ``:doc.link:\`GET:/index\```: links to the GET method of "/index"
+  * ``:doc.link:\`PUT:.\```: links to the PUT method of "/foo/bar"
+  * ``:doc.link:\`POST:./zog\```: links to the POST method of "/foo/bar/zog"
+  * ``:doc.link:\`POST:../zog\```: links to the POST method of "/foo/zog"
+
+* ``:doc.copy:\`[METHOD:]PATH[:SECTION]\```:
+
+  Inlines the specified remote endpoint's documentation here. The
+  ``METHOD`` and ``PATH`` apply as for ``:doc.link:\`...\```. The
+  optional ``SECTION`` parameter is a comma-separated list of which
+  sections to inline -- if not specified or empty, the entire
+  endpoint's documentation is inlined; if the wildcard ``*``, then all
+  named sections are inlined, but not the main description.
+
+  Note that section referencing will only work correctly if the
+  entries are decorated with the parsed sections. This is one of the
+  things that numpydoc-style parsing does when enabled (so don't
+  disable it! :-).
+
+* ``:doc.import:\`ASSET-SPEC\```:
+
+  Inlines the specified asset, which is loaded using either
+  pkg_resources or python import. When using pkg_resources, the spec
+  must be in the format ``[PACKAGE:]PATH``. If the PACKAGE is omitted,
+  then the PATH is taken to be relative to the current module.
+
+  If the asset cannot be loaded using pkg_resources, a standard python
+  import is tried. If this succeeds, it is either called (if callable)
+  with no arguments or cast to a string with ``str(symbol)``.
 
 
 Options
@@ -365,34 +603,63 @@ constructors, the prefix is left off. The following options exist:
 
   The inverse of the `include` option -- see `include` for details.
 
-* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: null
+* ``{PREFIX}.entries.parsers`` : list(resolve-spec), default: 'pyramid_describe.syntax.default'
 
   This option specifies a callable (or string in python dot syntax) or
-  list of thereof that filter and modify the entries before they are
-  rendered to the requested format. Each entry that is selected for
-  inclusion for rendering is first passed through each filter and
-  replaced by the return value from the call. This is done for each
-  filter consecutively. If any filter returns ``None``, the entry is
-  removed from the selection list.
+  list thereof that modify the entries before they are rendered. These
+  parsers are intended to augment the documentation in some way. For
+  example, formal syntax documentation may be extracted from the
+  plain-text documentation. Or special short-hand syntax can be
+  converted to standard reStructuredText format.
 
-  These filters are intended to allow two primary features:
+  Each entry that is selected for inclusion for rendering is first
+  passed through each parser and replaced by the return value from the
+  call. This is done for each parser consecutively. If any parser
+  returns ``None``, the entry is removed from the selection list.
 
-  * Access control: a filter can inspect the entry and the requesting
-    user and determine if the entry should be made visible. If not, it
-    should return ``None``.
+  By default, the 'pyramid_describe.syntax.default' parser is applied,
+  which works as described in `Documentation Conventions`_. This
+  default parser can be disabled (by setting this option to null),
+  replaced (by setting this option to another callable), or extended
+  (by setting this option to the default and appending any custom
+  parsers to it).
 
-  * Custom documentation parsing: a filter can parse the entry's `doc`
-    attribute (which gets auto-populated with the entry's python
-    documentation string), and extract other information such as
-    expected parameters, return values, and exceptions thrown.
-    Typically, this is done with something like numpydoc_.
-
-  Filters are passed two parameters: an `entry` object (see
+  Parsers are passed two parameters: an `entry` object (see
   pyramid_describe.entry.Entry for detailed attributes) and an
   `options` dictionary. The latter has many interesting attributes,
   including a reference to the current `request`.
 
+  Note that the `entry` object may represent either a single method of
+  an endpoint, or the entire endpoint. The methods will be sent
+  through the parser before the entire endpoint.
+
   TODO: add documentation about `entry` and `options`.
+
+  The result of a parser operation is expected to be cacheable; this
+  means that it should only be sensitive to the data in the actual
+  entry itself, not the current request. For that, see the
+  `entries.filters` option.
+
+  Each parser must be a callable; if it is not, then the object's
+  ``parser`` attribute will be tried instead. This allows the option
+  to specify just the name of a module that contains a ``def
+  parser(...): ...`` function definition.
+
+* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: null
+
+  This option is identical in syntax to the `entries.parsers` option,
+  is called with the same parameters, and is expected to have the
+  same return type.
+
+  The crucial difference, however, is that the result of the filters
+  is not expected to be cacheable. Therefore, a filter is the more
+  appropriate place to do access control: entries (or sections
+  thereof) can be removed (by returning ``None``) or modified in any
+  way (by returning a modified entry).
+
+  Note that parsers and filters typically work together in this
+  respect by, for example, having the parser decorate the entry with
+  classes that the filter then inspects.
 
   Note that there is a *separate* `filters` option that is used to
   filter the entire output document, which is format-specific. See
@@ -649,3 +916,4 @@ Format Options
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 .. _pdfkit: https://pypi.python.org/pypi/pdfkit
 .. _wkhtmltopdf: http://code.google.com/p/wkhtmltopdf/
+.. _docutils: http://docutils.sourceforge.net/
