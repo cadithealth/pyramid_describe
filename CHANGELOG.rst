@@ -3,6 +3,20 @@ ChangeLog
 =========
 
 
+v0.2.0
+======
+
+* Added workaround for setting ``describe.inspect`` so that it works
+  (but in a non-ideal way)
+* Added some common rST text roles with aliasing to "literal" (class,
+  meth, func)
+* Added useful rST text roles for interlinking documentation
+  (doc.link, doc.copy, doc.import)
+* Added numpydoc as default filtering of documentation
+* Split parsing responsibilities of ``entries.filters`` into separate
+  option ``entries.parsers`` (in preparation for caching optimization)
+
+
 v0.1.35
 =======
 
