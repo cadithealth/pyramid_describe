@@ -3,7 +3,7 @@ ChangeLog
 =========
 
 
-v0.3.0
+v0.3.1
 ======
 
 * Added support to control assembly of endpoints into one document via
