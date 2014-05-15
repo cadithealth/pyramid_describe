@@ -11,6 +11,7 @@ from pyramid.renderers import render as pyramid_render
 from docutils import nodes
 from docutils.parsers import rst
 from docutils.parsers.rst import directives#, roles
+import globre
 
 from . import doctree
 from .i18n import _
@@ -29,7 +30,10 @@ class DocEndpoint(nodes.reference):
     elif spec.startswith('unmatched:') or spec.startswith('regex:'):
       self.cre = re.compile(spec.split(':', 1)[1])
     else:
-      self.cre = re.compile('^' + re.escape(spec) + '$')
+      self.cre = globre.compile(
+        spec if not spec.endswith('/**') else spec[:-3] + '{(/.*)?}',
+        flags=globre.EXACT)
+
 # TODO: add rST and HTML serializer of `doc.endpoint` ("just in case")...
 #------------------------------------------------------------------------------
 class DocEndpointDirective(rst.Directive):

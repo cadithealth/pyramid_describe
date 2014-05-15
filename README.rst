@@ -700,10 +700,16 @@ constructors, the prefix is left off. The following options exist:
   The `doc.endpoint` directive takes a single argument that can have
   any of the following formats:
 
-  * ``.. doc.endpoint:: PATH``:
+  * ``.. doc.endpoint:: GLOB``:
 
-    Specifies the exact ``PATH`` of an endpoint to be included at the
-    position of the directive.
+    Specifies than the documentation for any endpoint whose path
+    matches the specified ``GLOB`` pattern should replace the
+    directive. The GLOB syntax uses globre_ rules, basically that "*"
+    matches zero or more characters except "/", "**" matches zero or
+    more of any character, and "?" matches any single except "/"
+    (there are some other rules too -- see globre_ for details). One
+    additional rule is that "/**" at the end of a pattern matches a
+    path without the trailing "/" as well.
 
   * ``.. doc.endpoint:: regex:EXPR``:
 
@@ -1013,3 +1019,4 @@ Format Options
 .. _pdfkit: https://pypi.python.org/pypi/pdfkit
 .. _wkhtmltopdf: http://code.google.com/p/wkhtmltopdf/
 .. _docutils: http://docutils.sourceforge.net/
+.. _globre: https://pypi.python.org/pypi/globre
