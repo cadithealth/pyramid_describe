@@ -63,3 +63,20 @@
 
 - resolve how :doc.*: linking works between endpoints that have/don't
   have declared methods (i.e. Controller vs. RestController).
+
+- perhaps move the default rST generation to use
+    render.template = pyramid_describe:template/render.mako
+  from that template:
+    This template is currently not being used. It was just a thought
+    on how default rST rendering could be converted to use mako
+    templating... (and thus simpler to create a new template since
+    there would be an example that "uses all features"...)
+
+- rearchitect... we need to move to the following steps/pipeline:
+    # globally cacheable:
+      1. assemble: collects all endpoints to be documented
+      2. parse: parse all documentation into formal syntax
+    # per-request handling:
+      3. filter: restrict which endpoints are visible/massage documentation
+      4. render: render endpoints into one rST document
+      5. format: format the rST document into target format
