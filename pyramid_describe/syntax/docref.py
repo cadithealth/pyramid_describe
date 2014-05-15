@@ -18,9 +18,15 @@ import pkg_resources
 from ..writers.rst import RstTranslator
 from ..describer import tag
 from ..resolve import resolve
+from ..render import walk
+
+#------------------------------------------------------------------------------
 
 # TODO: remove the global-level polution of the `roles` registrations
 #       (of **all** roles)
+
+# TODO: there currently is no detection of doc.link references to
+#       endpoints/methods that don't exist
 
 #------------------------------------------------------------------------------
 def parser(entry, options):
@@ -263,19 +269,14 @@ RstTranslator.visit_pyrdesc_doc_copy = pyrdesc_doc_copy_rst_visit
 RstTranslator.depart_pyrdesc_doc_copy = pyrdesc_doc_copy_rst_depart
 
 #------------------------------------------------------------------------------
-def walk(node):
-  yield node
-  # TODO: should this just be ``for child in node:`` ?
-  for child in getattr(node, 'children', []):
-    for sub in walk(child):
-      yield sub
-
-#------------------------------------------------------------------------------
 def findPath(node, path, up=True):
   # TODO: doc.copy's should probably be de-referenced on the parse-side instead
   #       of the render-side, since that would centralize where that kind of
   #       processing needs to occur... *AND* it would remove the need for this
   #       function, which is a *very* odd one...
+  #       ==> note that this would have to be a two-phase thing if done parse-
+  #           side, since a doc.copy may reference a URL that has not been
+  #           loaded yet.
   if not node:
     return None
   if up:

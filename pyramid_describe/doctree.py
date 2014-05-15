@@ -34,9 +34,13 @@ def rmeta(*args, **kw):
   return Meta('', *args, **kw)
 
 #------------------------------------------------------------------------------
-def rst2fragments(text):
-  if not text:
-    return []
+def rst2document(text, promote=False):
+  '''
+  The `promote` parameter controls whether or not certain lone section
+  titles are promoted to document title (for a lone top-level section)
+  and document subtitle (for a lone second-level section).
+  '''
+
   # todo: when there are errors with the input, this generates somewhat
   # confusing error output to STDERR, eg:
   #   <string>:12: (WARNING/2) Inline strong start-string without end-string.
@@ -48,11 +52,20 @@ def rst2fragments(text):
   #         return [rpara(rtext(text))]
   #       ==> requires error detection.
 
+  # NOTE: this is also used by `.render.render()`
+
   settings = dict(
-    doctitle_xform       = False,
-    sectsubtitle_xform   = False,
+    doctitle_xform       = promote,
+    sectsubtitle_xform   = promote,
   )
-  return list(core.publish_doctree(text, settings_overrides=settings))
+  return core.publish_doctree(text, settings_overrides=settings)
+
+#------------------------------------------------------------------------------
+def rst2fragments(text):
+  if not text:
+    return []
+  # TODO: see rst2document for error handling notes...
+  return list(rst2document(text))
 
 # TODO: perhaps all these functions would be much simpler if rstMax was
 #       checked once, at exit, and if false, all classes and ids were
@@ -64,7 +77,7 @@ def render(data):
   # todo:
   # doc.settings.text_width = data.options.width
 
-  title = data.options.title or _('Contents of "{}"', data.root)
+  title = render_title(data)
   if data.options.rstMax:
     doc['title'] = title
 
@@ -105,26 +118,34 @@ def render(data):
     mainsect.append(legend)
 
   doc.append(mainsect)
-
-  if data.options.showMeta:
-    meta = rcont()
-    meta.append(rmeta(name='title', content=title))
-    if data.options.showGenerator:
-      gen = 'pyramid-describe'
-      if data.options.showGenVersion:
-        gen += '/' + getVersion('pyramid_describe')
-      gen += ' [format={}]'.format(data.options.formatstack[-1])
-      meta.append(rmeta(name='generator', content=gen))
-    if data.options.showLocation and data.options.context.request.url:
-      meta.append(rmeta(name='location', content=data.options.context.request.url))
-    if data.options.rstMax and data.options.rstPdfkit:
-      options = yaml.load(data.options.get('pdfkit.options', '{}'))
-      for key in sorted(options.keys()):
-        value = options.get(key)
-        meta.append(rmeta(name='pdfkit-' + key, content=str(value)))
-    doc.append(meta)
-
+  doc.extend(render_meta(data, title))
   return doc
+
+#------------------------------------------------------------------------------
+def render_title(data):
+  return data.options.title or _('Contents of "{}"', data.root)
+
+#------------------------------------------------------------------------------
+def render_meta(data, title):
+  if not data.options.showMeta:
+    return []
+  title = title or render_title(data)
+  meta = rcont()
+  meta.append(rmeta(name='title', content=title))
+  if data.options.showGenerator:
+    gen = 'pyramid-describe'
+    if data.options.showGenVersion:
+      gen += '/' + getVersion('pyramid_describe')
+    gen += ' [format={}]'.format(data.options.formatstack[-1])
+    meta.append(rmeta(name='generator', content=gen))
+  if data.options.showLocation and data.options.context.request.url:
+    meta.append(rmeta(name='location', content=data.options.context.request.url))
+  if data.options.rstMax and data.options.rstPdfkit:
+    options = yaml.load(data.options.get('pdfkit.options', '{}'))
+    for key in sorted(options.keys()):
+      value = options.get(key)
+      meta.append(rmeta(name='pdfkit-' + key, content=str(value)))
+  return [meta]
 
 #------------------------------------------------------------------------------
 def render_entry(data, entry):

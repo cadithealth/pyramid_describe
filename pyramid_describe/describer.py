@@ -12,14 +12,14 @@ import xml.etree.ElementTree as ET
 from docutils.core import publish_doctree, publish_from_doctree
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, truthy
-from pyramid.renderers import render
+from pyramid.renderers import render as pyramid_render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
 
 from .entry import Entry
 from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters, tag
-from . import rst, doctree
+from . import rst, doctree, render
 from .i18n import _
 
 log = logging.getLogger(__name__)
@@ -297,6 +297,7 @@ class Describer(object):
       'entries.parsers', 'pyramid_describe.syntax.default'), 'parser')
     self.efilters = tocallables(self.settings.get(
       'entries.filters', None), 'filter')
+    self.render_template = self.settings.get('render.template', None)
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
@@ -360,8 +361,12 @@ class Describer(object):
     ret.formatstack = formatstack
     ret.dispatcher  = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
     ret.restVerbs   = set([meth2action(e) for e in ret.restVerbs])
+    # todo: a lot of these (especially `render.template`) are monkey-patched
+    #       onto the `options`... ugh. these need to be replaced with a more
+    #       generalized `context` or `stage` parameter...
     ret.eparsers    = self.eparsers
     ret.efilters    = self.efilters
+    ret['render.template'] = self.render_template
     ret.renderer    = None
     for idx in range(len(formatstack)):
       fmt = '+'.join(formatstack[:1 + idx])
@@ -735,10 +740,13 @@ class Describer(object):
   def template_render(self, data):
     tpl = data.options.renderer \
       or 'pyramid_describe:template/' + data.format + '.mako'
-    return render(tpl, dict(data=data), request=data.options.context.request)
+    return pyramid_render(
+      tpl, dict(data=data), request=data.options.context.request)
 
   #----------------------------------------------------------------------------
   def doctree_render(self, data):
+    if data.options.get('render.template', None) is not None:
+      return render.render(data, data.options.get('render.template'))
     return doctree.render(data)
 
   #----------------------------------------------------------------------------
