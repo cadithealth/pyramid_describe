@@ -16,7 +16,7 @@ Contents of "/"
 Endpoints
 ---------
 
-.. class:: doc-deprecated-2-0-0 doc-public endpoint
+.. class:: doc-deprecated doc-deprecated-2-0-0 doc-public endpoint
 
 .. _`endpoint-2f707574`:
 

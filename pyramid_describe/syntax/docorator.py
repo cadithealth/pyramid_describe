@@ -11,13 +11,19 @@ from docutils import nodes
 
 #------------------------------------------------------------------------------
 
-docorator_cre   = re.compile(r'@[A-Z0-9_.-]+(\([^)]*\))?', re.IGNORECASE)
+docorator_cre   = re.compile(r'@([A-Z0-9_.-]+)(\([^)]*\))?', re.IGNORECASE)
 notalphanum_cre = re.compile(r'[^A-Z0-9]+', re.IGNORECASE)
 
 #------------------------------------------------------------------------------
 def extract(text):
   for match in docorator_cre.finditer(text):
     # todo: make this 'doc-' prefix configurable...
+    cls = notalphanum_cre.sub('-', 'doc-' + match.group(1).lower())
+    if cls.endswith('-'):
+      cls = cls[:-1]
+    yield cls
+    if not match.group(2):
+      continue
     cls = notalphanum_cre.sub('-', 'doc-' + match.group(0)[1:].lower())
     if cls.endswith('-'):
       cls = cls[:-1]
@@ -29,10 +35,10 @@ def parser(entry, options):
     return entry
   if entry.doc:
     entry.classes = ( entry.classes or [] ) \
-      + list(extract(entry.doc.strip().split('\n\n')[0]))
+      + list(set(extract(entry.doc.strip().split('\n\n')[0])))
   for attr in 'params', 'returns', 'raises':
     for item in ( getattr(entry, attr, []) or [] ):
-      clist = list(extract(item.type or ''))
+      clist = list(set(extract(item.type or '')))
       if clist:
         item.classes = ( item.classes or [] ) + clist
   return entry
@@ -77,7 +83,7 @@ def decorate(node):
       return
   # todo: this will extract *all* the docorators in the paragraph,
   #       not just the ones at the beginning... fix!
-  clist = list(extract(node.astext()))
+  clist = list(set(extract(node.astext())))
   if clist:
     if 'classes' not in node.attributes:
       node.attributes['classes'] = []
