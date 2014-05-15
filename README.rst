@@ -79,6 +79,27 @@ support are available at:
 `WADL <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
 and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
+Make the documentation available publicly at "/describe":
+
+.. code-block:: python
+
+  def main(global_config, **settings):
+    # ...
+    config.include('pyramid_describe')
+    # ...
+
+.. code-block:: ini
+
+   [app:main]
+   describe.attach                          = /describe
+   describe.formats                         = html pdf
+   describe.format.html.default.cssPath     = mypkg:style/doc-html.css
+   describe.format.html+pdf.default.cssPath = mypkg:style/doc-pdf.css
+   describe.format.default.pdfkit.options   = {page-size: Letter}
+
+Note that there are **many** options to control how the resulting
+documentation is made available -- see Options_.
+
 
 Installation
 ============
@@ -837,7 +858,7 @@ Format Options
 * ``dynamicFormat`` : str, default: '{}/?'
 * ``restFormat`` : str, default: '<{}>'
 
-* ``pdfkit.options`` : str
+* ``pdfkit.options`` : yaml-str
 
   This option is YAML-parsed, and then sets the options that are
   inserted into the HTML meta tags that are instructions to the pdfkit
