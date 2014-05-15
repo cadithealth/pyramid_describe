@@ -131,14 +131,12 @@ def render_entry(data, entry):
   if not data.options.showInfo:
     return nodes.list_item('', rpara(rtext(entry.dpath)))
   section = rsect(entry.dpath)
+  section['path']       = entry.path
+  section['dpath']      = entry.dpath
   if data.options.rstMax:
     section['ids']        = [entry.id]
     section['target-ids'] = section['ids']
-    section['classes']    = ['endpoint']
-    section['path']       = entry.path
-    section['dpath']      = entry.dpath
-    if entry.classes:
-      section['classes']  += entry.classes
+    section['classes']    = ['endpoint'] + ( entry.classes or [] )
   section.extend(render_entry_body(data, entry))
   return section
 
@@ -176,9 +174,7 @@ def render_entry_methods(data, entry):
     if data.options.rstMax:
       msect['ids'] = [meth.id]
       msect['target-ids'] = msect['ids']
-      msect['classes'] = ['method']
-      if meth.classes:
-        msect['classes'] += meth.classes
+      msect['classes'] = ['method'] + ( meth.classes or [] )
     msect.extend(render_entry_body(data, meth))
     section.append(msect)
   return [section]
@@ -197,9 +193,7 @@ def render_entry_params(data, entry):
     if data.options.rstMax:
       rnode['ids'] = ['param-' + entry.id + '-' + data.options.idEncoder(node.name)]
       rnode['target-ids'] = rnode['ids']
-      rnode['classes'] = ['param']
-      if node.classes:
-        rnode['classes'] += node.classes
+      rnode['classes'] = ['param'] + ( node.classes or [] )
     spec = []
     if node.type:
       spec.append(node.type)
@@ -231,9 +225,7 @@ def render_entry_returns(data, entry):
     if data.options.rstMax:
       rnode['ids'] = ['return-' + entry.id + '-' + data.options.idEncoder(node.type)]
       rnode['target-ids'] = rnode['ids']
-      rnode['classes'] = ['return']
-      if node.classes:
-        rnode['classes'] += node.classes
+      rnode['classes'] = ['return'] + ( node.classes or [] )
     rnode.extend(rst2fragments(node.doc))
     section.append(rnode)
   return [section]
@@ -252,9 +244,7 @@ def render_entry_raises(data, entry):
     if data.options.rstMax:
       rnode['ids'] = ['raise-' + entry.id + '-' + data.options.idEncoder(node.type)]
       rnode['target-ids'] = rnode['ids']
-      rnode['classes'] = ['raise']
-      if node.classes:
-        rnode['classes'] += node.classes
+      rnode['classes'] = ['raise'] + ( node.classes or [] )
     rnode.extend(rst2fragments(node.doc))
     section.append(rnode)
   return [section]

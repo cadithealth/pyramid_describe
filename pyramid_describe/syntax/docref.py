@@ -118,23 +118,24 @@ def undecorate(path):
   return path
 
 #------------------------------------------------------------------------------
-def absolutePath(path, node):
+def resolvePath(path, node):
   if path.startswith('/'):
     return os.path.normpath(path)
   curpath = None
   while node.parent:
     node = node.parent
-    if isinstance(node, nodes.section) \
-        and 'classes' in getattr(node, 'attributes', '') \
-        and 'endpoint' in node.attributes.get('classes', ''):
-      curpath = node.attributes.get('dpath', '') \
-        or node.attributes.get('path', '') \
-        or curpath
-      if not curpath:
-        for nid in node.attributes['ids']:
-          if nid.startswith('endpoint-'):
-            curpath = nid.split('-')[1].decode('hex')
-            break
+    if not isinstance(node, nodes.section) or not hasattr(node, 'attributes'):
+      continue
+    curpath = node.attributes.get('dpath', '') \
+      or node.attributes.get('path', '') \
+      or curpath
+    if curpath:
+      break
+    if 'endpoint' in node.attributes.get('classes', ''):
+      for nid in node.attributes['ids']:
+        if nid.startswith('endpoint-'):
+          curpath = nid.split('-')[1].decode('hex')
+          break
       break
   if not curpath:
     raise ValueError(
@@ -164,7 +165,7 @@ class DocLink(object):
     if len(specv) > 2:
       raise ValueError(
         'Invalid pyramid-describe "%s" target: %r' % (self._name, spec))
-    self.dpath  = absolutePath(specv.pop(), node)
+    self.dpath  = resolvePath(specv.pop(), node)
     self.path   = undecorate(self.dpath)
     self.method = specv.pop() if specv else None
   def _escapeTextRoleArg(self, text):
@@ -220,6 +221,7 @@ HTMLTranslator.depart_pyrdesc_doc_link = pyrdesc_doc_link_html_depart
 #       really shouldn't be. instead, it should be a nodes.container (or
 #       something similar. one of the problems this causes is that the HTML
 #       output wraps the imported nodes with a redundant <p>...</p>. ugh.
+#       ==> perhaps doc.copy should be a "directive" (instead of a "role")?
 
 #------------------------------------------------------------------------------
 class pyrdesc_doc_copy(nodes.reference): pass

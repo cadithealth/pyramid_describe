@@ -31,6 +31,22 @@ class TestDocref(test_helpers.TestHelper):
       self.loadTestData('syntax_docref.output.rst'))
 
   #----------------------------------------------------------------------------
+  def test_rstNoMax(self):
+    from ..test.syntax_docref import Root
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats'        : 'rst',
+        'index-redirect' : 'false',
+        'exclude'        : ('|^/desc(/.*)?$|'),
+        'format.request' : 'true',
+      })
+    self.assertResponse(
+      self.send(root, '/desc?showLegend=false&showMeta=false'), 200,
+      self.loadTestData('syntax_docref-nomax.output.rst'))
+
+  #----------------------------------------------------------------------------
   def test_html(self):
     from ..test.syntax_docref import Root
     root = Root()
