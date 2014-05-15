@@ -26,7 +26,9 @@ Some documentation.
 ''',
     )
     entry = docorator.parser(entry, adict())
-    self.assertEqual(entry.classes, ['doc-foo', 'doc-bar-0-2-z-b', 'doc-zog'])
+    self.assertEqual(
+      sorted(entry.classes),
+      sorted(['doc-foo', 'doc-bar', 'doc-bar-0-2-z-b', 'doc-zog']))
 
   #----------------------------------------------------------------------------
   def test_rst(self):
