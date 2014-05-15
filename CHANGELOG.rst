@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.3.0
+======
+
+* Added support to control assembly of endpoints into one document via
+  pyramid template rendering with new ``describe.render.template``
+  option.
+
+
 v0.2.0
 ======
 
