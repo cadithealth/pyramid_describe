@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.3.2
+======
+
+* Moved ``.. doc.endpoint:: PATH`` to use GLOB-based matching instead
+  of plain strings.
+
+
 v0.3.1
 ======
 
