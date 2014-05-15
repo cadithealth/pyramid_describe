@@ -9,7 +9,7 @@
 from pyramid_controllers.util import getVersion
 
 from ..controller import DescribeController
-from . import test_helpers
+from .. import test_helpers
 
 #------------------------------------------------------------------------------
 class TestDocref(test_helpers.TestHelper):

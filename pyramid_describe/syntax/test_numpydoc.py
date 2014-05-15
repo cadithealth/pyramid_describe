@@ -7,7 +7,7 @@
 #------------------------------------------------------------------------------
 
 from ..controller import DescribeController
-from . import test_helpers
+from .. import test_helpers
 
 #------------------------------------------------------------------------------
 class TestNumpydoc(test_helpers.TestHelper):

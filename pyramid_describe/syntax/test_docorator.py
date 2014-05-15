@@ -10,7 +10,7 @@ from pyramid_controllers.util import getVersion
 
 from ..controller import DescribeController
 from ..util import adict
-from . import test_helpers
+from .. import test_helpers
 from . import docorator
 
 #------------------------------------------------------------------------------
