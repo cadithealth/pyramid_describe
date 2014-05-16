@@ -358,6 +358,8 @@ Inline strong start-string without end-string.
     src = '''\
 some text.
 
+.. class:: test-class
+
 ====================  =============================================
 Cell 1                Column 2
 ====================  =============================================
@@ -369,6 +371,8 @@ some more text.
 '''
     chk = '''\
 some text.
+
+.. class:: test-class
 
 ==================== =============================================
 Cell 1               Column 2

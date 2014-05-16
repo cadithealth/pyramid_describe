@@ -661,6 +661,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
   #----------------------------------------------------------------------------
   def visit_table(self, node):
     self.output.emptyline()
+    self._putAttributes(node)
 
   #----------------------------------------------------------------------------
   def depart_table(self, node):
