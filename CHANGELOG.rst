@@ -3,11 +3,17 @@ ChangeLog
 =========
 
 
+v0.3.3
+======
+
+* Added support for classes on tables in the reStructuredText writer
+
+
 v0.3.2
 ======
 
 * Moved ``.. doc.endpoint:: PATH`` to use GLOB-based matching instead
-  of plain strings.
+  of plain strings
 
 
 v0.3.1
@@ -15,7 +21,7 @@ v0.3.1
 
 * Added support to control assembly of endpoints into one document via
   pyramid template rendering with new ``describe.render.template``
-  option.
+  option
 
 
 v0.2.0
