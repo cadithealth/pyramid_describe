@@ -1,5 +1,7 @@
 - flag :doc.*: references that point to invalid locations somehow
 
+- move rst.Writer into docutils
+
 - make rst.Writer support substitution_definitions with multi-character
   strings with embedded unicode characters.
 
