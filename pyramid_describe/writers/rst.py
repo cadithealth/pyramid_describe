@@ -312,10 +312,10 @@ class RstTranslator(nodes.GenericNodeVisitor):
       self._putAttributes(node)
 
   #----------------------------------------------------------------------------
-  def default_departure(self, node):
+  def default_departure(self, node, fmt=None):
     if isinstance(node, nodes.Inline):
       text = self._popOutput().data()
-      fmt = self.inline_format[node.__class__.__name__]
+      fmt = self.inline_format[fmt or node.__class__.__name__]
       if fmt[1]:
         text = fmt[1](text)
       self.output.append(fmt[0].format(text))
@@ -470,11 +470,13 @@ class RstTranslator(nodes.GenericNodeVisitor):
       self.output.append('.. _{name}: {uri}'.format(
         name = rstEscape(node['names'][0], context='`'),
         uri  = rstEscape(node['refuri'])))
+    elif node.get('anonymous') and node.get('refuri'):
+      self.output.append('__ {uri}'.format(uri=rstEscape(node['refuri'])))
     elif node.get('refid'):
       self.output.append('.. _{id}:'.format(
         id=rstEscape(node['refid'], context='`')))
     else:
-      raise ValueError('target without names+refuri or refid')
+      raise ValueError('target without names+refuri, anon+refuri, or refid')
     self.output.newline()
 
   #----------------------------------------------------------------------------
@@ -489,8 +491,10 @@ class RstTranslator(nodes.GenericNodeVisitor):
     #       instead, there should be a helper method.
     sibs = list(node.parent)
     idx  = sibs.index(node)
+    fmt  = None
     # todo: the ".lower()" is a little disconcerting here... is there
     #       a better way?...
+    #       ==> perhaps use `nodes.fully_normalize_name()`
     if idx + 1 < len(sibs) \
         and isinstance(sibs[idx + 1], nodes.target) \
         and node['name'].lower() in sibs[idx + 1]['names'] \
@@ -507,10 +511,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
           if node['refuri'] in (text, 'mailto:' + text):
             self.output.append(text)
             return
-          # doh! something else! revert!...
-          # todo: there *must* be a better explanation.
           self._pushOutput()
           self.output.append(text)
+          if 'name' in node and nodes.make_id(node['name']) not in self.document.ids:
+            if not node.get('anonymous'):
+              self.output.append(' <{uri}>'.format(uri=rstEscape(node.get('refuri'))))
+            fmt = 'anonymous_reference'
       elif 'refid' in node:
         text = self._popOutput().data().strip()
         if text != node.get('name', ''):
@@ -522,7 +528,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
             'implicit reference text does not match target name... ignoring')
         self._pushOutput()
         self.output.append(text)
-    return self.default_departure(node)
+      else:
+        self.document.reporter.warning(
+          'reference with neither ref-uri nor ref-id... ignoring')
+        self._pushOutput()
+        self.output.append(text)
+    return self.default_departure(node, fmt=fmt)
 
   #----------------------------------------------------------------------------
   def visit_meta(self, node):

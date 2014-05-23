@@ -130,6 +130,53 @@ some text.
     self.assertMultiLineEqual(self.rt(src), chk)
 
   #----------------------------------------------------------------------------
+  def test_link_anonymous_target(self):
+    src = '__ http://example.com/anonymous/target'
+    chk = '''\
+__ http://example.com/anonymous/target
+
+.. class:: system-messages
+
+========================
+Docutils System Messages
+========================
+
+.. class:: system-message
+
+---------------------------
+ERROR/3 (<string>, line ??)
+---------------------------
+
+Anonymous hyperlink mismatch: 0 references but 1 targets. See "backrefs"
+attribute for IDs.
+'''
+    out = six.StringIO()
+    self.assertMultiLineEqual(self.rt(src, settings={'warning_stream': out}), chk)
+
+  #----------------------------------------------------------------------------
+  def test_link_anonymous_inline(self):
+    src = 'An anonymous `inlined link <http://example.com/inline>`__.'
+    chk = src + '\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_link_anonymous_reference(self):
+    src = '''\
+An anonymous `link`__ and `link`__.
+
+__ http://example.com/first
+__ http://example.com/second
+'''
+    chk = '''\
+An anonymous link__ and link__.
+
+__ http://example.com/first
+
+__ http://example.com/second
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
   def test_literal_block(self):
     src = 'A literal example::\n\n  Code Line 1\n  ==> code line 2\n'
     chk = 'A literal example:\n\n::\n\n    Code Line 1\n    ==> code line 2\n'
