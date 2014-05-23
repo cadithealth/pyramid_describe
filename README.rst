@@ -79,7 +79,7 @@ support are available at:
 `WADL <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.wadl>`_,
 and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example.xml>`_.
 
-Make the documentation available publicly at "/describe":
+Enable the plugin:
 
 .. code-block:: python
 
@@ -87,6 +87,8 @@ Make the documentation available publicly at "/describe":
     # ...
     config.include('pyramid_describe')
     # ...
+
+And make the documentation available publicly at "/describe":
 
 .. code-block:: ini
 
@@ -393,7 +395,7 @@ information and is therefore outside of its scope.
 
 
 Field List Aliasing of Sections
-------------------------------
+-------------------------------
 
 All of the section headers that are specially processed by numpydoc
 can also be specified as lone "field list" elements. For example, the
@@ -704,12 +706,13 @@ constructors, the prefix is left off. The following options exist:
 
     Specifies than the documentation for any endpoint whose path
     matches the specified ``GLOB`` pattern should replace the
-    directive. The GLOB syntax uses globre_ rules, basically that "*"
-    matches zero or more characters except "/", "**" matches zero or
-    more of any character, and "?" matches any single except "/"
-    (there are some other rules too -- see globre_ for details). One
-    additional rule is that "/**" at the end of a pattern matches a
-    path without the trailing "/" as well.
+    directive. The GLOB syntax uses globre_ rules, basically that
+    ``*`` matches zero or more characters except ``/``, ``**`` matches
+    zero or more of any character (including ``/``), and ``?`` matches
+    any single character except ``/`` (there are some other rules too
+    -- see globre_ for details). One additional rule specific to
+    pyramid-describe is that ``/**`` at the end of a pattern matches a
+    path without the trailing ``/`` as well.
 
   * ``.. doc.endpoint:: regex:EXPR``:
 
