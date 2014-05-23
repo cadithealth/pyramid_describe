@@ -17,7 +17,7 @@ from docutils.utils.urischemes import schemes
 enumlistfmt_re = re.compile(
   r'^\(?([0-9]+|[a-z]|[ivxlcdm]+)[.)]\s', flags=re.IGNORECASE)
 
-plaintexturi_re = re.compile(
+plaintexturi_cre = re.compile(
   r'^('
   + '|'.join([re.escape(s) for s in schemes.keys()])
   + '):'
@@ -347,8 +347,9 @@ class RstTranslator(nodes.GenericNodeVisitor):
     node['classes'] = kls
     self.tlevel += 1
     self.visit_title(None)
-    self.output.append(
-      '{type}/{level} ({source}, line {line})'.format(**node.attributes))
+    kw = {'type': '??', 'level': '??', 'source': '??', 'line': '??'}
+    kw.update(**node.attributes)
+    self.output.append('{type}/{level} ({source}, line {line})'.format(**kw))
     self.depart_title(None)
     self.tlevel -= 1
 
@@ -501,7 +502,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
         uri  = rstEscape(node.get('refuri', node.get('refid', '')))))
     else:
       if 'refuri' in node:
-        if plaintexturi_re.match(node['refuri']):
+        if plaintexturi_cre.match(node['refuri']):
           text = self._popOutput().data()
           if node['refuri'] in (text, 'mailto:' + text):
             self.output.append(text)
