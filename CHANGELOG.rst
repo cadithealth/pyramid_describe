@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.4.0
+======
+
+* Added anonymous hyperlink support in the reStructuredText writer
+* Added support for endpoint link listings
+
+
 v0.3.3
 ======
 
