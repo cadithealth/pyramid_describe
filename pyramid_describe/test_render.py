@@ -48,7 +48,7 @@ class TestRender(test_helpers.TestHelper):
       self.loadTestData('render_template.output.rst'))
 
   #----------------------------------------------------------------------------
-  def test_templateWithMetaAndMax(self):
+  def test_template_withMetaAndMax(self):
     from .test.render_simple import Root
     root = Root()
     root.desc = DescribeController(
@@ -65,6 +65,23 @@ class TestRender(test_helpers.TestHelper):
       self.loadTestData('render_template-withmetamax.output.rst', {
         'version' : getVersion('pyramid_describe'),
       }))
+
+  #----------------------------------------------------------------------------
+  def test_template_endpointList(self):
+    from .test.render_simple import Root
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats'         : 'rst',
+        'index-redirect'  : 'false',
+        'exclude'         : ('|^/desc(/.*)?$|'),
+        'format.request'  : 'true',
+        'render.template' : 'pyramid_describe:test/render_template_list.mako',
+      })
+    self.assertResponse(
+      self.send(root, '/desc?showLegend=false&rstMax=false&showMeta=false'), 200,
+      self.loadTestData('render_template_list.output.rst'))
 
 #------------------------------------------------------------------------------
 # end of $Id$

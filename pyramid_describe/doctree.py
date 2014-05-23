@@ -72,6 +72,14 @@ def rst2fragments(text):
 #       removed?...
 
 #------------------------------------------------------------------------------
+def walk(node):
+  yield node
+  # TODO: should this just be ``for child in node:`` ?
+  for child in list(getattr(node, 'children', [])):
+    for sub in walk(child):
+      yield sub
+
+#------------------------------------------------------------------------------
 def render(data):
   doc = utils.new_document('<pyramid_describe.document>')
   # todo:

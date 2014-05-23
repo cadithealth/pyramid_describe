@@ -52,6 +52,13 @@ Other:
    :unmatched:
 
 
+Index
+=====
+
+.. doc.endpoint::
+   :link:
+
+
 Copyright
 =========
 

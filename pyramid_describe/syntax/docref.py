@@ -18,7 +18,7 @@ import pkg_resources
 from ..writers.rst import RstTranslator
 from ..describer import tag
 from ..resolve import resolve
-from ..render import walk
+from ..doctree import walk
 
 #------------------------------------------------------------------------------
 

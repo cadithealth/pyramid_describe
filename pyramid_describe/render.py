@@ -15,6 +15,7 @@ import globre
 
 from . import doctree
 from .i18n import _
+from .syntax.docref import pyrdesc_doc_link as doc_link
 
 #------------------------------------------------------------------------------
 
@@ -22,29 +23,31 @@ from .i18n import _
 
 #------------------------------------------------------------------------------
 class DocEndpoint(nodes.reference):
-  def __init__(self, spec, *args, **kw):
+  def __init__(self, spec, regex=False, unmatched=False, link=False, *args, **kw):
     super(DocEndpoint, self).__init__(*args, **kw)
-    self.unmatched = spec.startswith('unmatched:') or spec == 'unmatched'
-    if spec == 'unmatched':
+    self.unmatched = unmatched
+    self.link      = link
+    if spec is None:
       self.cre = re.compile('.*')
-    elif spec.startswith('unmatched:') or spec.startswith('regex:'):
-      self.cre = re.compile(spec.split(':', 1)[1])
     else:
-      self.cre = globre.compile(
-        spec if not spec.endswith('/**') else spec[:-3] + '{(/.*)?}',
-        flags=globre.EXACT)
+      if regex:
+        self.cre = re.compile(spec)
+      else:
+        self.cre = globre.compile(
+          spec if not spec.endswith('/**') else spec[:-3] + '{(/.*)?}',
+          flags=globre.EXACT)
 
 # TODO: add rST and HTML serializer of `doc.endpoint` ("just in case")...
 #------------------------------------------------------------------------------
 class DocEndpointDirective(rst.Directive):
-  required_arguments = 1
-  # todo:
-  #   add `option_spec` parameter such that `unmatched` can be an option...
-  #   (and then perhaps the `required_arguments` should be set to 0?):
-  #
-  #     option_spec = {
-  #       'unmatched'  : directives.flag,
-  #     }
+  # TODO: make DocEndpointDirective (and DocEndpoint) support multiple
+  #       arguments, which are OR'ed together.
+  optional_arguments = 1
+  option_spec = {
+    'unmatched'  : directives.flag,
+    'regex'      : directives.flag,
+    'link'       : directives.flag,
+  }
   #----------------------------------------------------------------------------
   def run(self):
     if not isinstance(self.state, rst.states.Body):
@@ -53,16 +56,32 @@ class DocEndpointDirective(rst.Directive):
         ' as a stand-alone section within the document body.' % (self.name,),
         nodes.literal_block(self.block_text, self.block_text), 
         line=self.lineno)]
-    return [DocEndpoint(self.arguments[0])]
+    spec = self.arguments[0] if len(self.arguments) > 0 else None
+    # for some retarded reason, when a flag is specified, it returns
+    # ``None``... so, converting that here.
+    opts = dict(self.options)
+    for key, val in list(opts.items()):
+      if val is None:
+        opts[key] = True
+    return [DocEndpoint(spec, **opts)]
 directives.register_directive('doc.endpoint', DocEndpointDirective)
 
 #------------------------------------------------------------------------------
-def walk(node):
-  yield node
-  # TODO: should this just be ``for child in node:`` ?
-  for child in list(getattr(node, 'children', [])):
-    for sub in walk(child):
-      yield sub
+def renderDocEndpoint(data, node, endpoints):
+  if not node.link:
+    node.replace_self([doctree.render_entry(data, ep) for ep in endpoints])
+    return
+  # todo: to be "correct", this `repl` should be a nodes.bullet_list...
+  #       but the problem with that is that then two consecutive lists
+  #       will be technically not part of the same list.
+  #       ==> NOTE: by makeing DocEndpoint accept multiple spec's, this
+  #           would be made a non-issue...
+  repl = []
+  for endpoint in endpoints:
+    repl.append(nodes.list_item('', doctree.rpara(
+      doc_link('', doctree.rtext(endpoint.dpath))
+    )))
+  node.replace_self(repl)
 
 #------------------------------------------------------------------------------
 def render(data, tspec):
@@ -71,9 +90,11 @@ def render(data, tspec):
                        request=data.options.context.request)
   doc = doctree.rst2document(doc, promote=True)
   doc.extend(doctree.render_meta(data, doc.get('title')))
-  # todo: confirm that the endpoints are already sorted...
-  epstates = [[endpoint, False] for endpoint in data.endpoints]
-  for node in walk(doc):
+  # todo: perhaps move this sorting into `describe.py`
+  #       ==> and make sorting configurable
+  epstates = sorted([[endpoint, False] for endpoint in data.endpoints],
+                    key=lambda entry: entry[0].path.lower())
+  for node in doctree.walk(doc):
     if isinstance(node, DocEndpoint):
       matched = [epstate
                  for epstate in epstates
@@ -81,7 +102,7 @@ def render(data, tspec):
                    and node.cre.search(epstate[0].dpath)]
       for match in matched:
         match[1] = True
-      node.replace_self([doctree.render_entry(data, m[0]) for m in matched])
+      renderDocEndpoint(data, node, [m[0] for m in matched])
   return doc
 
 #------------------------------------------------------------------------------
