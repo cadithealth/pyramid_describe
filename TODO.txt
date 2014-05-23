@@ -1,3 +1,5 @@
+- flag :doc.*: references that point to invalid locations somehow
+
 - make rst.Writer support substitution_definitions with multi-character
   strings with embedded unicode characters.
 
