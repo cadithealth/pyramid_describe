@@ -34,6 +34,14 @@ General purpose endpoints:
    :regex:
 
 
+Local Index
+```````````
+
+.. doc.endpoint:: /(about)?$
+   :regex:
+   :link:
+
+
 Item
 ----
 
@@ -43,6 +51,14 @@ Endpoints that apply to an ITEM_ID:
    :regex:
 
 
+Local Index
+```````````
+
+.. doc.endpoint:: /{ITEM_ID}(?!/chatter)(/.*)?$
+   :regex:
+   :link:
+
+
 Miscellaneous
 -------------
 
@@ -50,6 +66,14 @@ Other:
 
 .. doc.endpoint::
    :unmatched:
+
+
+Local Index
+```````````
+
+.. doc.endpoint::
+   :unmatched:
+   :link:
 
 
 Index

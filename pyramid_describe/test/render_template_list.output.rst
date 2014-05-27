@@ -46,6 +46,14 @@ Serves the homepage.
 
 Serves the glorious "about us" page.
 
+:::::::::::
+Local Index
+:::::::::::
+
+* :doc.link:`/`
+
+* :doc.link:`/about`
+
 ``````
 Item
 ``````
@@ -64,6 +72,14 @@ Provides RESTful access to the URL-specified item.
 
 Executes a sub-action.
 
+:::::::::::
+Local Index
+:::::::::::
+
+* :doc.link:`/{ITEM_ID}`
+
+* :doc.link:`/{ITEM_ID}/subaction`
+
 `````````````
 Miscellaneous
 `````````````
@@ -75,6 +91,12 @@ Other:
 ::::::::::::::::::
 
 Generates chatter.
+
+:::::::::::
+Local Index
+:::::::::::
+
+* :doc.link:`/{ITEM_ID}/chatter`
 
 ------
 Index

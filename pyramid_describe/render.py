@@ -92,17 +92,17 @@ def render(data, tspec):
   doc.extend(doctree.render_meta(data, doc.get('title')))
   # todo: perhaps move this sorting into `describe.py`
   #       ==> and make sorting configurable
-  epstates = sorted([[endpoint, False] for endpoint in data.endpoints],
+  epstates = sorted([[endpoint, False, False] for endpoint in data.endpoints],
                     key=lambda entry: entry[0].path.lower())
   for node in doctree.walk(doc):
     if isinstance(node, DocEndpoint):
+      flagslot = 1 if not node.link else 2
       matched = [epstate
                  for epstate in epstates
-                 if ( not epstate[1] or not node.unmatched )
+                 if ( not epstate[flagslot] or not node.unmatched )
                    and node.cre.search(epstate[0].dpath)]
-      if not node.link:
-        for match in matched:
-          match[1] = True
+      for match in matched:
+        match[flagslot] = True
       renderDocEndpoint(data, node, [m[0] for m in matched])
   return doc
 
