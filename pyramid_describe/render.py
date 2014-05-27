@@ -100,8 +100,9 @@ def render(data, tspec):
                  for epstate in epstates
                  if ( not epstate[1] or not node.unmatched )
                    and node.cre.search(epstate[0].dpath)]
-      for match in matched:
-        match[1] = True
+      if not node.link:
+        for match in matched:
+          match[1] = True
       renderDocEndpoint(data, node, [m[0] for m in matched])
   return doc
 
