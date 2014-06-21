@@ -1,3 +1,11 @@
+- in order to reduce verbosity, `:doc.copy:...:` should:
+    - copy for structured data output (YAML, WADL, etc)
+    - link for text output (HTML, etc)
+
+- handle the scenario that all items in a "parameters" (or
+  raises/returns) section are filtered out (and is thus empty,
+  and shouldn't be displayed at all).
+
 - flag :doc.*: references that point to invalid locations somehow
 
 - move rst.Writer into docutils
