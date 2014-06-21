@@ -34,7 +34,7 @@ dependencies = [
   'pyramid              >= 1.4.2',
   'pyramid-controllers  >= 0.3.18',
   'pyramid-iniherit     >= 0.1.7',
-  'six                  >= 1.4.1',
+  'six                  >= 1.6.0',
   'docutils             >= 0.10',
   'PyYAML               >= 3.10',
   'numpydoc             >= 0.4',        # => Sphinx Jinja2
