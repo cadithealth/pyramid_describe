@@ -196,7 +196,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'exclude': '|^/desc(/.*)?$|',
         'index-redirect': 'false',
         'format.default.ascii': 'true',
-        })
+      })
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -204,6 +204,31 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
 |   |-- <GET>       # Gets the current value.
 |   |-- <PUT>       # Updates the value.
 |   `-- <DELETE>    # Deletes the entry.
+|-- sub/
+|   `-- method      # This method outputs a JSON list.
+|-- swi             # A sub-controller providing only an index.
+`-- unknown/?       # A dynamically generated sub-controller.
+''')
+
+  #----------------------------------------------------------------------------
+  def test_format_txt_customMethodsOrder(self):
+    ## The Describer can accept an option to specify custom method ordering
+    root = SimpleRoot()
+    root.desc = DescribeController(
+      root, doc='URL \t  tree\n    description.',
+      settings={
+        'exclude': '|^/desc(/.*)?$|',
+        'index-redirect': 'false',
+        'methods.order': ['GET'],
+        'format.default.ascii': 'true',
+      })
+    self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
+/                   # The default root.
+|-- rest            # A RESTful entry.
+|   |-- <GET>       # Gets the current value.
+|   |-- <DELETE>    # Deletes the entry.
+|   |-- <POST>      # Creates a new entry.
+|   `-- <PUT>       # Updates the value.
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
