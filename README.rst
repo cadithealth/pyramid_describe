@@ -688,6 +688,13 @@ constructors, the prefix is left off. The following options exist:
   filter the entire output document, which is format-specific. See
   the formatting options for details.
 
+* ``{PREFIX}.methods.order`` : list(str), default: ['post', 'get', 'put', 'delete']
+
+  Sets the order that endpoint methods are listed in. By default,
+  it is in CRUD + alphabetic order, i.e. that CRUD methods (POST,
+  GET, PUT, DELETE) are listed first, then all other methods are
+  listed alphabetically thereafter.
+
 * ``{PREFIX}.render.template`` : asset-spec, default: null
 
   Overrides the rendering of the endpoints from separate units into

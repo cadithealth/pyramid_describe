@@ -26,7 +26,8 @@ log = logging.getLogger(__name__)
 
 DEFAULT   = 'pyramid_describe:DEFAULT'
 FORMATS   = ('html', 'txt', 'rst', 'json', 'wadl', 'yaml', 'xml')
-METHORDER = ('post', 'get', 'put', 'delete')
+
+DEFAULT_METHODS_ORDER = ('post', 'get', 'put', 'delete')
 
 try:
   import pdfkit
@@ -159,7 +160,7 @@ def tocallables(spec, attr):
     for e in ret]
 
 #------------------------------------------------------------------------------
-def methodSort(methods):
+def methOrderKey(methods):
   methods = [m.lower() for m in methods]
   def _sort(method):
     method = method.name.lower()
@@ -311,6 +312,8 @@ class Describer(object):
     self.efilters = tocallables(self.settings.get(
       'entries.filters', None), 'filter')
     self.render_template = self.settings.get('render.template', None)
+    self.methOrderKey = methOrderKey(
+      tolist(self.settings.get('methods.order', DEFAULT_METHODS_ORDER)))
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
@@ -436,14 +439,12 @@ class Describer(object):
       except Exception:
         log.exception('invalid target for pyramid-describe: %r', options.view)
         raise TypeError(_('the URL "{}" does not point to a pyramid_controllers.Controller', options.root))
-
-    mskey = methodSort(METHORDER)
     for entry in self._walkEntries(options, None):
       if entry.methods:
         entry.methods = filter(None, [
           runFilters(options.eparsers, e, options)
           for e in entry.methods])
-        entry.methods = sorted(entry.methods, key=mskey)
+        entry.methods = sorted(entry.methods, key=self.methOrderKey)
       entry = runFilters(options.eparsers, entry, options)
       if entry:
         yield entry
