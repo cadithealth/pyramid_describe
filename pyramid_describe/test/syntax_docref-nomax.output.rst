@@ -17,6 +17,14 @@ Methods
 :::::::
 
 ''''''
+POST
+''''''
+
+Alias of :doc.link:`PUT:/{ITEM_ID}`.
+
+:doc.copy:`PUT:/{ITEM_ID}`
+
+''''''
 GET
 ''''''
 
@@ -29,14 +37,6 @@ Returns
 ~~~~~~~~~~
 JSON data.
 ~~~~~~~~~~
-
-''''''
-POST
-''''''
-
-Alias of :doc.link:`PUT:/{ITEM_ID}`.
-
-:doc.copy:`PUT:/{ITEM_ID}`
 
 ''''''
 PUT

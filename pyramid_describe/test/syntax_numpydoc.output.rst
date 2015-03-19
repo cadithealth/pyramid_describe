@@ -36,6 +36,18 @@ Methods
 
 .. class:: method
 
+.. _`method-2f4954454d5f4944-504f5354`:
+
+''''''
+POST
+''''''
+
+Alias of :doc.link:`PUT:/{ITEM_ID}`.
+
+:doc.copy:`PUT:/{ITEM_ID}`
+
+.. class:: method
+
 .. _`method-2f4954454d5f4944-474554`:
 
 ''''''
@@ -113,18 +125,6 @@ HTTPNotFound
 ~~~~~~~~~~~~
 
 The specified item ID does not exist.
-
-.. class:: method
-
-.. _`method-2f4954454d5f4944-504f5354`:
-
-''''''
-POST
-''''''
-
-Alias of :doc.link:`PUT:/{ITEM_ID}`.
-
-:doc.copy:`PUT:/{ITEM_ID}`
 
 .. class:: method
 

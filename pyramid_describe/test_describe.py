@@ -125,7 +125,39 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
   maxDiff = None
 
   #----------------------------------------------------------------------------
-  def test_example(self):
+  def test_format_txt(self):
+    ## The Describer can render a plain-text hierarchy
+    root = SimpleRoot()
+    # todo: yaml and pdf are not always there...
+    root.desc = DescribeController(
+      root, doc='URL \t  tree\n    description.',
+      settings={
+        'index-redirect': 'false',
+        })
+    self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
+/                           # The default root.
+├── desc/                   # URL tree description.
+│   ├── application.html
+│   ├── application.json
+│   ├── application.pdf
+│   ├── application.rst
+│   ├── application.txt
+│   ├── application.wadl
+│   ├── application.xml
+│   └── application.yaml
+├── rest                    # A RESTful entry.
+│   ├── <POST>              # Creates a new entry.
+│   ├── <GET>               # Gets the current value.
+│   ├── <PUT>               # Updates the value.
+│   └── <DELETE>            # Deletes the entry.
+├── sub/
+│   └── method              # This method outputs a JSON list.
+├── swi                     # A sub-controller providing only an index.
+└── unknown/?               # A dynamically generated sub-controller.
+''')
+
+  #----------------------------------------------------------------------------
+  def test_format_txt_exclude(self):
     from .test_example import RootController, main
     # TODO: this is ridiculous...
     def ridiculous_init_override(self):
@@ -147,47 +179,15 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
 ├── contact/            # Contact manager.
 │   ├── <POST>          # Creates a new 'contact' object.
 │   └── {CONTACTID}     # RESTful access to a specific contact.
-│       ├── <DELETE>    # Delete this contact.
 │       ├── <GET>       # Get this contact's details.
-│       └── <PUT>       # Update this contact's details.
+│       ├── <PUT>       # Update this contact's details.
+│       └── <DELETE>    # Delete this contact.
 ├── login               # Authenticate against the server.
 └── logout              # Remove authentication tokens.
 ''')
 
   #----------------------------------------------------------------------------
-  def test_autodescribe_format_txt(self):
-    ## The Describer can render a plain-text hierarchy
-    root = SimpleRoot()
-    # todo: yaml and pdf are not always there...
-    root.desc = DescribeController(
-      root, doc='URL \t  tree\n    description.',
-      settings={
-        'index-redirect': 'false',
-        })
-    self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
-/                           # The default root.
-├── desc/                   # URL tree description.
-│   ├── application.html
-│   ├── application.json
-│   ├── application.pdf
-│   ├── application.rst
-│   ├── application.txt
-│   ├── application.wadl
-│   ├── application.xml
-│   └── application.yaml
-├── rest                    # A RESTful entry.
-│   ├── <DELETE>            # Deletes the entry.
-│   ├── <GET>               # Gets the current value.
-│   ├── <POST>              # Creates a new entry.
-│   └── <PUT>               # Updates the value.
-├── sub/
-│   └── method              # This method outputs a JSON list.
-├── swi                     # A sub-controller providing only an index.
-└── unknown/?               # A dynamically generated sub-controller.
-''')
-
-  #----------------------------------------------------------------------------
-  def test_autodescribe_format_txt_asciisettings(self):
+  def test_format_txt_asciisettings(self):
     ## The Describer can limit plain-text to 7-bit ASCII characters only (via global settings)
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -200,10 +200,10 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
-|   |-- <DELETE>    # Deletes the entry.
-|   |-- <GET>       # Gets the current value.
 |   |-- <POST>      # Creates a new entry.
-|   `-- <PUT>       # Updates the value.
+|   |-- <GET>       # Gets the current value.
+|   |-- <PUT>       # Updates the value.
+|   `-- <DELETE>    # Deletes the entry.
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
@@ -211,7 +211,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
 ''')
 
   #----------------------------------------------------------------------------
-  def test_autodescribe_format_txt_asciiquerystring(self):
+  def test_format_txt_asciiquerystring(self):
     ## The Describer can limit plain-text to 7-bit ASCII characters only (via query-string)
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -224,10 +224,10 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
     self.assertResponse(self.send(root, '/desc/application.txt?ascii=true'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
-|   |-- <DELETE>    # Deletes the entry.
-|   |-- <GET>       # Gets the current value.
 |   |-- <POST>      # Creates a new entry.
-|   `-- <PUT>       # Updates the value.
+|   |-- <GET>       # Gets the current value.
+|   |-- <PUT>       # Updates the value.
+|   `-- <DELETE>    # Deletes the entry.
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
@@ -249,10 +249,10 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
     self.assertResponse(self.send(root, '/desc/app.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
-|   |-- <DELETE>    # Deletes the entry.
-|   |-- <GET>       # Gets the current value.
 |   |-- <POST>      # Creates a new entry.
-|   `-- <PUT>       # Updates the value.
+|   |-- <GET>       # Gets the current value.
+|   |-- <PUT>       # Updates the value.
+|   `-- <DELETE>    # Deletes the entry.
 |-- sub/
 |   `-- method      # This method outputs a JSON list.
 |-- swi             # A sub-controller providing only an index.
@@ -434,10 +434,10 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
-│   ├── <DELETE>    # Deletes the entry.
-│   ├── <GET>       # Gets the current value.
 │   ├── <POST>      # Creates a new entry.
-│   └── <PUT>       # Updates the value.
+│   ├── <GET>       # Gets the current value.
+│   ├── <PUT>       # Updates the value.
+│   └── <DELETE>    # Deletes the entry.
 ├── swi             # A sub-controller providing only an index.
 └── unknown/?       # A dynamically generated sub-controller.
 ''')
@@ -445,7 +445,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
   #----------------------------------------------------------------------------
   def test_filters(self):
     ## Test the Describer `entries.filters`
-    def test_filter(entry, options):
+    def custom_filter(entry, options):
       if entry.path.startswith('/sub/method') or entry.path.startswith('/desc'):
         return None
       if entry.isMethod and entry.name == 'get' and entry.parent.path == '/rest':
@@ -457,15 +457,15 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
       settings={
         'formats'           : 'txt',
         'index-redirect'    : 'false',
-        'entries.filters'   : test_filter,
+        'entries.filters'   : custom_filter,
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
-│   ├── <DELETE>    # Deletes the entry.
-│   ├── <GET>       # Returns the entry's attributes.
 │   ├── <POST>      # Creates a new entry.
-│   └── <PUT>       # Updates the value.
+│   ├── <GET>       # Returns the entry's attributes.
+│   ├── <PUT>       # Updates the value.
+│   └── <DELETE>    # Deletes the entry.
 ├── swi             # A sub-controller providing only an index.
 └── unknown/?       # A dynamically generated sub-controller.
 ''')
@@ -485,10 +485,10 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
     self.assertResponse(self.send(root, '/desc?format=html&showRest=false&showInfo=false'), 200, '''\
 /                   # The default root.
 ├── rest            # A RESTful entry.
-│   ├── <DELETE>    # Deletes the entry.
-│   ├── <GET>       # Gets the current value.
 │   ├── <POST>      # Creates a new entry.
-│   └── <PUT>       # Updates the value.
+│   ├── <GET>       # Gets the current value.
+│   ├── <PUT>       # Updates the value.
+│   └── <DELETE>    # Deletes the entry.
 ├── swi             # A sub-controller providing only an index.
 └── unknown/?       # A dynamically generated sub-controller.
 ''')
@@ -611,10 +611,10 @@ Endpoints
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
 ├── rest
-│   ├── <DELETE>
-│   ├── <GET>
 │   ├── <POST>
-│   └── <PUT>
+│   ├── <GET>
+│   ├── <PUT>
+│   └── <DELETE>
 ├── swi
 └── unknown/?
 ''')
@@ -676,10 +676,10 @@ Endpoints
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
 ├── rest
-│   ├── <DELETE>
-│   ├── <GET>
 │   ├── <POST>
-│   └── <PUT>
+│   ├── <GET>
+│   ├── <PUT>
+│   └── <DELETE>
 ├── swfs/
 ├── swi
 └── unknown/?
@@ -736,22 +736,6 @@ Methods
 :::::::
 
 ''\'''\'
-DELETE
-''\'''\'
-
-Handler: pyramid_describe.test_describe.Rest().delete [method]
-
-Deletes the entry.
-
-''\'''\'
-GET
-''\'''\'
-
-Handler: pyramid_describe.test_describe.Rest().get [method]
-
-Gets the current value.
-
-''\'''\'
 POST
 ''\'''\'
 
@@ -806,12 +790,28 @@ HTTPForbidden
 The user does not have posting privileges
 
 ''\'''\'
+GET
+''\'''\'
+
+Handler: pyramid_describe.test_describe.Rest().get [method]
+
+Gets the current value.
+
+''\'''\'
 PUT
 ''\'''\'
 
 Handler: pyramid_describe.test_describe.Rest().put [method]
 
 Updates the value.
+
+''\'''\'
+DELETE
+''\'''\'
+
+Handler: pyramid_describe.test_describe.Rest().delete [method]
+
+Deletes the entry.
 
 ```````````
 /sub/method
@@ -1050,38 +1050,6 @@ A RESTful entry.
 Methods
 :::::::
 
-.. class:: method
-
-.. _`method-2f72657374-44454c455445`:
-
-''\'''\'
-DELETE
-''\'''\'
-
-.. class:: handler
-
-.. _`handler-method-2f72657374-44454c455445`:
-
-Handler: pyramid_describe.test_describe.Rest().delete [method]
-
-Deletes the entry.
-
-.. class:: method
-
-.. _`method-2f72657374-474554`:
-
-''\'''\'
-GET
-''\'''\'
-
-.. class:: handler
-
-.. _`handler-method-2f72657374-474554`:
-
-Handler: pyramid_describe.test_describe.Rest().get [method]
-
-Gets the current value.
-
 .. class:: fake-docs-here method post-is-not-put
 
 .. _`method-2f72657374-504f5354`:
@@ -1182,6 +1150,22 @@ The user does not have posting privileges
 
 .. class:: method
 
+.. _`method-2f72657374-474554`:
+
+''\'''\'
+GET
+''\'''\'
+
+.. class:: handler
+
+.. _`handler-method-2f72657374-474554`:
+
+Handler: pyramid_describe.test_describe.Rest().get [method]
+
+Gets the current value.
+
+.. class:: method
+
 .. _`method-2f72657374-505554`:
 
 ''\'''\'
@@ -1195,6 +1179,22 @@ PUT
 Handler: pyramid_describe.test_describe.Rest().put [method]
 
 Updates the value.
+
+.. class:: method
+
+.. _`method-2f72657374-44454c455445`:
+
+''\'''\'
+DELETE
+''\'''\'
+
+.. class:: handler
+
+.. _`handler-method-2f72657374-44454c455445`:
+
+Handler: pyramid_describe.test_describe.Rest().delete [method]
+
+Deletes the entry.
 
 .. class:: endpoint
 
@@ -1553,14 +1553,6 @@ body {{
       <p>A RESTful entry.</p>
       <div class="methods section" id="methods-endpoint-2f72657374">
        <h4 class="section-title">Methods</h4>
-       <div class="method section" id="method-2f72657374-44454c455445">
-        <h5 class="section-title">DELETE</h5>
-        <p>Deletes the entry.</p>
-       </div>
-       <div class="method section" id="method-2f72657374-474554">
-        <h5 class="section-title">GET</h5>
-        <p>Gets the current value.</p>
-       </div>
        <div class="fake-docs-here method post-is-not-put section" id="method-2f72657374-504f5354">
         <h5 class="section-title">POST</h5>
         <p>Creates a new entry.</p>
@@ -1596,9 +1588,17 @@ body {{
          </div>
         </div>
        </div>
+       <div class="method section" id="method-2f72657374-474554">
+        <h5 class="section-title">GET</h5>
+        <p>Gets the current value.</p>
+       </div>
        <div class="method section" id="method-2f72657374-505554">
         <h5 class="section-title">PUT</h5>
         <p>Updates the value.</p>
+       </div>
+       <div class="method section" id="method-2f72657374-44454c455445">
+        <h5 class="section-title">DELETE</h5>
+        <p>Deletes the entry.</p>
        </div>
       </div>
      </div>
@@ -1786,14 +1786,6 @@ request-specific details.</p>
         "decoratedPath": "/rest",
         "doc": "A RESTful entry.",
         "methods": [
-          { "name": "DELETE",
-            "id": "method-2f72657374-44454c455445",
-            "doc": "Deletes the entry."
-          },
-          { "name": "GET",
-            "id": "method-2f72657374-474554",
-            "doc": "Gets the current value."
-          },
           { "name": "POST",
             "id": "method-2f72657374-504f5354",
             "doc": "Creates a new entry.",
@@ -1829,9 +1821,17 @@ request-specific details.</p>
               }
             ]
           },
+          { "name": "GET",
+            "id": "method-2f72657374-474554",
+            "doc": "Gets the current value."
+          },
           { "name": "PUT",
             "id": "method-2f72657374-505554",
             "doc": "Updates the value."
+          },
+          { "name": "DELETE",
+            "id": "method-2f72657374-44454c455445",
+            "doc": "Deletes the entry."
           }
         ]
       },
@@ -1900,12 +1900,6 @@ application:
       decoratedPath: /rest
       doc: A RESTful entry.
       methods:
-        - name: DELETE
-          id: 'method-2f72657374-44454c455445'
-          doc: Deletes the entry.
-        - name: GET
-          id: 'method-2f72657374-474554'
-          doc: Gets the current value.
         - name: POST
           id: 'method-2f72657374-504f5354'
           doc: Creates a new entry.
@@ -1932,9 +1926,15 @@ application:
             - type: HTTPForbidden
               id: 'raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e'
               doc: The user does not have posting privileges
+        - name: GET
+          id: 'method-2f72657374-474554'
+          doc: Gets the current value.
         - name: PUT
           id: 'method-2f72657374-505554'
           doc: Updates the value.
+        - name: DELETE
+          id: 'method-2f72657374-44454c455445'
+          doc: Deletes the entry.
     - name: method
       id: 'endpoint-2f7375622f6d6574686f64'
       path: /sub/method
@@ -2022,8 +2022,6 @@ application:
  </endpoint>
  <endpoint name="rest" path="/rest" decorated-name="rest" decorated-path="/rest" id="endpoint-2f72657374">
   <doc>A RESTful entry.</doc>
-  <method id="method-2f72657374-44454c455445" name="DELETE"><doc>Deletes the entry.</doc></method>
-  <method id="method-2f72657374-474554" name="GET"><doc>Gets the current value.</doc></method>
   <method id="method-2f72657374-504f5354" name="POST">
    <doc>Creates a new entry.</doc>
    <param default="4096" id="param-2f726573743f5f6d6574686f643d504f5354-73697a65" name="size" optional="True" type="int">
@@ -2042,7 +2040,9 @@ application:
     <doc>The user does not have posting privileges</doc>
    </raise>
   </method>
+  <method id="method-2f72657374-474554" name="GET"><doc>Gets the current value.</doc></method>
   <method id="method-2f72657374-505554" name="PUT"><doc>Updates the value.</doc></method>
+  <method id="method-2f72657374-44454c455445" name="DELETE"><doc>Deletes the entry.</doc></method>
  </endpoint>
  <endpoint name="method" path="/sub/method" decorated-name="method" decorated-path="/sub/method" id="endpoint-2f7375622f6d6574686f64">
   <doc>This method outputs a JSON list.</doc>
@@ -2092,12 +2092,6 @@ application:
   </resource>
   <resource id="endpoint-2f72657374" path="rest">
    <pd:doc>A RESTful entry.</pd:doc>
-   <method id="method-2f72657374-44454c455445" name="DELETE">
-    <pd:doc>Deletes the entry.</pd:doc>
-   </method>
-   <method id="method-2f72657374-474554" name="GET">
-    <pd:doc>Gets the current value.</pd:doc>
-   </method>
    <method id="method-2f72657374-504f5354" name="POST">
     <pd:doc>Creates a new entry.</pd:doc>
     <request>
@@ -2120,8 +2114,14 @@ application:
      </fault>
     </response>
    </method>
+   <method id="method-2f72657374-474554" name="GET">
+    <pd:doc>Gets the current value.</pd:doc>
+   </method>
    <method id="method-2f72657374-505554" name="PUT">
     <pd:doc>Updates the value.</pd:doc>
+   </method>
+   <method id="method-2f72657374-44454c455445" name="DELETE">
+    <pd:doc>Deletes the entry.</pd:doc>
    </method>
   </resource>
   <resource id="endpoint-2f7375622f6d6574686f64" path="sub/method">
