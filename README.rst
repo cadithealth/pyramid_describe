@@ -967,7 +967,6 @@ Format Options
   * orientation
   * no-outline
   * print-media-type
-  * disable-plugins
   * zoom
   * javascript-delay
   * disable-javascript
