@@ -1,3 +1,39 @@
+- detect :doc.link:`...` links that don't have a target and fail or report
+  error
+
+- should the filters *augment* instead of *override* the system-defaults?
+  ==> make it configurable?
+
+- create a setting to auto-filter content based on labels, eg:
+    labels: !internal ?public # == NOT `internal`, OPTIONAL `public`
+
+- why are the pdfkit options being inserted into the HTML (instead of
+  only in the HTML-for-PDF)?
+
+- create a `Entry.labels` aadict that contains docorators
+  ==> the value should be either True/False or the parameter in parenthesis
+      if parenthesized.
+  ==> make these go back and forth between Entry.classes prefixed with `doc-`...
+
+- add ``nullable`` as known flag to parameters
+
+- make the Dispatcher.walk() use generators instead of recursion...
+  ==> reduces stack
+  ==> **AND** could be used to solve the RestController issue #2 more elegantly
+
+- add support for EPUB. model after:
+    https://bitbucket.org/firesock/epubc/
+
+- get rid of duplicate ids... for example, when two endpoints have
+  the same-name parameter... you get:
+
+    System Message: INFO/1 (application.rst, line 609); backlink
+    Duplicate implicit target name: "username".
+
+- when rendering rst *for end user consumption*, `:doc.*:` (and any
+  other custom rendering instructions) must be converted to standard
+  rST...
+
 - in order to reduce verbosity, `:doc.copy:...:` should:
     - copy for structured data output (YAML, WADL, etc)
     - link for text output (HTML, etc)
@@ -36,6 +72,9 @@
                 |-- ...
                 `-- ...
 
+  ==> even better, don't restrict this algorithm just to the root,
+      but apply it to any non-leaf node with just one sub-branch.
+
 - force 'format' to lower case?... prolly - but where?
 
 - make `DescriberController.formattext_html` try to load docutils, and
@@ -51,10 +90,14 @@
   class instead of by instance?
 
 - remove the inconsistency between filters receiving `data`
-  vs. `options`...
+  vs. `options` vs. `stage` etc...
 
 - rename `data`, `context`, `proc` ==> `stage` (it's the best i could
   come up with)
+
+- make the filters receive dup'd structures, so they are
+  free to either modify the passed-in structure or return
+  a whole new one ==> and document it!
 
 - when a numpydoc section is :doc.copy:'d, the referenced sections
   show up *before* any locally defined sections... oops. eg:
