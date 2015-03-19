@@ -30,7 +30,8 @@ FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'yaml', 'xml')
 try:
   import pdfkit
   FORMATS += ('pdf',)
-except ImportError: pass
+except ImportError:
+  pdfkit = None
 
 #------------------------------------------------------------------------------
 def ccc(name):
@@ -814,8 +815,10 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def render_pdf(self, data):
+    if not pdfkit:
+      raise ValueError('pdfkit not available')
     html = self.render(data, format='html').decode('UTF-8')
-    pdf  = pdfkit.from_string(html, False, options={'quiet': ''})
+    pdf  = pdfkit.from_string(html, False, options={'quiet': None})
     if len(pdf.strip()) <= 0:
       raise ValueError(
         'pdfkit failed to generate a PDF - usually a "pdfkit.options" problem')
