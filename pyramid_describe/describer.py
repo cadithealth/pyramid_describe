@@ -24,8 +24,9 @@ from .i18n import _
 
 log = logging.getLogger(__name__)
 
-DEFAULT = 'pyramid_describe:DEFAULT'
-FORMATS = ('html', 'txt', 'rst', 'json', 'wadl', 'yaml', 'xml')
+DEFAULT   = 'pyramid_describe:DEFAULT'
+FORMATS   = ('html', 'txt', 'rst', 'json', 'wadl', 'yaml', 'xml')
+METHORDER = ('post', 'get', 'put', 'delete')
 
 try:
   import pdfkit
@@ -124,7 +125,7 @@ class DescriberData(adict):
         fullset.extend(reversed(toadd))
       fullset.append(entry)
       if entry.isRest and entry.isController and entry.methods:
-        for method in sorted(entry.methods, key=lambda e: e.name):
+        for method in entry.methods:
           method._dreal = True
           fullset.append(method)
     entries = fullset
@@ -156,6 +157,17 @@ def tocallables(spec, attr):
   return [
     e if callable(e) else getattr(e, attr)
     for e in ret]
+
+#------------------------------------------------------------------------------
+def methodSort(methods):
+  methods = [m.lower() for m in methods]
+  def _sort(method):
+    method = method.name.lower()
+    try:
+      return (0, methods.index(method))
+    except ValueError:
+      return (1, method)
+  return _sort
 
 #------------------------------------------------------------------------------
 class Describer(object):
@@ -382,6 +394,9 @@ class Describer(object):
   def getFilteredEndpoints(self, options):
     for entry in self.getCachedEndpoints(options):
       if entry.methods:
+
+        #HEA
+
         entry.methods = filter(None, [
           runFilters(options.efilters, e, options)
           for e in entry.methods])
@@ -422,11 +437,13 @@ class Describer(object):
         log.exception('invalid target for pyramid-describe: %r', options.view)
         raise TypeError(_('the URL "{}" does not point to a pyramid_controllers.Controller', options.root))
 
+    mskey = methodSort(METHORDER)
     for entry in self._walkEntries(options, None):
       if entry.methods:
         entry.methods = filter(None, [
           runFilters(options.eparsers, e, options)
           for e in entry.methods])
+        entry.methods = sorted(entry.methods, key=mskey)
       entry = runFilters(options.eparsers, entry, options)
       if entry:
         yield entry
@@ -506,7 +523,7 @@ class Describer(object):
           for spec in getattr(handler, options.dispatcher.PCATTR).index
           if spec.forceSlash or ( spec.forceSlash is not False
                                   and options.dispatcher.defaultForceSlash )
-          ])
+        ])
     return ret
 
   #----------------------------------------------------------------------------
@@ -514,24 +531,26 @@ class Describer(object):
     'Converts an uninstantiated class to an entry.'
     if not options.showDynamic:
       return None
-    ret = Entry(name         = name,
-                parent       = parent,
-                view         = klass,
-                isController = True,
-                isEndpoint   = True,
-                isDynamic    = True,
-                )
+    ret = Entry(
+      name         = name,
+      parent       = parent,
+      view         = klass,
+      isController = True,
+      isEndpoint   = True,
+      isDynamic    = True,
+    )
     return self.decorateEntry(options, ret)
 
   #----------------------------------------------------------------------------
   def method2entry(self, options, name, method, parent):
     'Converts an object method to an entry.'
-    ret = Entry(name         = name,
-                parent       = parent,
-                view         = method,
-                isController = False,
-                isEndpoint   = True,
-                )
+    ret = Entry(
+      name         = name,
+      parent       = parent,
+      view         = method,
+      isController = False,
+      isEndpoint   = True,
+    )
     if parent and isinstance(parent.view, RestController) \
         and name in options.restVerbs:
       if not options.showRest:
@@ -810,7 +829,7 @@ class Describer(object):
   def render_html(self, data):
     text = self.render(data, format='rst', override_options=dict({
       'rstMax': True,
-      }))
+    }))
     return rst.rst2html(data, text)
 
   #----------------------------------------------------------------------------
