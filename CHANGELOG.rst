@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.4.1
+======
+
+* Modified display of controller methods to be sorted first
+  semantically, then alphabetically (with customizability)
+* "doc.endpoint :link:" directives now use separate "matched" flag
+
+
 v0.4.0
 ======
 
