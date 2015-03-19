@@ -21,9 +21,8 @@ def read(*parts, **kw):
 
 test_dependencies = [
   'nose                 >= 1.3.0',
-  'coverage             >= 3.6',
+  'coverage             >= 3.5.3',
   'WebTest              >= 1.4.0',
-  'PyYAML               >= 3.10',
   'pdfkit               >= 0.4.1',
   'pxml                 >= 0.2.10',
 ]
@@ -32,7 +31,7 @@ dependencies = [
   'distribute           >= 0.6.24',
   'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
-  'pyramid-controllers  >= 0.3.18',
+  'pyramid-controllers  >= 0.3.21',
   'pyramid-iniherit     >= 0.1.7',
   'six                  >= 1.6.0',
   'docutils             >= 0.10',
