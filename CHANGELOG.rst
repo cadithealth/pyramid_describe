@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.4.3
+======
+
+* Corrected `figure` override attributes
+
+
 v0.4.2
 ======
 
