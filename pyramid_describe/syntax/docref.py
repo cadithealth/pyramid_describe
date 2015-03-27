@@ -154,6 +154,7 @@ def resolvePath(path, node):
 
 #------------------------------------------------------------------------------
 class pyrdesc_doc_link(nodes.reference): pass
+textrole_doc_link = pyrdesc_doc_link
 roles.register_generic_role('doc.link', pyrdesc_doc_link)
 
 #------------------------------------------------------------------------------
@@ -231,6 +232,7 @@ HTMLTranslator.depart_pyrdesc_doc_link = pyrdesc_doc_link_html_depart
 
 #------------------------------------------------------------------------------
 class pyrdesc_doc_copy(nodes.reference): pass
+textrole_doc_copy = pyrdesc_doc_copy
 roles.register_generic_role('doc.copy', pyrdesc_doc_copy)
 
 #------------------------------------------------------------------------------

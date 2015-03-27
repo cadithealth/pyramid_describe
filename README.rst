@@ -480,6 +480,17 @@ are provided:
   import is tried. If this succeeds, it is either called (if callable)
   with no arguments or cast to a string with ``str(symbol)``.
 
+Note that sometimes it useful to have aliases to above
+text-roles. This can be achieved by registering the alias text-roles.
+The following will alias ``api`` to ``doc.link``:
+
+.. code-block:: python
+
+  from docutils.parsers.rst import roles
+  from pyramid_describe.syntax.docref import textrole_doc_link
+
+  roles.register_generic_role('api', textrole_doc_link)
+
 
 Options
 =======
@@ -649,8 +660,7 @@ constructors, the prefix is left off. The following options exist:
 
   Parsers are passed two parameters: an `entry` object (see
   pyramid_describe.entry.Entry for detailed attributes) and an
-  `options` dictionary. The latter has many interesting attributes,
-  including a reference to the current `request`.
+  `options` dictionary.
 
   Note that the `entry` object may represent either a single method of
   an endpoint, or the entire endpoint. The methods will be sent
@@ -662,6 +672,11 @@ constructors, the prefix is left off. The following options exist:
   means that it should only be sensitive to the data in the actual
   entry itself, not the current request. For that, see the
   `entries.filters` option.
+
+  TODO: although the `options` object currently includes a reference
+  to the current `request`, this should not be assumed -- it will
+  likely be removed as entry parsing (but not rendering) may be done
+  pro-actively at some point (i.e. when there is no request).
 
   Each parser must be a callable; if it is not, then the object's
   ``parser`` attribute will be tried instead. This allows the option
