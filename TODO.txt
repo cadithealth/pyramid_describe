@@ -1,3 +1,17 @@
+- make the Entry object in entries.parsers support the mode where it
+  has both a plain-text `.doc` and an rST `.rstdoc`, and it
+  dynamically converts on demand (and expunges on `set`)... that way
+  whatever you need is available...
+
+- switch default `doc` encoding to UTF-8 (with option to override)
+  so that something like this can be in the docstrings::
+
+    Details in § `Foo Section`_.
+
+  or submit patch to docutils that allows this:
+
+    Details in :unicode:`U+000A7` `Foo Section`_.
+
 - detect :doc.link:`...` links that don't have a target and fail or report
   error
 
