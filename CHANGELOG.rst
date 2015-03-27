@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.4.2
+======
+
+* Added support for `image` and `figure` directives
+* Added documentation on aliasing doc.* directives
+
+
 v0.4.1
 ======
 
