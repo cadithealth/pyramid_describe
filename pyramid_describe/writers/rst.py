@@ -564,21 +564,24 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self._putImage(node)
 
   #----------------------------------------------------------------------------
-  def _putImage(self, node, directive='image'):
+  def _putImage(self, node, directive='image', override_attributes=None):
     self.output.emptyline()
     self.output.append('.. {name}:: {uri}'.format(
       name = directive,
       uri  = rstEscape(node.get('uri'), context='para')
     ))
     self.output.newline()
-    for attr in sorted(node.attributes.keys()):
+    attributes = dict(node.attributes.items())
+    if override_attributes:
+      attributes.update(override_attributes)
+    for attr in sorted(attributes.keys()):
       if attr in ('uri', 'ids', 'backrefs', 'dupnames', 'classes', 'names'):
         continue
       self.output.append('{indent}:{name}: {content}'.format(
         indent  = self.settings.indent,
         name    = rstEscape(attr, context=':'),
         # todo: revisit rstEscape!... (and def. this 'para' context...)
-        content = rstEscape(node.get(attr), context='para'),
+        content = rstEscape(attributes.get(attr), context='para'),
       ))
       self.output.newline()
     self.output.newline()
@@ -591,7 +594,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
   def visit_figure(self, node):
     if not node.children or node.children[0].tagname != 'image':
       raise ValueError('figure without image')
-    self._putImage(node.children[0], directive='figure')
+    self._putImage(
+      node.children[0], directive='figure', override_attributes=node.attributes)
     self._pushOutput()
 
   #----------------------------------------------------------------------------

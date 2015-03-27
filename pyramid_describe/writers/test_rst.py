@@ -719,6 +719,7 @@ A paragraph.
 A paragraph.
 
 .. figure:: /path/to/a/figure.png
+  :align: center
   :alt: it's just a figure
 
   A Caption!
