@@ -682,6 +682,64 @@ section 1.2.
 '''
     self.assertMultiLineEqual(self.rt(src), chk)
 
+  #----------------------------------------------------------------------------
+  def test_image(self):
+    src = '''\
+A paragraph.
+
+.. image:: /path/to/an/image.png
+  :alt: it's just an image
+'''
+    chk = src.replace('\n  ', '\n    ')
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  # todo: also test inline images, eg:
+  #
+  #       this is some |text| (that was an icon)
+  #
+  #       .. |text| image:: text.png
+  #
+  #----------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------
+  def test_figure_bare(self):
+    src = '''\
+A paragraph.
+
+.. figure:: /path/to/a/figure.png
+  :alt: it's just a figure
+'''
+    chk = src.replace('\n  ', '\n    ')
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_figure_caption(self):
+    src = '''\
+A paragraph.
+
+.. figure:: /path/to/a/figure.png
+  :alt: it's just a figure
+
+  A Caption!
+
+  And a **LEGEND**.
+'''
+    chk = src.replace('\n  ', '\n    ')
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  # todo: test that the figure legend can take this...
+  #
+  # +-----------------------+-----------------------+
+  # | Symbol                | Meaning               |
+  # +=======================+=======================+
+  # | .. image:: tent.png   | Campground            |
+  # +-----------------------+-----------------------+
+  # | .. image:: waves.png  | Lake                  |
+  # +-----------------------+-----------------------+
+  # | .. image:: peak.png   | Mountain              |
+  # +-----------------------+-----------------------+
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------

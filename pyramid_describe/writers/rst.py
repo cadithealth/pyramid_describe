@@ -22,7 +22,8 @@ plaintexturi_cre = re.compile(
   + '|'.join([re.escape(s) for s in schemes.keys()])
   + '):'
   + r'([A-Za-z0-9_.~!*\'();:@&=+$,/?#[\]-]*)'
-  + '$')
+  + '$'
+)
 
 #------------------------------------------------------------------------------
 # TODO: all calls to `rstEscape` need to be revisited...
@@ -93,7 +94,7 @@ class Writer(writers.Writer):
       ['--explicit-title'],
       {'dest': 'explicit_title', 'action': 'store_true',
        'default': False}),
-     ),)
+    ),)
 
   config_section = 'rst writer'
   config_section_dependencies = ('writers',)
@@ -241,7 +242,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
     'substitution_reference'          : ('|{}|',     None),
     'reference'                       : ('{}_',      rstTicks),
     'anonymous_reference'             : ('{}__',     rstTicks),
-    }
+  }
 
   #----------------------------------------------------------------------------
   def __init__(self, document):
@@ -336,7 +337,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output.append('`{text} <#{refuri}>`__'.format(
       text   = text,
       refuri = node['refid'],
-      ))
+    ))
     self.output.separator()
 
   #----------------------------------------------------------------------------
@@ -548,12 +549,58 @@ class RstTranslator(nodes.GenericNodeVisitor):
       name    = rstEscape(node['name'], context=':'),
       # todo: revisit rstEscape!... (and def. this 'para' context...)
       content = rstEscape(node['content'], context='para'),
-      ))
+    ))
     self.output.newline()
 
   #----------------------------------------------------------------------------
   def depart_meta(self, node):
     pass
+
+  #----------------------------------------------------------------------------
+  def visit_image(self, node):
+    # todo: generalize this...
+    if node.parent and node.parent.tagname in ('figure',):
+      return
+    self._putImage(node)
+
+  #----------------------------------------------------------------------------
+  def _putImage(self, node, directive='image'):
+    self.output.emptyline()
+    self.output.append('.. {name}:: {uri}'.format(
+      name = directive,
+      uri  = rstEscape(node.get('uri'), context='para')
+    ))
+    self.output.newline()
+    for attr in sorted(node.attributes.keys()):
+      if attr in ('uri', 'ids', 'backrefs', 'dupnames', 'classes', 'names'):
+        continue
+      self.output.append('{indent}:{name}: {content}'.format(
+        indent  = self.settings.indent,
+        name    = rstEscape(attr, context=':'),
+        # todo: revisit rstEscape!... (and def. this 'para' context...)
+        content = rstEscape(node.get(attr), context='para'),
+      ))
+      self.output.newline()
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def depart_image(self, node):
+    pass
+
+  #----------------------------------------------------------------------------
+  def visit_figure(self, node):
+    if not node.children or node.children[0].tagname != 'image':
+      raise ValueError('figure without image')
+    self._putImage(node.children[0], directive='figure')
+    self._pushOutput()
+
+  #----------------------------------------------------------------------------
+  def depart_figure(self, node):
+    text = self._popOutput().data(indent=self.settings.indent, notrail=True)
+    if text.strip():
+      self.output.emptyline()
+      self.output.append(text)
+    self.output.newline()
 
   #----------------------------------------------------------------------------
   def visit_bullet_list(self, node): pass
@@ -661,7 +708,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
   # def depart_substitution_reference(self, node): ...
 
   #----------------------------------------------------------------------------
-  # TODO: this table rendering needs to be considerable improved!...
+  # TODO: this table rendering needs to be considerably improved!...
   #----------------------------------------------------------------------------
 
   #----------------------------------------------------------------------------
