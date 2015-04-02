@@ -14,7 +14,7 @@ from docutils.utils.urischemes import schemes
 #------------------------------------------------------------------------------
 # TODO: these regex's... their necessity needs to be re-evaluated...
 
-enumlistfmt_re = re.compile(
+enumlistfmt_cre = re.compile(
   r'^\(?([0-9]+|[a-z]|[ivxlcdm]+)[.)]\s', flags=re.IGNORECASE)
 
 plaintexturi_cre = re.compile(
@@ -56,7 +56,7 @@ def rstEscape(text, context=None):
       and not re.match('a-zA-Z0-9', text[0]):
     text = ( '\\' + text[0] ) * len(text)
   else:
-    if enumlistfmt_re.match(text):
+    if enumlistfmt_cre.match(text):
       text = '\\' + text
   return text
 
