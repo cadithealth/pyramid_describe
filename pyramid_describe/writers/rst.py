@@ -616,7 +616,18 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def depart_list_item(self, node):
-    blt  = node.parent.get('bullet', '*')
+    if isinstance(node.parent, nodes.bullet_list):
+      blt = node.parent.get('bullet', '*')
+    elif isinstance(node.parent, nodes.enumerated_list):
+      # todo: be sensitive to `node.parent.get('enumtype')`...
+      blt = str(node.parent.children.index(node) + 1)
+      blt += node.parent.get('suffix', '.')
+    else:
+      # TODO: i *should* throw:
+      #         raise ValueError('unknown list type: %r' % (node.parent,))
+      #       but because of the issue in pyramid_describe/render.py:renderDocEndpoint
+      #       i can't... fix!
+      blt = node.parent.get('bullet', '*')
     text = self._popOutput().data(
       indent=' ' * ( len(blt) + 1 ), first_indent=False, notrail=True)
     self.output.emptyline()

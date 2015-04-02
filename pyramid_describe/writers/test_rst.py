@@ -375,6 +375,29 @@ The following `skill` levels exist:
     self.assertMultiLineEqual(self.rt(src), chk)
 
   #----------------------------------------------------------------------------
+  def test_lists_numbered(self):
+    src = '''\
+Some things that may be on your bucket list:
+
+#. Swim with dolphins (the real issue here is how
+   do you *define* dolphins? Watchers? Fishies?
+   Extra-terrestrials?)
+#. Run a marathon
+#. Write a book
+'''
+    chk = '''\
+Some things that may be on your bucket list:
+
+1. Swim with dolphins (the real issue here is how do you *define* dolphins?
+   Watchers? Fishies? Extra-terrestrials?)
+
+2. Run a marathon
+
+3. Write a book
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
   def test_problematic(self):
     src = 'this paragraph is not **clean.\n'
     chk = '''\
