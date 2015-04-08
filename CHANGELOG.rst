@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.4.4
+======
+
+* Added support for reStructuredText enumerated (numbered) lists
+
+
 v0.4.3
 ======
 
