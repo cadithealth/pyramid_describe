@@ -260,6 +260,9 @@ class RstTranslator(nodes.GenericNodeVisitor):
 
   #----------------------------------------------------------------------------
   def _pushOutput(self):
+    # todo: the problem with many of the pushOutputs is that they
+    #       don't explicitly increase the indent level (although they
+    #       will be on poOutput)...
     self.ostack.append(self.output)
     self.output = Output()
 
@@ -311,6 +314,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
   def default_visit(self, node):
     if isinstance(node, nodes.Inline):
       self._pushOutput()
+    elif isinstance(node, nodes.Admonition):
+      self.default_visit_admonition(node)
     else:
       self._putAttributes(node)
 
@@ -322,6 +327,8 @@ class RstTranslator(nodes.GenericNodeVisitor):
       if fmt[1]:
         text = fmt[1](text)
       self.output.append(fmt[0].format(text))
+    elif isinstance(node, nodes.Admonition):
+      self.default_depart_admonition(node)
 
   #----------------------------------------------------------------------------
   def visit_problematic(self, node):
@@ -444,6 +451,21 @@ class RstTranslator(nodes.GenericNodeVisitor):
         break_long_words = False,
         break_on_hyphens = False,
       )))
+    self.output.newline()
+
+  #----------------------------------------------------------------------------
+  def default_visit_admonition(self, node):
+    self._pushOutput()
+
+  #----------------------------------------------------------------------------
+  def default_depart_admonition(self, node):
+    text = self._popOutput().data(indent=self.settings.indent, notrail=True)
+    self.output.emptyline()
+    self._putAttributes(node)
+    self.output.append('.. %s::' % (node.__class__.__name__,))
+    if text.strip():
+      self.output.emptyline()
+      self.output.append(text)
     self.output.newline()
 
   #----------------------------------------------------------------------------

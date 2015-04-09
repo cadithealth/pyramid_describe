@@ -774,6 +774,32 @@ A paragraph.
   # | .. image:: peak.png   | Mountain              |
   # +-----------------------+-----------------------+
 
+  #----------------------------------------------------------------------------
+  def test_admonitions(self):
+    src = '''\
+A paragraph.
+
+.. important::
+
+  This should be read.
+
+.. note:: This is less
+  important. But still here.
+'''
+    chk = '''\
+A paragraph.
+
+.. important::
+
+    This should be read.
+
+.. note::
+
+    This is less important. But still here.
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+
 #------------------------------------------------------------------------------
 # end of $Id$
 #------------------------------------------------------------------------------
