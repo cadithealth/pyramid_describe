@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.4.5
+======
+
+* Added support for reStructuredText admonitions (attention, caution,
+  danger, error, hint, important, note, tip, warning)
+* Fixed reStructuredText text wrapping of hyphenated words
+
+
 v0.4.4
 ======
 
