@@ -97,6 +97,16 @@ a `link with space`_.
     self.assertMultiLineEqual(self.rt(src), src)
 
   #----------------------------------------------------------------------------
+  def test_wrapping_hyphenated(self):
+    # ensure hyphenated words are not broken up... (as that does not
+    # survive round-trip parsing)
+    src = '''\
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras faucibus
+neque-non-metus dignissim.
+'''
+    self.assertMultiLineEqual(self.rt(src), src)
+
+  #----------------------------------------------------------------------------
   def test_link_embedded(self):
     src = 'a `link with space <http://example.com>`_.'
     chk = 'a `link with space <http://example.com>`_.\n'

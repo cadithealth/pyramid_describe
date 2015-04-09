@@ -6,7 +6,9 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, textwrap, curses.ascii
+import re
+import textwrap
+import curses.ascii
 from docutils import core, utils, nodes, writers
 import docutils.writers
 from docutils.utils.urischemes import schemes
@@ -436,7 +438,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
     self.output.emptyline()
     # todo: do textwrapping rules change in rST?...
     self.output.append(
-      '\n'.join(textwrap.wrap(text, width=self.settings.text_width)))
+      '\n'.join(textwrap.wrap(
+        text,
+        width            = self.settings.text_width,
+        break_long_words = False,
+        break_on_hyphens = False,
+      )))
     self.output.newline()
 
   #----------------------------------------------------------------------------
