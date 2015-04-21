@@ -47,13 +47,13 @@ TL;DR
 
 Install:
 
-.. code-block:: bash
+.. code:: bash
 
   $ pip install pyramid-describe
 
 Command-line example:
 
-.. code-block:: bash
+.. code:: bash
 
   $ pdescribe example.ini --format txt
   /                       # The application root.
@@ -81,7 +81,7 @@ and `XML <https://raw.github.com/cadithealth/pyramid_describe/master/doc/example
 
 Enable the plugin:
 
-.. code-block:: python
+.. code:: python
 
   def main(global_config, **settings):
     # ...
@@ -90,7 +90,7 @@ Enable the plugin:
 
 And make the documentation available publicly at "/describe":
 
-.. code-block:: ini
+.. code:: ini
 
    [app:main]
    describe.attach                          = /describe
@@ -108,7 +108,7 @@ Installation
 
 Install with the usual python mechanism, e.g. here with ``pip``:
 
-.. code-block:: bash
+.. code:: bash
 
   $ pip install pyramid-describe
 
@@ -129,7 +129,7 @@ Pyramid Inclusion
 Pyramid-describe can be added via standard pyramid inclusion, either
 in the INI file or directly in your `main` function. For example:
 
-.. code-block:: python
+.. code:: python
 
   def main(global_config, **settings):
     # ...
@@ -140,7 +140,7 @@ configuration options in the application settings. See the `Options`_
 section for a list of all supported options, with a short example
 here:
 
-.. code-block:: ini
+.. code:: ini
 
   [app:main]
 
@@ -179,7 +179,7 @@ the following parameters:
 
 Example:
 
-.. code-block:: python
+.. code:: python
 
   from pyramid_describe import DescribeController
 
@@ -225,7 +225,7 @@ the following attributes:
 
 Example:
 
-.. code-block:: python
+.. code:: python
 
   from pyramid_describe import Describer
 
@@ -266,7 +266,7 @@ This behavior can be disabled or extended by setting the
 employs each of these functions (see below for an in-depth
 explanation):
 
-.. code-block:: python
+.. code:: python
 
   class MyController(RestController):
 
@@ -401,7 +401,7 @@ All of the section headers that are specially processed by numpydoc
 can also be specified as lone "field list" elements. For example, the
 following two declarations are treated identically:
 
-.. code-block:: python
+.. code:: python
 
    def function_name(self, request):
      '''
@@ -411,7 +411,7 @@ following two declarations are treated identically:
      This endpoint does not take any parameters.
      '''
 
-.. code-block:: python
+.. code:: python
 
    def function_name(self, request):
      '''
@@ -484,7 +484,7 @@ Note that sometimes it useful to have aliases to above
 text-roles. This can be achieved by registering the alias text-roles.
 The following will alias ``api`` to ``doc.link``:
 
-.. code-block:: python
+.. code:: python
 
   from docutils.parsers.rst import roles
   from pyramid_describe.syntax.docref import textrole_doc_link
@@ -509,7 +509,7 @@ constructors, the prefix is left off. The following options exist:
   application router. The following example attaches two controllers
   at ``/desc-one`` and ``/desc-two``:
 
-  .. code-block:: ini
+  .. code:: ini
 
     [app:main]
     describe.prefixes = describe-one describe-two
@@ -541,7 +541,7 @@ constructors, the prefix is left off. The following options exist:
   or use the "format=EXT" query-string. Examples using the default
   settings:
 
-  .. code-block:: text
+  .. code:: text
 
     http://localhost:8080/describe/application.txt
     http://localhost:8080/describe/application.json
@@ -628,7 +628,7 @@ constructors, the prefix is left off. The following options exist:
 
   Example:
 
-  .. code-block:: ini
+  .. code:: ini
 
     describe.include = :^/api/:i :^/foo(/.*)?$:
     describe.exclude = :.*/private(/.*)?$:i
@@ -761,7 +761,7 @@ constructors, the prefix is left off. The following options exist:
 
   An example; the following configuration:
 
-  .. code-block:: ini
+  .. code:: ini
 
     describe.render.template = myapp:template/docs.mako
 
@@ -771,7 +771,7 @@ constructors, the prefix is left off. The following options exist:
   can leverage all the standard Mako syntax, as long as it outputs
   valid reStructuredText. An example template:
 
-  .. code-block:: mako
+  .. code:: mako
 
     =========================
     Application Documentation
@@ -799,7 +799,7 @@ constructors, the prefix is left off. The following options exist:
   extended by adding a format to this list and then specifying a
   template to render the format. For example:
 
-  .. code-block:: ini
+  .. code:: ini
 
     # declare support for HTML, JSON and SWF
     describe.formats = html json swf
@@ -910,7 +910,7 @@ For example, the following configuration will apply a different CSS to
 the HTML rendering based on whether the output is going to be HTML,
 PDF, or SWF:
 
-.. code-block:: ini
+.. code:: ini
 
    # the following sets the `cssPath` option for *any* HTML rendering:
    describe.format.html.default.cssPath = myapp:style/rst2html.css
@@ -970,7 +970,7 @@ Format Options
   inserted into the HTML meta tags that are instructions to the pdfkit
   processor. The default values specified by pyramid-describe are:
 
-  .. code-block:: text
+  .. code:: text
 
     {
       margin-top: 10mm,
@@ -1025,7 +1025,7 @@ Format Options
   `formatstack` option can be inspected, which will include ``'pdf'``
   during the HTML filtering. For example:
 
-  .. code-block:: python
+  .. code:: python
 
     def html_filter(doc, stage):
       if 'pdf' in stage.options.formatstack:
