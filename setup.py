@@ -28,16 +28,15 @@ test_dependencies = [
 ]
 
 dependencies = [
-  'distribute           >= 0.6.24',
   'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
-  'pyramid-controllers  >= 0.3.21',
-  'pyramid-iniherit     >= 0.1.7',
+  'pyramid-controllers  >= 0.3.24',
+  'pyramid-iniherit     >= 0.1.8',
   'six                  >= 1.6.0',
   'docutils             >= 0.10',
   'PyYAML               >= 3.10',
   'numpydoc             >= 0.4',        # => Sphinx Jinja2
-  'globre               >= 0.1.2',
+  'globre               >= 0.1.3',
 ]
 
 extras_dependencies = {
