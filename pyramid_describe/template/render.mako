@@ -1,5 +1,5 @@
 
-.. IMPORTANT:
+.. IMPORTANT::
 
   This template is currently not being used. It was just a thought on
   how default rST rendering could be converted to use mako
