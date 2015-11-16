@@ -167,7 +167,7 @@ def tocallables(spec, attr):
     return None
   ret = [resolve(e) for e in tolist(spec)]
   return [
-    e if callable(e) else getattr(e, attr)
+    e if six.callable(e) else getattr(e, attr)
     for e in ret]
 
 #------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ class Describer(object):
     options = adict(self.options[None])
     for idx in range(len(formatstack)):
       options.update(self.options.get('+'.join(formatstack[:1 + idx])))
-    if callable(context.get_options):
+    if six.callable(context.get_options):
       options.update(context.get_options(format))
     options.update(self.override[None])
     for idx in range(len(formatstack)):
@@ -408,9 +408,6 @@ class Describer(object):
   def getFilteredEndpoints(self, options):
     for entry in self.getCachedEndpoints(options):
       if entry.methods:
-
-        #HEA
-
         entry.methods = filter(None, [
           runFilters(options.efilters, e, options)
           for e in entry.methods])
