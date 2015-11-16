@@ -6,9 +6,18 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import re, logging, inspect, binascii, types, json, six, collections, yaml
-from six.moves import urllib
+import re
+import logging
+import inspect
+import binascii
+import types
+import json
+import collections
 import xml.etree.ElementTree as ET
+
+import six
+import yaml
+from six.moves import urllib
 from docutils.core import publish_doctree, publish_from_doctree
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, truthy
@@ -21,6 +30,8 @@ from .entry import Entry
 from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters, tag
 from . import rst, doctree, render
 from .i18n import _
+
+#------------------------------------------------------------------------------
 
 log = logging.getLogger(__name__)
 
