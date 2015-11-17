@@ -1,3 +1,5 @@
+- migrate from `adict` to `aadict`
+
 - make the Entry object in entries.parsers support the mode where it
   has both a plain-text `.doc` and an rST `.rstdoc`, and it
   dynamically converts on demand (and expunges on `set`)... that way
