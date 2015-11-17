@@ -25,6 +25,8 @@ from pyramid.renderers import render as pyramid_render
 from pyramid_controllers import Controller, RestController, Dispatcher
 from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_METHODS
 from pyramid_controllers.dispatcher import getDispatcherFromStack
+import asset
+from aadict import aadict
 
 from .entry import Entry
 from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters, tag
@@ -318,10 +320,12 @@ class Describer(object):
       self.options[fmt]  = extract(self.settings, 'format.' + fmt + '.default')
       self.override[fmt] = extract(self.settings, 'format.' + fmt + '.override')
     # and now load the entry parsers and filters
-    self.eparsers = tocallables(self.settings.get(
-      'entries.parsers', 'pyramid_describe.syntax.default'), 'parser')
-    self.efilters = tocallables(self.settings.get(
-      'entries.filters', None), 'filter')
+    self.eparsers = [plug.handle for plug in asset.plugins(
+      'pyramid_describe.plugins.entries.parsers',
+      self.settings.get('entries.parsers', '*'))]
+    self.efilters = [plug.handle for plug in asset.plugins(
+      'pyramid_describe.plugins.entries.filters',
+      self.settings.get('entries.filters', '*'))]
     self.render_template = self.settings.get('render.template', None)
     self.methOrderKey = methOrderKey(
       tolist(self.settings.get('methods.order', DEFAULT_METHODS_ORDER)))
@@ -406,12 +410,14 @@ class Describer(object):
 
   #----------------------------------------------------------------------------
   def getFilteredEndpoints(self, options):
+    # todo: further decorate `context`...
+    context = aadict(options=options)
     for entry in self.getCachedEndpoints(options):
       if entry.methods:
         entry.methods = filter(None, [
-          runFilters(options.efilters, e, options)
+          runFilters(options.efilters, e, context)
           for e in entry.methods])
-      entry = runFilters(options.efilters, entry, options)
+      entry = runFilters(options.efilters, entry, context)
       if entry:
         yield entry
 
@@ -447,13 +453,15 @@ class Describer(object):
       except Exception:
         log.exception('invalid target for pyramid-describe: %r', options.view)
         raise TypeError(_('the URL "{}" does not point to a pyramid_controllers.Controller', options.root))
+    # todo: further decorate `context`...
+    context = aadict(options=options)
     for entry in self._walkEntries(options, None):
       if entry.methods:
         entry.methods = filter(None, [
-          runFilters(options.eparsers, e, options)
+          runFilters(options.eparsers, e, context)
           for e in entry.methods])
         entry.methods = sorted(entry.methods, key=self.methOrderKey)
-      entry = runFilters(options.eparsers, entry, options)
+      entry = runFilters(options.eparsers, entry, context)
       if entry:
         yield entry
 
@@ -811,8 +819,8 @@ class Describer(object):
     #       ==> one of the **MAJOR** problems with this is that it
     #       means that the structure_render() output is not
     #       docoratorified!...
-    from .syntax import default, docorator
-    if default.parser in ( data.options.eparsers or [] ):
+    from .syntax import docorator
+    if docorator.parser in ( data.options.eparsers or [] ):
       doc = docorator.postParser(doc)
     # </HACK-ALERT>
 

@@ -31,12 +31,14 @@ dependencies = [
   'argparse             >= 1.2.1',
   'pyramid              >= 1.4.2',
   'pyramid-controllers  >= 0.3.24',
-  'pyramid-iniherit     >= 0.1.8',
-  'six                  >= 1.6.0',
+  'pyramid-iniherit     >= 0.1.9',
+  'six                  >= 1.6.1',
   'docutils             >= 0.10',
   'PyYAML               >= 3.10',
   'numpydoc             >= 0.4',        # => Sphinx Jinja2
   'globre               >= 0.1.3',
+  'aadict               >= 0.2.2',
+  'asset                >= 0.6.6',
 ]
 
 extras_dependencies = {
@@ -48,6 +50,13 @@ entrypoints = {
     'pdescribe          = pyramid_describe.cli:main',
     'rst2rst.py         = pyramid_describe.writers.tools_rst2rst:main',
   ],
+  'pyramid_describe.plugins.entries.parsers': [
+    'docref             = pyramid_describe.syntax.docref:parser',
+    'title              = pyramid_describe.syntax.title:parser',
+    'numpydoc           = pyramid_describe.syntax.numpydoc:parser',
+    'docorator          = pyramid_describe.syntax.docorator:parser',
+  ],
+  'pyramid_describe.plugins.entries.filters': [],
 }
 
 classifiers = [

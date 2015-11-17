@@ -32,6 +32,18 @@ def normLines(text):
 
 #------------------------------------------------------------------------------
 def parser(entry, options):
+  '''
+  This pyramid-describe entry parser plugin converts NumpyDoc
+  section titles in ``:Title:`` format into reStructuredText
+  underline format, e.g.::
+
+    :Parameters:
+
+  gets converted to::
+
+    Parameters
+    ----------
+  '''
   if not entry or not entry.doc:
     return entry
   doc = normLines(entry.doc).strip()
@@ -46,6 +58,7 @@ def parser(entry, options):
       doc = doc[: - len(lbl)] + name + '\n' + line
   entry.doc = doc
   return entry
+parser.after = 'docref'
 
 #------------------------------------------------------------------------------
 # end of $Id$

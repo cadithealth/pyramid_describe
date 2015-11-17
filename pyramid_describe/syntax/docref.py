@@ -6,13 +6,14 @@
 # copy: (C) Copyright 2014-EOT Cadit Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import six
 import os.path
+import re
+
+import six
 import docutils
 from docutils import nodes
 from docutils.parsers.rst import roles
 from docutils.writers.html4css1 import HTMLTranslator
-import re
 import pkg_resources
 
 from ..writers.rst import RstTranslator
@@ -29,15 +30,15 @@ from ..doctree import walk
 #       endpoints/methods that don't exist
 
 #------------------------------------------------------------------------------
-def parser(entry, options):
+def parser(entry, context):
   if not entry:
     return entry
-  entry.doc = resolveImports(entry.doc, entry, options)
+  entry.doc = resolveImports(entry.doc, entry, context)
   return entry
 
 #------------------------------------------------------------------------------
 docimport_cre = re.compile(':doc\.import:`([^`]+)`')
-def resolveImports(text, entry, options):
+def resolveImports(text, entry, context):
   # note: not using rST to parse the text because it may not be "rST"
   #       compliant yet... (docref.parser is called first in the
   #       chain).
@@ -46,16 +47,16 @@ def resolveImports(text, entry, options):
   if ':doc.import:' not in text:
     return text
   def _resolve(match):
-    return resolveImport(match.group(1), entry, options)
+    return resolveImport(match.group(1), entry, context)
   return docimport_cre.sub(_resolve, text)
 
 #------------------------------------------------------------------------------
-def resolveImport(spec, entry, options):
+def resolveImport(spec, entry, context):
   try:
     try:
-      return resolveImportAsset(spec, entry, options)
+      return resolveImportAsset(spec, entry, context)
     except:
-      return resolveImportSymbol(spec, entry, options)
+      return resolveImportSymbol(spec, entry, context)
   except:
     raise ValueError(
       'Invalid pyramid-describe "doc.import" target from %r: %r'
@@ -70,7 +71,7 @@ def getModuleParent(modname):
 
 #------------------------------------------------------------------------------
 pkg_cre = re.compile('^([a-z0-9._]+):', re.IGNORECASE)
-def resolveImportAsset(spec, entry, options):
+def resolveImportAsset(spec, entry, context):
   pkg = pkg_cre.match(spec)
   if not pkg:
     pkg  = getModuleParent(entry.view.__module__)
@@ -84,7 +85,7 @@ def resolveImportAsset(spec, entry, options):
   return pkg_resources.resource_string(pkg, path)
 
 #------------------------------------------------------------------------------
-def resolveImportSymbol(spec, entry, options):
+def resolveImportSymbol(spec, entry, context):
   # todo: ugh. this is yucky... there must be a better way of
   #       resolving relative module names...
   count = 0

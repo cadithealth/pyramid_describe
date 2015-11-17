@@ -22,7 +22,7 @@ required_cre = re.compile(r'(^|,)\s*required\s*(?=,|$)', flags=re.IGNORECASE)
 default_cre  = re.compile(r'(?:^|,)\s*default:?\s+([^,]*)\s*(?=,|$)', flags=re.IGNORECASE)
 
 #------------------------------------------------------------------------------
-def consumeParams(ndoc, entry, options):
+def consumeParams(ndoc, entry, context):
   nparams = ndoc['Parameters'] + ndoc['Other Parameters']
   if not nparams:
     return None
@@ -66,7 +66,7 @@ def consumeParams(ndoc, entry, options):
   return params
 
 #------------------------------------------------------------------------------
-def consumeReturns(ndoc, entry, options):
+def consumeReturns(ndoc, entry, context):
   if not ndoc['Returns']:
     return None
   ret = []
@@ -86,7 +86,7 @@ def consumeReturns(ndoc, entry, options):
   return ret
 
 #------------------------------------------------------------------------------
-def consumeRaises(ndoc, entry, options):
+def consumeRaises(ndoc, entry, context):
   if not ndoc['Raises']:
     return None
   ret = []
@@ -161,15 +161,20 @@ def denumpify(text, level=0):
   return ret
 
 #------------------------------------------------------------------------------
-def parser(entry, options):
+def parser(entry, context):
+  '''
+  This pyramid-describe entry parser plugin extracts NumpyDoc
+  documentation about parameters, return values, and exceptions
+  into structured information.
+  '''
 
   if not entry or not entry.doc:
     return entry
 
   ndoc = NumpyDocString(entry.doc)
-  entry.params  = consumeParams(ndoc, entry, options)   or entry.params
-  entry.returns = consumeReturns(ndoc, entry, options)  or entry.returns
-  entry.raises  = consumeRaises(ndoc, entry, options)   or entry.raises
+  entry.params  = consumeParams(ndoc, entry, context)   or entry.params
+  entry.returns = consumeReturns(ndoc, entry, context)  or entry.returns
+  entry.raises  = consumeRaises(ndoc, entry, context)   or entry.raises
   # todo: anything to do with 'Warns', 'Attributes', 'Methods' ?...
 
   # this re-assembles everything that was not consumed and removes
@@ -184,6 +189,7 @@ def parser(entry, options):
     entry.doc += ndoc.hackalert
 
   return entry
+parser.after = 'title'
 
 #------------------------------------------------------------------------------
 # end of $Id$

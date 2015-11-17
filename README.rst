@@ -492,6 +492,80 @@ The following will alias ``api`` to ``doc.link``:
   roles.register_generic_role('api', textrole_doc_link)
 
 
+Plugin Architecture
+===================
+
+The pyramid-describe package is being converted to use a
+plugin-oriented architecture, which uses setuptools' "entrypoints"
+mechanism to register a plugin. The following entrypoint groups are
+currently supported:
+
+* ``pyramid_describe.plugins.entries.parsers``
+
+  These plugins receive an Entry object and are intended to augment
+  its documentation in some way. For example, formal syntax
+  documentation may be extracted from the plain-text documentation. Or
+  special short-hand syntax can be converted to standard
+  reStructuredText format.
+
+  The default `entries.parsers` plugins, which implement the
+  `Documentation Conventions`_, are loaded in the following order:
+
+  #. docref : resolves documentation linking, e.g. ``:doc.link:`{TARGET}```
+  #. title : converts ``:{TITLE}:`` style NumpyDoc titles to reStructuredText
+  #. numpydoc : extracts NumpyDoc-formatted documentation to structured data
+  #. docorator : extracts ``@{LABEL}`` style documentation enhancement classes
+
+  Each entry that is selected for inclusion for rendering is first
+  passed through each parser and replaced by the return value from the
+  call. This is done for each parser consecutively. If any parser
+  returns ``None``, the entry is removed from the selection list.
+
+  Entry parser plugins receive two parameters:
+
+  * `entry` : see pyramid_describe.entry.Entry for detailed attributes.
+
+  * `context` : provides the parsing context object, whose primary
+    attribute of interest is the `options` dictionary.
+
+  Note that the `entry` object may represent either a single method of
+  an endpoint, or the entire endpoint. The methods will be sent
+  through the parser before the entire endpoint.
+
+  TODO: add documentation about `entry` and `context.options`.
+
+  The result of a parser operation is expected to be cacheable; this
+  means that it should only be sensitive to the data in the actual
+  entry itself, not the current request. For that, see the
+  `pyramid_describe.plugins.entries.filters` plugins.
+
+  TODO: although the `context.options` object currently includes a
+  reference to the current `request`, this should *NOT* be used! It
+  will eventually be removed, as entry parsing (but not rendering) may
+  be done pro-actively at some point (i.e. when there is no request).
+
+* ``pyramid_describe.plugins.entries.filters``
+
+  These plugins are identical in API to the
+  `pyramid_describe.plugins.entries.parsers` plugins, is called with
+  the same parameters, and is expected to have the same return type.
+
+  The crucial difference, however, is that the result of these plugins
+  is not expected to be cacheable. Therefore, a filter is the more
+  appropriate place to do access control: entries (or sections
+  thereof) can be removed (by returning ``None``) or modified in any
+  way (by returning a modified entry).
+
+  Note that parser and filter plugins typically work together in this
+  respect by, for example, having the parser decorate the entry with
+  classes that the filter then inspects.
+
+All plugins are loaded using the plugins loading mechanism from `asset
+<https://pypi.python.org/pypi/asset>`__ -- see the `plugin
+<https://github.com/metagriffin/asset/blob/master/doc/plugin.rst>`__
+documentation for details.
+
+
 Options
 =======
 
@@ -637,71 +711,33 @@ constructors, the prefix is left off. The following options exist:
 
   The inverse of the `include` option -- see `include` for details.
 
-* ``{PREFIX}.entries.parsers`` : list(resolve-spec), default: 'pyramid_describe.syntax.default'
+* ``{PREFIX}.entries.parsers`` : list(resolve-spec), default: '*'
 
-  This option specifies a callable (or string in python dot syntax) or
-  list thereof that modify the entries before they are rendered. These
-  parsers are intended to augment the documentation in some way. For
-  example, formal syntax documentation may be extracted from the
-  plain-text documentation. Or special short-hand syntax can be
-  converted to standard reStructuredText format.
+  This option overrides the default entry parser plugin loading, which
+  loads all registered plugins for the
+  ``pyramid_describe.plugins.entries.parsers`` entrypoint group.
+  Typically, this is used to add a custom entry parser to the
+  registered set, e.g.:
 
-  Each entry that is selected for inclusion for rendering is first
-  passed through each parser and replaced by the return value from the
-  call. This is done for each parser consecutively. If any parser
-  returns ``None``, the entry is removed from the selection list.
+  .. code:: ini
 
-  By default, the 'pyramid_describe.syntax.default' parser is applied,
-  which works as described in `Documentation Conventions`_. This
-  default parser can be disabled (by setting this option to null),
-  replaced (by setting this option to another callable), or extended
-  (by setting this option to the default and appending any custom
-  parsers to it).
+    describe.entries.parsers = +package.module.custom_parser
 
-  Parsers are passed two parameters: an `entry` object (see
-  pyramid_describe.entry.Entry for detailed attributes) and an
-  `options` dictionary.
+  See the `Plugin Architecture`_ section for details.
 
-  Note that the `entry` object may represent either a single method of
-  an endpoint, or the entire endpoint. The methods will be sent
-  through the parser before the entire endpoint.
+* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: '*'
 
-  TODO: add documentation about `entry` and `options`.
+  This option overrides the default entry filter plugin loading, which
+  loads all registered plugins for the
+  ``pyramid_describe.plugins.entries.filters`` entrypoint group.
+  Typically, this is used to add a custom entry filter to the
+  registered set, e.g.:
 
-  The result of a parser operation is expected to be cacheable; this
-  means that it should only be sensitive to the data in the actual
-  entry itself, not the current request. For that, see the
-  `entries.filters` option.
+  .. code:: ini
 
-  TODO: although the `options` object currently includes a reference
-  to the current `request`, this should not be assumed -- it will
-  likely be removed as entry parsing (but not rendering) may be done
-  pro-actively at some point (i.e. when there is no request).
+    describe.entries.filters = +package.module.custom_filter
 
-  Each parser must be a callable; if it is not, then the object's
-  ``parser`` attribute will be tried instead. This allows the option
-  to specify just the name of a module that contains a ``def
-  parser(...): ...`` function definition.
-
-* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: null
-
-  This option is identical in syntax to the `entries.parsers` option,
-  is called with the same parameters, and is expected to have the
-  same return type.
-
-  The crucial difference, however, is that the result of the filters
-  is not expected to be cacheable. Therefore, a filter is the more
-  appropriate place to do access control: entries (or sections
-  thereof) can be removed (by returning ``None``) or modified in any
-  way (by returning a modified entry).
-
-  Note that parsers and filters typically work together in this
-  respect by, for example, having the parser decorate the entry with
-  classes that the filter then inspects.
-
-  Note that there is a *separate* `filters` option that is used to
-  filter the entire output document, which is format-specific. See
-  the formatting options for details.
+  See the `Plugin Architecture`_ section for details.
 
 * ``{PREFIX}.methods.order`` : list(str), default: ['post', 'get', 'put', 'delete']
 

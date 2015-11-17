@@ -30,7 +30,22 @@ def extract(text):
     yield cls
 
 #------------------------------------------------------------------------------
-def parser(entry, options):
+def parser(entry, context):
+  '''
+  This pyramid-describe entry parser plugin extracts so-called
+  "docorators" (documentation decorators, get it? ;-) from the
+  documentation and adds them as classes to the decorated items. For
+  example::
+
+    @PUBLIC, @DEPRECATED(2.3)
+
+    This is a public, but deprecated, method.
+
+  will add the classes ``doc-public`` and ``doc-deprecated-2-3`` to
+  the entry (if the docorators appear on the first line) or the
+  current paragraph (if they appear within the non-first-paragraph
+  documentation text), or the next section
+  '''
   if not entry:
     return entry
   if entry.doc:
@@ -42,7 +57,7 @@ def parser(entry, options):
       if clist:
         item.classes = ( item.classes or [] ) + clist
   return entry
-
+parser.after = 'numpydoc'
 
 #------------------------------------------------------------------------------
 # <HACK-ALERT>
