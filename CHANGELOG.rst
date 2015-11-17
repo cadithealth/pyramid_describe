@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.4.7
+======
+
+* Moved entry parsers and filters to plugin-oriented loading
+
+
 v0.4.6
 ======
 
