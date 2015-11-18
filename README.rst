@@ -548,13 +548,17 @@ currently supported:
 
   These plugins are identical in API to the
   `pyramid_describe.plugins.entries.parsers` plugins, is called with
-  the same parameters, and is expected to have the same return type.
+  the same parameters, and is expected to have the same return type,
+  with the following critical differences:
 
-  The crucial difference, however, is that the result of these plugins
-  is not expected to be cacheable. Therefore, a filter is the more
-  appropriate place to do access control: entries (or sections
-  thereof) can be removed (by returning ``None``) or modified in any
-  way (by returning a modified entry).
+  #. The `context` parameter has an additional `context.request`
+    attribute.
+
+  #. The result of the "filter" plugins is not expected to be
+    cacheable. Therefore, a filter is the more appropriate place to do
+    access control: entries (or sections thereof) can be removed (by
+    returning ``None``) or modified in any way (by returning a
+    modified entry).
 
   Note that parser and filter plugins typically work together in this
   respect by, for example, having the parser decorate the entry with

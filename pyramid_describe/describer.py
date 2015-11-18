@@ -411,7 +411,7 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def getFilteredEndpoints(self, options):
     # todo: further decorate `context`...
-    context = aadict(options=options)
+    context = aadict(options=options, request=options.context.request)
     for entry in self.getCachedEndpoints(options):
       if entry.methods:
         entry.methods = filter(None, [
