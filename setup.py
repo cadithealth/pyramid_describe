@@ -38,7 +38,7 @@ dependencies = [
   'numpydoc             >= 0.4',        # => Sphinx Jinja2
   'globre               >= 0.1.3',
   'aadict               >= 0.2.2',
-  'asset                >= 0.6.6',
+  'asset                >= 0.6.7',
 ]
 
 extras_dependencies = {
