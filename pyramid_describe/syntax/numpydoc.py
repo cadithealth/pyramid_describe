@@ -9,7 +9,9 @@
 from __future__ import absolute_import
 
 import re
+
 from numpydoc.docscrape import NumpyDocString, Reader, dedent_lines
+import asset
 
 from ..util import adict
 from ..describer import tag
@@ -161,6 +163,7 @@ def denumpify(text, level=0):
   return ret
 
 #------------------------------------------------------------------------------
+@asset.plugin('pyramid_describe.plugins.entries.parsers', 'numpydoc', after='title')
 def parser(entry, context):
   '''
   This pyramid-describe entry parser plugin extracts NumpyDoc
@@ -189,7 +192,6 @@ def parser(entry, context):
     entry.doc += ndoc.hackalert
 
   return entry
-parser.after = 'title'
 
 #------------------------------------------------------------------------------
 # end of $Id$

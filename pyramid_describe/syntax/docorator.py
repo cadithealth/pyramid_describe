@@ -7,7 +7,9 @@
 #------------------------------------------------------------------------------
 
 import re
+
 from docutils import nodes
+import asset
 
 #------------------------------------------------------------------------------
 
@@ -30,6 +32,7 @@ def extract(text):
     yield cls
 
 #------------------------------------------------------------------------------
+@asset.plugin('pyramid_describe.plugins.entries.parsers', 'docorator', after='numpydoc')
 def parser(entry, context):
   '''
   This pyramid-describe entry parser plugin extracts so-called
@@ -57,7 +60,6 @@ def parser(entry, context):
       if clist:
         item.classes = ( item.classes or [] ) + clist
   return entry
-parser.after = 'numpydoc'
 
 #------------------------------------------------------------------------------
 # <HACK-ALERT>

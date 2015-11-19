@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from numpydoc.docscrape import NumpyDocString
+import asset
 
 #------------------------------------------------------------------------------
 _sectnames = None
@@ -31,6 +32,7 @@ def normLines(text):
   return str(text).replace('\r\n', '\n').replace('\r', '\n')
 
 #------------------------------------------------------------------------------
+@asset.plugin('pyramid_describe.plugins.entries.parsers', 'title', after='docref')
 def parser(entry, options):
   '''
   This pyramid-describe entry parser plugin converts NumpyDoc
@@ -58,7 +60,6 @@ def parser(entry, options):
       doc = doc[: - len(lbl)] + name + '\n' + line
   entry.doc = doc
   return entry
-parser.after = 'docref'
 
 #------------------------------------------------------------------------------
 # end of $Id$

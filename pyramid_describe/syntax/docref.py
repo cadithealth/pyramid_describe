@@ -15,6 +15,7 @@ from docutils import nodes
 from docutils.parsers.rst import roles
 from docutils.writers.html4css1 import HTMLTranslator
 import pkg_resources
+import asset
 
 from ..writers.rst import RstTranslator
 from ..describer import tag
@@ -30,6 +31,7 @@ from ..doctree import walk
 #       endpoints/methods that don't exist
 
 #------------------------------------------------------------------------------
+@asset.plugin('pyramid_describe.plugins.entries.parsers', 'docref')
 def parser(entry, context):
   if not entry:
     return entry
