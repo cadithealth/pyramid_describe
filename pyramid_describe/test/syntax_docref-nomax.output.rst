@@ -22,8 +22,6 @@ POST
 
 Alias of :doc.link:`PUT:/{ITEM_ID}`.
 
-:doc.copy:`PUT:/{ITEM_ID}`
-
 ''''''
 GET
 ''''''
@@ -43,5 +41,3 @@ PUT
 ''''''
 
 Update the item's current attributes.
-
-:doc.copy:`GET:/{ITEM_ID}:Returns`

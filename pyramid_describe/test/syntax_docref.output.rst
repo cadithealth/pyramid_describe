@@ -44,8 +44,6 @@ POST
 
 Alias of :doc.link:`PUT:/{ITEM_ID}`.
 
-:doc.copy:`PUT:/{ITEM_ID}`
-
 .. class:: method
 
 .. _`method-2f4954454d5f4944-474554`:
@@ -81,5 +79,3 @@ PUT
 ''''''
 
 Update the item's current attributes.
-
-:doc.copy:`GET:/{ITEM_ID}:Returns`

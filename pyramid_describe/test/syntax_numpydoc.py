@@ -53,15 +53,12 @@ class Item(RestController):
 
       Whether or not this item is available.
 
-    :doc.copy:`GET:.:Returns,Raises`
     '''
 
   @expose
   def post(self, request):
     '''
     Alias of :doc.link:`PUT:.`.
-
-    :doc.copy:`PUT:.`
     '''
 
 class Root(Controller):

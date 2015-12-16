@@ -30,16 +30,12 @@ class ItemController(RestController):
   def put(self, request):
     '''
     Update the item's current attributes.
-
-    :doc.copy:`GET:.:Returns`
     '''
 
   @expose
   def post(self, request):
     '''
     Alias of :doc.link:`PUT:.`.
-
-    :doc.copy:`PUT:.`
     '''
 
 class Root(Controller):
