@@ -6,10 +6,17 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import sys, re, json, unittest, six, pkg_resources, pxml, yaml
+import sys
+import re
+import json
+import unittest
 import xml.etree.ElementTree as ET
-from webtest import TestApp
 
+import six
+import pkg_resources
+import pxml
+import yaml
+from webtest import TestApp
 from pyramid import testing
 from pyramid.request import Request
 from pyramid.response import Response
