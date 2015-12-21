@@ -170,6 +170,13 @@ attribute for IDs.
     self.assertMultiLineEqual(self.rt(src), chk)
 
   #----------------------------------------------------------------------------
+  def test_link_anonymous_internal(self):
+    # todo: should this really work???
+    src = 'An anonymous `inlined internal link <#some-id>`__.'
+    chk = src + '\n'
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
   def test_link_anonymous_refuri(self):
     src = '''\
 An anonymous `link`__ and `link`__.

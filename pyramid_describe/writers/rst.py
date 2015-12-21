@@ -20,9 +20,9 @@ enumlistfmt_cre = re.compile(
   r'^\(?([0-9]+|[a-z]|[ivxlcdm]+)[.)]\s', flags=re.IGNORECASE)
 
 plaintexturi_cre = re.compile(
-  r'^('
+  r'^(#|('
   + '|'.join([re.escape(s) for s in schemes.keys()])
-  + '):'
+  + '):)'
   + r'([A-Za-z0-9_.~!*\'();:@&=+$,/?#[\]-]*)'
   + '$'
 )
