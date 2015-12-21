@@ -503,8 +503,12 @@ class RstTranslator(nodes.GenericNodeVisitor):
     elif node.get('anonymous') and node.get('refuri'):
       self.output.append('__ {uri}'.format(uri=rstEscape(node['refuri'])))
     elif node.get('refid'):
-      self.output.append('.. _{id}:'.format(
-        id=rstEscape(node['refid'], context='`')))
+      if node.get('anonymous'):
+        self.output.append('__ {id}_'.format(
+          id=rstEscape(node['refid'], context='`')))
+      else:
+        self.output.append('.. _{id}:'.format(
+          id=rstEscape(node['refid'], context='`')))
     else:
       raise ValueError('target without names+refuri, anon+refuri, or refid')
     self.output.newline()
@@ -548,16 +552,21 @@ class RstTranslator(nodes.GenericNodeVisitor):
               self.output.append(' <{uri}>'.format(uri=rstEscape(node.get('refuri'))))
             fmt = 'anonymous_reference'
       elif 'refid' in node:
-        text = self._popOutput().data().strip()
-        if text != node.get('name', ''):
-          self.document.reporter.warning(
-            'implicit reference text does not match reference name... ignoring ref-name')
-        if nodes.fully_normalize_name(text) \
-            not in self.document.ids[node['refid']].get('names', []):
-          self.document.reporter.error(
-            'implicit reference text does not match target name... ignoring')
-        self._pushOutput()
-        self.output.append(text)
+        refid = node['refid']
+        if refid in self.document.ids:
+          if node.get('anonymous'):
+            fmt = 'anonymous_reference'
+        else:
+          text = self._popOutput().data().strip()
+          if text != node.get('name', ''):
+            self.document.reporter.warning(
+              'implicit reference text does not match reference name... ignoring ref-name')
+          if nodes.fully_normalize_name(text) \
+              not in self.document.ids[refid].get('names', []):
+            self.document.reporter.error(
+              'implicit reference text does not match target name... ignoring')
+          self._pushOutput()
+          self.output.append(text)
       else:
         self.document.reporter.warning(
           'reference with neither ref-uri nor ref-id... ignoring')

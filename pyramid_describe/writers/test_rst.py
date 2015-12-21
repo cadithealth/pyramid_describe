@@ -170,7 +170,7 @@ attribute for IDs.
     self.assertMultiLineEqual(self.rt(src), chk)
 
   #----------------------------------------------------------------------------
-  def test_link_anonymous_reference(self):
+  def test_link_anonymous_refuri(self):
     src = '''\
 An anonymous `link`__ and `link`__.
 
@@ -183,6 +183,28 @@ An anonymous link__ and link__.
 __ http://example.com/first
 
 __ http://example.com/second
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
+  def test_link_anonymous_refid(self):
+    src = '''\
+An anonymous `link`__ to another para.
+
+__ other_
+
+.. _other:
+
+Another para.
+'''
+    chk = '''\
+An anonymous link__ to another para.
+
+__ other_
+
+.. _other:
+
+Another para.
 '''
     self.assertMultiLineEqual(self.rt(src), chk)
 
