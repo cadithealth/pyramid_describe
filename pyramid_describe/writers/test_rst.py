@@ -107,6 +107,22 @@ neque-non-metus dignissim.
     self.assertMultiLineEqual(self.rt(src), src)
 
   #----------------------------------------------------------------------------
+  def test_unique_classes(self):
+    src = '''\
+.. class:: foo
+
+.. class:: foo
+
+A para.
+'''
+    chk = '''\
+.. class:: foo
+
+A para.
+'''
+    self.assertMultiLineEqual(self.rt(src), chk)
+
+  #----------------------------------------------------------------------------
   def test_link_embedded(self):
     src = 'a `link with space <http://example.com>`_.'
     chk = 'a `link with space <http://example.com>`_.\n'
@@ -172,6 +188,7 @@ attribute for IDs.
   #----------------------------------------------------------------------------
   def test_link_anonymous_internal(self):
     # todo: should this really work???
+    #       (since there isn't an actual "some-id" ID...)
     src = 'An anonymous `inlined internal link <#some-id>`__.'
     chk = src + '\n'
     self.assertMultiLineEqual(self.rt(src), chk)

@@ -301,7 +301,7 @@ class RstTranslator(nodes.GenericNodeVisitor):
         self.output.emptyline()
     if node['classes']:
       self.output.emptyline()
-      self.output.append('.. class:: ' + ' '.join(sorted(node['classes'])))
+      self.output.append('.. class:: ' + ' '.join(sorted(set(node['classes']))))
       self.output.emptyline()
     tids = node.get('target-ids', None)
     if tids:
