@@ -38,7 +38,8 @@ dependencies = [
   'numpydoc             >= 0.4',        # => Sphinx Jinja2
   'globre               >= 0.1.3',
   'aadict               >= 0.2.2',
-  'asset                >= 0.6.7',
+  'asset                >= 0.6.9',
+  'morph                >= 0.1.2',
 ]
 
 extras_dependencies = {
@@ -50,13 +51,27 @@ entrypoints = {
     'pdescribe          = pyramid_describe.cli:main',
     'rst2rst.py         = pyramid_describe.writers.tools_rst2rst:main',
   ],
-  'pyramid_describe.plugins.entries.parsers': [
+  'pyramid_describe.plugins.entry.parsers': [
     'docref             = pyramid_describe.syntax.docref:parser',
     'title              = pyramid_describe.syntax.title:parser',
     'numpydoc           = pyramid_describe.syntax.numpydoc:parser',
     'docorator          = pyramid_describe.syntax.docorator:parser',
   ],
-  'pyramid_describe.plugins.entries.filters': [],
+  'pyramid_describe.plugins.type.parsers': [
+  ],
+  'pyramid_describe.plugins.catalog.parsers': [
+    'numpydoc           = pyramid_describe.syntax.numpydoc:catalog_parser',
+    'docorator          = pyramid_describe.syntax.docorator:catalog_parser',
+  ],
+  'pyramid_describe.plugins.entry.filters': [
+    'access             = pyramid_describe.access:entry_filter',
+  ],
+  'pyramid_describe.plugins.type.filters': [
+    'access             = pyramid_describe.access:type_filter',
+  ],
+  'pyramid_describe.plugins.catalog.filters': [
+    'access             = pyramid_describe.access:catalog_filter',
+  ],
 }
 
 classifiers = [
