@@ -3,6 +3,37 @@ ChangeLog
 =========
 
 
+v0.5.0
+======
+
+WARNING: BACKWARDS INCOMPATIBLE CHANGES!
+
+* Moved to using `asset.plugin` plugin declaration/decoration
+* Added the `request` attribute to the `context` parameter to
+  filtering plugins
+* Added declared type management (extraction, indexing, documentation,
+  and linking), with backwards incompatible changes:
+
+  * Entry.params, Entry.returns, and Entry.raises now contain a
+    `pyramid_describe.typereg.Type` reference instead of an ad-hoc
+    dict object.
+
+* Removed support for ``:doc.copy:`` rST directive (replaced by type
+  management)
+* Renamed configuration options and plugin channels
+  ``**.entries.parsers`` to ``**.entry.parsers`` and
+  ``**.entries.filters`` to ``**.entry.filters``
+* Added plugin channels:
+
+  * ``pyramid_describe.plugins.type.parsers``
+  * ``pyramid_describe.plugins.type.filters``
+  * ``pyramid_describe.plugins.catalog.parsers``
+  * ``pyramid_describe.plugins.catalog.filters``
+
+* Added support for docorator-based access control to endpoints and
+  types
+
+
 v0.4.7
 ======
 
