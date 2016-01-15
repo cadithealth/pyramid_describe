@@ -43,28 +43,112 @@ Parameters
 
 .. class:: param
 
-.. _`param-endpoint-2f707574-6e616d65`:
+.. _`param-endpoint-2f707574-64696374`:
 
 ''''''
-name
+dict
 ''''''
+
+.. class:: attr
+
+""""""
+name
+""""""
 
 .. class:: spec
 
-str
+string
 
 The object name.
 
-.. class:: doc-internal param
+.. class:: doc-internal
 
-.. _`param-endpoint-2f707574-61646d696e`:
+@INTERNAL: the name can be "foo" for an easter egg.
 
-''''''
+.. class:: attr doc-internal
+
+""""""
 admin
-''''''
+""""""
 
 .. class:: spec
 
-bool, @INTERNAL, optional, default: false
+boolean, @INTERNAL, default: ``false``
 
 Make the item visible to admins only.
+
+.. class:: attr
+
+""""""
+shape
+""""""
+
+.. class:: spec
+
+`Shape <#typereg-type-5368617065>`__
+
+.. class:: typereg
+
+.. _`section-typereg`:
+
+------
+Types
+------
+
+.. class:: doc-beta typereg-type
+
+.. _`typereg-type-5368617065`:
+
+``````
+Shape
+``````
+
+@BETA
+
+A shape.
+
+.. class:: doc-internal
+
+@INTERNAL: as generic as possible.
+
+.. class:: attr doc-internal
+
+::::::
+arg1
+::::::
+
+.. class:: spec
+
+string, @INTERNAL
+
+first arg.
+
+.. class:: attr doc-internal
+
+::::::
+arg2
+::::::
+
+.. class:: spec
+
+string, @INTERNAL
+
+@INTERNAL
+
+second arg.
+
+.. class:: attr
+
+::::::
+arg3
+::::::
+
+.. class:: spec
+
+string
+
+third arg.
+
+.. class:: doc-internal
+
+@INTERNAL: also a string.

@@ -16,13 +16,15 @@ Contents of "/"
 Endpoints
 ---------
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f4954454d5f4944`:
 
 ``````````
 /{ITEM_ID}
 ``````````
+
+@PUBLIC
 
 Manages the attributes of the selected item.
 
@@ -34,7 +36,7 @@ Manages the attributes of the selected item.
 Methods
 :::::::
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-504f5354`:
 
@@ -42,15 +44,19 @@ Methods
 POST
 ''''''
 
+@PUBLIC
+
 Alias of :doc.link:`PUT:/{ITEM_ID}`.
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-474554`:
 
 ''''''
 GET
 ''''''
+
+@PUBLIC
 
 Get the current attributes.
 
@@ -62,20 +68,16 @@ Get the current attributes.
 Returns
 """""""
 
-.. class:: return
+JSON data (unspecified structure).
 
-.. _`return-method-2f4954454d5f4944-474554-4a534f4e20646174612e`:
-
-~~~~~~~~~~
-JSON data.
-~~~~~~~~~~
-
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-505554`:
 
 ''''''
 PUT
 ''''''
+
+@PUBLIC
 
 Update the item's current attributes.

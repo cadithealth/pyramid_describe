@@ -25,6 +25,7 @@ class TestDocref(test_helpers.TestHelper):
         'index-redirect' : 'false',
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
+        'access.control' : '*',
       })
     self.assertResponse(
       self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'), 200,
@@ -41,6 +42,7 @@ class TestDocref(test_helpers.TestHelper):
         'index-redirect' : 'false',
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
+        'access.control' : '*',
       })
     self.assertResponse(
       self.send(root, '/desc?showLegend=false&showMeta=false'), 200,
@@ -57,6 +59,7 @@ class TestDocref(test_helpers.TestHelper):
         'index-redirect' : 'false',
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
+        'access.control' : '*',
       })
     self.assertResponse(
       self.send(root, '/desc?showLegend=false'), 200,

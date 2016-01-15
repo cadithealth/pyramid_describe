@@ -11,28 +11,45 @@ import re
 from docutils import nodes
 import asset
 
+from ..typereg import Type, TypeRef
+
 #------------------------------------------------------------------------------
 
 docorator_cre   = re.compile(r'@([A-Z0-9_.-]+)(\([^)]*\))?', re.IGNORECASE)
 notalphanum_cre = re.compile(r'[^A-Z0-9]+', re.IGNORECASE)
 
 #------------------------------------------------------------------------------
-def extract(text):
+def _extract(text):
+  # todo: this will extract *all* the docorators in `text`,
+  #       not just the ones at the beginning... fix!
+  # TODO: the `docorator_cre` RE should *not* match 'foo@bar'...
+  #       (but currently does)
   for match in docorator_cre.finditer(text):
-    # todo: make this 'doc-' prefix configurable...
-    cls = notalphanum_cre.sub('-', 'doc-' + match.group(1).lower())
-    if cls.endswith('-'):
-      cls = cls[:-1]
-    yield cls
-    if not match.group(2):
-      continue
-    cls = notalphanum_cre.sub('-', 'doc-' + match.group(0)[1:].lower())
-    if cls.endswith('-'):
-      cls = cls[:-1]
-    yield cls
+    yield match.group(0)
 
 #------------------------------------------------------------------------------
-@asset.plugin('pyramid_describe.plugins.entries.parsers', 'docorator', after='numpydoc')
+def _docorator2classes(label):
+  label = label.lower()
+  if '(' in label:
+    cls = notalphanum_cre.sub('-', 'doc-' + label.split('(', 1)[0])
+    if cls.endswith('-'):
+      cls = cls[:-1]
+    yield cls
+  cls = notalphanum_cre.sub('-', 'doc-' + label)
+  if cls.endswith('-'):
+    cls = cls[:-1]
+  yield cls
+
+#------------------------------------------------------------------------------
+def extract(text, raw=False):
+  lbls = sorted(set(_extract(text)))
+  clss = sorted(set([c for l in lbls for c in _docorator2classes(l)]))
+  if raw:
+    return (lbls, clss)
+  return clss
+
+#------------------------------------------------------------------------------
+@asset.plugin('pyramid_describe.plugins.entry.parsers', 'docorator', after='numpydoc')
 def parser(entry, context):
   '''
   This pyramid-describe entry parser plugin extracts so-called
@@ -47,64 +64,98 @@ def parser(entry, context):
   will add the classes ``doc-public`` and ``doc-deprecated-2-3`` to
   the entry (if the docorators appear on the first line) or the
   current paragraph (if they appear within the non-first-paragraph
-  documentation text), or the next section
+  documentation text).
   '''
   if not entry:
     return entry
   if entry.doc:
     entry.classes = ( entry.classes or [] ) \
-      + list(set(extract(entry.doc.strip().split('\n\n')[0])))
-  for attr in 'params', 'returns', 'raises':
-    for item in ( getattr(entry, attr, []) or [] ):
-      clist = list(set(extract(item.type or '')))
-      if clist:
-        item.classes = ( item.classes or [] ) + clist
+      + extract(entry.doc.strip().split('\n\n')[0])
   return entry
 
 #------------------------------------------------------------------------------
-# <HACK-ALERT>
-# TODO: remove this hack; basically, the docorator parsing is being
-#       done here *again* in order to avoid needing to parse (and thus
-#       render) the rST during `entries.parsers` handling... ugh. some
-#       possible solutions:
-#         * use doctree as the native format for the describer (ugh)
-#         * do a rstParse-analyze-rstRender roundtrip on the docs (ugh)
-#         * make the entry.doc be a doctree object, changing the API (ugh)
-#       the last is probably the best, but yuck. maybe it can be an
-#       encapsulated object that auto-renders itself if accessed as a
-#       string (and invalidates the doctree if set to a string). but
-#       that increases the roundtrips for all unaware callables. (ugh)
-#
-#       ===> NOTE: numpydoc's parser() is already parsing the
-#       document...  is there perhaps a way to share that here?...
-#
-# </HACK-ALERT>
-def postParser(doc):
-  walktree(doc)
-  return doc
-def walktree(node):
-  if not node or not isinstance(node, nodes.Node):
+@asset.plugin('pyramid_describe.plugins.catalog.parsers', 'docorator', after='numpydoc')
+def catalog_parser(catalog, context):
+  for tname in catalog.typereg.typeNames():
+    _docorateType(catalog.typereg, catalog.typereg.get(tname), force=True)
+  for endpoint in catalog.endpoints:
+    for method in endpoint.methods or []:
+      _docorateEntry(catalog.typereg, method)
+    _docorateEntry(catalog.typereg, endpoint)
+  return catalog
+
+#------------------------------------------------------------------------------
+def _docorateEntry(typereg, entry):
+  for attr in ('params', 'returns', 'raises'):
+    _docorateType(typereg, getattr(entry, attr, None))
+  entry.doc = _docorateText(entry.doc, skipfirst=True)
+
+#------------------------------------------------------------------------------
+def _docorateType(typereg, typ, force=False):
+  if not typ:
     return
-  decorate(node)
-  for snode in node:
-    walktree(snode)
-def decorate(node):
-  if not isinstance(node, nodes.paragraph) \
-      or not node.astext().startswith('@'):
+  if isinstance(typ, Type) and not force and typ is typereg.get(typ.name):
     return
-  if node.parent and isinstance(node.parent, nodes.section):
-    children = node.parent.children
-    if ( len(children) > 0 and node is children[0] ) \
-        or ( len(children) > 1 and node is children[1]
-             and isinstance(children[0], nodes.title) ):
-      return
-  # todo: this will extract *all* the docorators in the paragraph,
-  #       not just the ones at the beginning... fix!
-  clist = list(set(extract(node.astext())))
-  if clist:
-    if 'classes' not in node.attributes:
-      node.attributes['classes'] = []
-    node.attributes['classes'].extend(clist)
+  if isinstance(typ, TypeRef):
+    _docorateType(typereg, typ.type)
+  if typ.doc:
+    docorators, classes = extract(typ.doc.strip().split('\n\n')[0], raw=True)
+    if docorators:
+      # todo: this may be problematic if the docorator has special chars...
+      if isinstance(typ, TypeRef):
+        # todo: *ideally*, these docorators would also be removed from
+        #       the text if they are the only text in the first
+        #       line...
+        if not typ.params:
+          typ.params = dict()
+        for doco in docorators:
+          typ.params[doco] = True
+      # note: `Type`s don't have any params, so primary docorators are
+      #       only promoted to `meta.classes`.
+    if classes:
+      if isinstance(typ, TypeRef):
+        if not typ.params:
+          typ.params = dict()
+        typ.params['classes'] = sorted(set(typ.params.get('classes', []) + classes))
+      else:
+        typ.meta.classes = sorted(set((typ.meta.classes or []) + classes))
+  typ.doc = _docorateText(typ.doc, skipfirst=True)
+  for sub in typ.children:
+    _docorateType(typereg, sub)
+  if typ.params:
+    classes = []
+    for key, val in typ.params.items():
+      if val is True and key.startswith('@'):
+        classes += extract(key)
+    if classes:
+      typ.params['classes'] = sorted(set(typ.params.get('classes', []) + classes))
+
+#------------------------------------------------------------------------------
+def _docorateText(text, skipfirst=False):
+  if not text:
+    return text
+  # todo: this is very primitive... *ideally* this would perform
+  #       an rst-parse + rst-render roundtrip, *BUT*... there are
+  #       significant issues with parsing an rst segment that may
+  #       have internal links to other fragments not in `text`
+  #       (because they are elsewhere in the documentation).
+  # todo: also, it has the problem of not being idempotent, i.e.
+  #       if called repeatedly on the same text, the text will
+  #       have the classes added multiple times.
+  # todo: what about indented sections?...
+  while '\n\n\n' in text:
+    text = text.replace('\n\n\n', '\n\n')
+  parts = text.split('\n\n')
+  ret   = []
+  if skipfirst:
+    ret.append(parts.pop(0))
+  for part in parts:
+    if part.startswith('@'):
+      classes = extract(part)
+      if classes:
+        ret.append('.. class:: ' + ' '.join(classes))
+    ret.append(part)
+  return '\n\n'.join(ret)
 
 #------------------------------------------------------------------------------
 # end of $Id$

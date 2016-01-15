@@ -38,14 +38,14 @@ class TestPlugins(unittest.TestCase):
   #----------------------------------------------------------------------------
   def test_parsers_standard(self):
     self.assertEqual(
-      [p.name for p in asset.plugins('pyramid_describe.plugins.entries.parsers')],
+      [p.name for p in asset.plugins('pyramid_describe.plugins.entry.parsers')],
       ['docref', 'title', 'numpydoc', 'docorator'])
 
   #----------------------------------------------------------------------------
   def test_parsers_extra_asset(self):
     self.assertEqual(
       [p.name for p in asset.plugins(
-        'pyramid_describe.plugins.entries.parsers',
+        'pyramid_describe.plugins.entry.parsers',
         '+pyramid_describe.test_helpers.plugin_test_symbol',
       )],
       ['docref', 'title', 'numpydoc',

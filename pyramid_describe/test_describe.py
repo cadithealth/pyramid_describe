@@ -32,6 +32,7 @@ from pyramid_controllers.util import getVersion
 from pyramid_describe.util import adict
 from pyramid_describe.rst import AsIs
 from pyramid_describe.controller import DescribeController
+from pyramid_describe.typereg import Type, TypeRef
 
 #------------------------------------------------------------------------------
 def extrafeature(name):
@@ -43,10 +44,11 @@ def extrafeature(name):
 
 #------------------------------------------------------------------------------
 # make the XML namespace output a bit easier to grok...
-ET.register_namespace('wadl', 'http://research.sun.com/wadl/2006/10')
+ET.register_namespace('wadl', 'http://wadl.dev.java.net/2009/02')
 ET.register_namespace('xsd',  'http://www.w3.org/2001/XMLSchema')
 ET.register_namespace('xsi',  'http://www.w3.org/2001/XMLSchema-instance')
-ET.register_namespace('pd',   'http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc')
+ET.register_namespace('doc',  'http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc')
+ET.register_namespace('lh',   'http://localhost')
 
 class Rest(RestController):
   'A RESTful entry.'
@@ -92,26 +94,26 @@ class SimpleRoot(Controller):
   unknown = Unknown
 
 def docsEnhancer(entry, options):
+  entry.classes = ['doc-public']
   if entry and entry.path == '/swi':
-    entry.classes = ['sub-with-index']
+    entry.classes += ['sub-with-index']
     return entry
   if not entry or entry.path != '/rest?_method=POST':
     return entry
-  entry.classes = ['post-is-not-put', 'fake-docs-here']
-  entry.params = (
-    adict(id='param-2f726573743f5f6d6574686f643d504f5354-73697a65', name='size', type='int',
-          default=4096, optional=True, doc='The anticipated maximum size'),
-    adict(id='param-2f726573743f5f6d6574686f643d504f5354-74657874', name='text', type='str',
-          optional=False, doc='The text content for the posting'),
-  )
-  entry.returns = (adict(id='return-2f726573743f5f6d6574686f643d504f5354-30-737472', type='str',
-                         doc='The ID of the new posting'),)
-  entry.raises  = (
-    adict(id='raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564',
-          type='HTTPUnauthorized', doc='Authenticated access is required'),
-    adict(id='raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e',
-          type='HTTPForbidden', doc='The user does not have posting privileges'),
-  )
+  entry.classes += ['post-is-not-put', 'fake-docs-here']
+  typereg = options.options.typereg
+  typereg.registerType(typereg.parseType('HTTPUnauthorized'))
+  typereg.registerType(typereg.parseType('HTTPForbidden'))
+  entry.params = Type(base=Type.COMPOUND, name=Type.DICT, value=[
+    TypeRef(name='size', type=typereg.parseType('int'), doc='The anticipated maximum size',
+            params={'default': 4096, 'optional': True}),
+    TypeRef(name='text', type=typereg.parseType('str'), doc='The text content for the posting'),
+  ])
+  entry.returns = TypeRef(type=typereg.parseType('str'), doc='The ID of the new posting')
+  entry.raises  = Type(base=Type.COMPOUND, name=Type.ONEOF, value=[
+    TypeRef(type=typereg.get('HTTPUnauthorized'), doc='Authenticated access is required'),
+    TypeRef(type=typereg.get('HTTPForbidden'), doc='The user does not have posting privileges'),
+  ])
   return entry
 
 settings_minRst = {
@@ -120,11 +122,33 @@ settings_minRst = {
   'format.default': 'rst',
   'format.default.showLegend': 'false',
   'format.default.showMeta': 'false',
+  'access.default.endpoint': 'public',
 }
 
 #------------------------------------------------------------------------------
-def pdfclean(pdf):
-  return re.sub('^/CreationDate \(D:[0-9\'-]+\)$', '', pdf, flags=re.MULTILINE)
+def pdfClean(pdf):
+  pdf = re.sub(
+    r'^/CreationDate \(D:[0-9\'-]+\)$',
+    '/CreationDate (D:20090213233130-00\'00\')', pdf, flags=re.MULTILINE)
+  return pdf
+
+#------------------------------------------------------------------------------
+def psClean(ps):
+  ps = re.sub(
+    r'^%%CreationDate: D:[0-9\'-]+$',
+    '%%CreationDate: D:20090213233130-00\'00\'', ps, flags=re.MULTILINE)
+  return ps
+
+#------------------------------------------------------------------------------
+def pdf2ps(pdf):
+  import subprocess
+  proc = subprocess.Popen(
+    ['pdf2ps', '-', '-'],
+    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  stdout, stderr = proc.communicate(input=pdf)
+  if stderr:
+    raise ValueError(stderr)
+  return stdout
 
 #------------------------------------------------------------------------------
 class DescribeTest(TestHelper, pxml.XmlTestMixin):
@@ -140,7 +164,8 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
       root, doc='URL \t  tree\n    description.',
       settings={
         'index-redirect': 'false',
-        })
+        'access.default.endpoint': 'public',
+      })
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                           # The default root.
 ├── desc/                   # URL tree description.
@@ -175,7 +200,8 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
           'formats': 'txt',
           'index-redirect': 'false',
           'exclude': '|^/desc(/.*)?$|',
-          })
+          'access.default.endpoint': 'public',
+        })
     RootController.__init__ = ridiculous_init_override
     # /TODO
     self.app = main({})
@@ -203,6 +229,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'exclude': '|^/desc(/.*)?$|',
         'index-redirect': 'false',
         'format.default.ascii': 'true',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                   # The default root.
@@ -228,6 +255,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'methods.order': ['GET'],
         'format.default.ascii': 'true',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc/application.txt'), 200, '''\
 /                   # The default root.
@@ -252,7 +280,8 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'format.request': 'true',
         'index-redirect': 'false',
         'exclude': '|^/desc(/.*)?$|',
-        })
+        'access.default.endpoint': 'public',
+      })
     self.assertResponse(self.send(root, '/desc/application.txt?ascii=true'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -277,7 +306,8 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'format.default.ascii': 'true',
         'fullname': 'app',
-        })
+        'access.default.endpoint': 'public',
+      })
     self.assertResponse(self.send(root, '/desc/app.txt'), 200, '''\
 /                   # The default root.
 |-- rest            # A RESTful entry.
@@ -428,6 +458,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'inspect': '/sub',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
@@ -445,6 +476,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'include': '|^/sub/method$|',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
@@ -462,6 +494,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'formats': 'txt',
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
@@ -483,14 +516,14 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
       entry.doc = 'Returns the entry\'s attributes.'
     return entry
   def test_filters(self):
-    ## Test the Describer `entries.filters`
+    ## Test the Describer `entry.filters`
     root = SimpleRoot()
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
         'formats'           : 'txt',
         'index-redirect'    : 'false',
-        'entries.filters'   : 'pyramid_describe.test_describe.DescribeTest.custom_filter',
+        'entry.filters'     : 'pyramid_describe.test_describe.DescribeTest.custom_filter',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /                   # The default root.
@@ -514,6 +547,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|',
                     '|^/desc(/.*)?$|'),
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc?format=html&showRest=false&showInfo=false'), 200, '''\
 /                   # The default root.
@@ -537,6 +571,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
@@ -556,6 +591,7 @@ class DescribeTest(TestHelper, pxml.XmlTestMixin):
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false&showLegend=false&showMeta=false&rstMax=true'), 200, '''\
 .. title:: Contents of "/"
@@ -596,6 +632,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'true',
+        'access.default.endpoint': 'public',
       })
     chk = '''\
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -640,6 +677,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'format showInfo',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
@@ -679,6 +717,7 @@ Endpoints
         'formats': 'txt',
         'index-redirect': 'false',
         'exclude': '|^/desc(/.*)?$|',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 /
@@ -705,6 +744,7 @@ Endpoints
         'index-redirect': 'false',
         'exclude': ('|^/sub/method$|', '|^/desc(/.*)?$|'),
         'format.request': 'format showInfo',
+        'access.default.endpoint': 'public',
       })
     self.assertResponse(self.send(root, '/desc?showRest=false&showInfo=false'), 200, '''\
 /
@@ -729,7 +769,7 @@ Endpoints
         'index-redirect': 'false',
         'format.default': 'rst',
         'format.default.showImpl': 'true',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 ===============
@@ -781,18 +821,22 @@ Parameters
 """"""""""
 
 ~~~~~~
-size
+dict
 ~~~~~~
 
-int, optional, default: 4096
+^^^^^^
+size
+^^^^^^
+
+integer, default: ``4096``
 
 The anticipated maximum size
 
-~~~~~~
+^^^^^^
 text
-~~~~~~
+^^^^^^
 
-str
+string
 
 The text content for the posting
 
@@ -801,7 +845,7 @@ Returns
 """""""
 
 ~~~~~~
-str
+string
 ~~~~~~
 
 The ID of the new posting
@@ -871,6 +915,48 @@ Handler: pyramid_describe.test_describe.Unknown [class]
 A dynamically generated sub-controller.
 
 ------
+Types
+------
+
+`````````````
+HTTPForbidden
+`````````````
+
+Access was denied to this resource.
+
+::::::
+code
+::::::
+
+``403``
+
+:::::::
+message
+:::::::
+
+``"Forbidden"``
+
+````````````````
+HTTPUnauthorized
+````````````````
+
+This server could not verify that you are authorized to access the document you
+requested.  Either you supplied the wrong credentials (e.g., bad password), or
+your browser does not understand how to supply the credentials required.
+
+::::::
+code
+::::::
+
+``401``
+
+:::::::
+message
+:::::::
+
+``"Unauthorized"``
+
+------
 Legend
 ------
 
@@ -928,7 +1014,7 @@ request-specific details.
         'format.default': 'rst',
         'format.default.title': 'Application API Details',
         'format.default.showImpl': 'true',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
 =======================
@@ -1005,7 +1091,7 @@ request-specific details.
         'format.default': 'rst',
         'format.default.showImpl': 'true',
         'format.default.rstMax': 'true',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'format.default.pdfkit.options': '{footer-spacing: "3"}',
       })
     self.assertResponse(self.send(root, '/desc'), 200, '''\
@@ -1027,7 +1113,7 @@ Contents of "/"
 Endpoints
 ---------
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f`:
 
@@ -1043,7 +1129,7 @@ Handler: pyramid_describe.test_describe.SimpleRoot() [instance]
 
 The default root.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f64657363`:
 
@@ -1059,7 +1145,7 @@ Handler: pyramid_describe.controller.DescribeController() [instance]
 
 URL tree description.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f72657374`:
 
@@ -1083,7 +1169,7 @@ A RESTful entry.
 Methods
 :::::::
 
-.. class:: fake-docs-here method post-is-not-put
+.. class:: doc-public fake-docs-here method post-is-not-put
 
 .. _`method-2f72657374-504f5354`:
 
@@ -1109,29 +1195,33 @@ Parameters
 
 .. class:: param
 
-.. _`param-method-2f72657374-504f5354-73697a65`:
+.. _`param-method-2f72657374-504f5354-64696374`:
 
 ~~~~~~
-size
+dict
 ~~~~~~
+
+.. class:: attr
+
+^^^^^^
+size
+^^^^^^
 
 .. class:: spec
 
-int, optional, default: 4096
+integer, default: ``4096``
 
 The anticipated maximum size
 
-.. class:: param
+.. class:: attr
 
-.. _`param-method-2f72657374-504f5354-74657874`:
-
-~~~~~~
+^^^^^^
 text
-~~~~~~
+^^^^^^
 
 .. class:: spec
 
-str
+string
 
 The text content for the posting
 
@@ -1145,10 +1235,10 @@ Returns
 
 .. class:: return
 
-.. _`return-method-2f72657374-504f5354-737472`:
+.. _`return-method-2f72657374-504f5354-737472696e67`:
 
 ~~~~~~
-str
+string
 ~~~~~~
 
 The ID of the new posting
@@ -1165,9 +1255,9 @@ Raises
 
 .. _`raise-method-2f72657374-504f5354-48545450556e617574686f72697a6564`:
 
-~~~~~~~~~~~~~~~~
-HTTPUnauthorized
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`HTTPUnauthorized <#typereg-type-48545450556e617574686f72697a6564>`__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Authenticated access is required
 
@@ -1175,13 +1265,13 @@ Authenticated access is required
 
 .. _`raise-method-2f72657374-504f5354-48545450466f7262696464656e`:
 
-~~~~~~~~~~~~~
-HTTPForbidden
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`HTTPForbidden <#typereg-type-48545450466f7262696464656e>`__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The user does not have posting privileges
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f72657374-474554`:
 
@@ -1197,7 +1287,7 @@ Handler: pyramid_describe.test_describe.Rest().get [method]
 
 Gets the current value.
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f72657374-505554`:
 
@@ -1213,7 +1303,7 @@ Handler: pyramid_describe.test_describe.Rest().put [method]
 
 Updates the value.
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f72657374-44454c455445`:
 
@@ -1229,7 +1319,7 @@ Handler: pyramid_describe.test_describe.Rest().delete [method]
 
 Deletes the entry.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f7375622f6d6574686f64`:
 
@@ -1245,7 +1335,7 @@ Handler: pyramid_describe.test_describe.Sub().method [method]
 
 This method outputs a JSON list.
 
-.. class:: endpoint sub-with-index
+.. class:: doc-public endpoint sub-with-index
 
 .. _`endpoint-2f737769`:
 
@@ -1261,7 +1351,7 @@ Handler: pyramid_describe.test_describe.SubIndex() [instance]
 
 A sub-controller providing only an index.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f756e6b6e6f776e`:
 
@@ -1276,6 +1366,76 @@ A sub-controller providing only an index.
 Handler: pyramid_describe.test_describe.Unknown [class]
 
 A dynamically generated sub-controller.
+
+.. class:: typereg
+
+.. _`section-typereg`:
+
+------
+Types
+------
+
+.. class:: source-pyramid-httpexceptions typereg-type
+
+.. _`typereg-type-48545450466f7262696464656e`:
+
+`````````````
+HTTPForbidden
+`````````````
+
+Access was denied to this resource.
+
+.. class:: attr
+
+::::::
+code
+::::::
+
+.. class:: spec
+
+``403``
+
+.. class:: attr
+
+:::::::
+message
+:::::::
+
+.. class:: spec
+
+``"Forbidden"``
+
+.. class:: source-pyramid-httpexceptions typereg-type
+
+.. _`typereg-type-48545450556e617574686f72697a6564`:
+
+````````````````
+HTTPUnauthorized
+````````````````
+
+This server could not verify that you are authorized to access the document you
+requested.  Either you supplied the wrong credentials (e.g., bad password), or
+your browser does not understand how to supply the credentials required.
+
+.. class:: attr
+
+::::::
+code
+::::::
+
+.. class:: spec
+
+``401``
+
+.. class:: attr
+
+:::::::
+message
+:::::::
+
+.. class:: spec
+
+``"Unauthorized"``
 
 .. class:: legend
 
@@ -1512,7 +1672,7 @@ The following `skill` levels exist:
       settings={
         'exclude': '|^/desc/.*$|',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'format.default.title': 'Application API',
         'format.default.rstMax': 'true',
       })
@@ -1573,79 +1733,115 @@ body {{
     <h1 class="section-title">Application API</h1>
     <div class="endpoints section" id="section-endpoints">
      <h2 class="section-title">Endpoints</h2>
-     <div class="endpoint section" id="endpoint-2f">
+     <div class="doc-public endpoint section" id="endpoint-2f">
       <h3 class="section-title">/</h3>
       <p>The default root.</p>
      </div>
-     <div class="endpoint section" id="endpoint-2f64657363">
+     <div class="doc-public endpoint section" id="endpoint-2f64657363">
       <h3 class="section-title">/desc</h3>
       <p>URL tree description.</p>
      </div>
-     <div class="endpoint section" id="endpoint-2f72657374">
+     <div class="doc-public endpoint section" id="endpoint-2f72657374">
       <h3 class="section-title">/rest</h3>
       <p>A RESTful entry.</p>
       <div class="methods section" id="methods-endpoint-2f72657374">
        <h4 class="section-title">Methods</h4>
-       <div class="fake-docs-here method post-is-not-put section" id="method-2f72657374-504f5354">
+       <div class="doc-public fake-docs-here method post-is-not-put section" id="method-2f72657374-504f5354">
         <h5 class="section-title">POST</h5>
         <p>Creates a new entry.</p>
         <div class="params section" id="params-method-2f72657374-504f5354">
          <h6 class="section-title">Parameters</h6>
-         <div class="param section" id="param-method-2f72657374-504f5354-73697a65">
-          <h7 class="section-title">size</h7>
-          <p class="spec">int, optional, default: 4096</p>
-          <p>The anticipated maximum size</p>
-         </div>
-         <div class="param section" id="param-method-2f72657374-504f5354-74657874">
-          <h7 class="section-title">text</h7>
-          <p class="spec">str</p>
-          <p>The text content for the posting</p>
+         <div class="param section" id="param-method-2f72657374-504f5354-64696374">
+          <h7 class="section-title">dict</h7>
+          <div class="attr section" id="size">
+           <h8 class="section-title">size</h8>
+           <p class="spec">integer, default: <tt class="docutils literal">4096</tt></p>
+           <p>The anticipated maximum size</p>
+          </div>
+          <div class="attr section" id="text">
+           <h8 class="section-title">text</h8>
+           <p class="spec">string</p>
+           <p>The text content for the posting</p>
+          </div>
          </div>
         </div>
         <div class="returns section" id="returns-method-2f72657374-504f5354">
          <h6 class="section-title">Returns</h6>
-         <div class="return section" id="return-method-2f72657374-504f5354-737472">
-          <h7 class="section-title">str</h7>
+         <div class="return section" id="return-method-2f72657374-504f5354-737472696e67">
+          <h7 class="section-title">string</h7>
           <p>The ID of the new posting</p>
          </div>
         </div>
         <div class="raises section" id="raises-method-2f72657374-504f5354">
          <h6 class="section-title">Raises</h6>
          <div class="raise section" id="raise-method-2f72657374-504f5354-48545450556e617574686f72697a6564">
-          <h7 class="section-title">HTTPUnauthorized</h7>
+          <h7 class="section-title">
+           <a class="reference external" href="#typereg-type-48545450556e617574686f72697a6564">HTTPUnauthorized</a>
+          </h7>
           <p>Authenticated access is required</p>
          </div>
          <div class="raise section" id="raise-method-2f72657374-504f5354-48545450466f7262696464656e">
-          <h7 class="section-title">HTTPForbidden</h7>
+          <h7 class="section-title">
+            <a class="reference external" href="#typereg-type-48545450466f7262696464656e">HTTPForbidden</a>
+          </h7>
           <p>The user does not have posting privileges</p>
          </div>
         </div>
        </div>
-       <div class="method section" id="method-2f72657374-474554">
+       <div class="doc-public method section" id="method-2f72657374-474554">
         <h5 class="section-title">GET</h5>
         <p>Gets the current value.</p>
        </div>
-       <div class="method section" id="method-2f72657374-505554">
+       <div class="doc-public method section" id="method-2f72657374-505554">
         <h5 class="section-title">PUT</h5>
         <p>Updates the value.</p>
        </div>
-       <div class="method section" id="method-2f72657374-44454c455445">
+       <div class="doc-public method section" id="method-2f72657374-44454c455445">
         <h5 class="section-title">DELETE</h5>
         <p>Deletes the entry.</p>
        </div>
       </div>
      </div>
-     <div class="endpoint section" id="endpoint-2f7375622f6d6574686f64">
+     <div class="doc-public endpoint section" id="endpoint-2f7375622f6d6574686f64">
       <h3 class="section-title">/sub/method</h3>
       <p>This method outputs a JSON list.</p>
      </div>
-     <div class="endpoint section sub-with-index" id="endpoint-2f737769">
+     <div class="doc-public endpoint section sub-with-index" id="endpoint-2f737769">
       <h3 class="section-title">/swi</h3>
       <p>A sub-controller providing only an index.</p>
      </div>
-     <div class="endpoint section" id="endpoint-2f756e6b6e6f776e">
+     <div class="doc-public endpoint section" id="endpoint-2f756e6b6e6f776e">
       <h3 class="section-title">/unknown/?</h3>
       <p>A dynamically generated sub-controller.</p>
+     </div>
+    </div>
+    <div class="section typereg" id="section-typereg">
+     <h2 class="section-title">Types</h2>
+     <div class="section source-pyramid-httpexceptions typereg-type" id="typereg-type-48545450466f7262696464656e">
+      <h3 class="section-title">HTTPForbidden</h3>
+      <p>Access was denied to this resource.</p>
+      <div class="attr section" id="code">
+       <h4 class="section-title">code</h4>
+       <p class="spec"><tt class="docutils literal">403</tt></p>
+      </div>
+      <div class="attr section" id="message">
+       <h4 class="section-title">message</h4>
+       <p class="spec"><tt class="docutils literal">&quot;Forbidden&quot;</tt></p>
+      </div>
+     </div>
+     <div class="section source-pyramid-httpexceptions typereg-type" id="typereg-type-48545450556e617574686f72697a6564">
+      <h3 class="section-title">HTTPUnauthorized</h3>
+      <p>This server could not verify that you are authorized to access the document you
+requested.  Either you supplied the wrong credentials (e.g., bad password), or
+your browser does not understand how to supply the credentials required.</p>
+      <div class="attr section" id="id4">
+       <h4 class="section-title">code</h4>
+       <p class="spec"><tt class="docutils literal">401</tt></p>
+      </div>
+      <div class="attr section" id="id5">
+       <h4 class="section-title">message</h4>
+       <p class="spec"><tt class="docutils literal">&quot;Unauthorized&quot;</tt></p>
+      </div>
      </div>
     </div>
     <div class="legend section" id="section-legend">
@@ -1745,7 +1941,7 @@ request-specific details.</p>
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'index-redirect': 'false',
         'exclude': '|^/desc/.*$|',
         'format.default.showLegend': 'false',
@@ -1790,7 +1986,7 @@ request-specific details.</p>
        settings={
         'format.default': 'json',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -1822,37 +2018,42 @@ request-specific details.</p>
           { "name": "POST",
             "id": "method-2f72657374-504f5354",
             "doc": "Creates a new entry.",
-            "params": [
-              { "name": "size",
-                "id": "param-2f726573743f5f6d6574686f643d504f5354-73697a65",
-                "type": "int",
-                "optional": true,
-                "default": 4096,
-                "doc": "The anticipated maximum size"
-              },
-              { "name": "text",
-                "id": "param-2f726573743f5f6d6574686f643d504f5354-74657874",
-                "type": "str",
-                "optional": false,
-                "doc": "The text content for the posting"
+            "params": {
+              "name": "dict",
+              "params": {
+                "value": [
+                  { "name": "size",
+                    "type": { "name": "integer" },
+                    "params": {
+                      "optional": true,
+                      "default": 4096
+                    },
+                    "doc": "The anticipated maximum size"
+                  },
+                  { "name": "text",
+                    "type": { "name": "string" },
+                    "doc": "The text content for the posting"
+                  }
+                ]
               }
-            ],
-            "returns": [
-              { "type": "str",
-                "id": "return-2f726573743f5f6d6574686f643d504f5354-30-737472",
-                "doc": "The ID of the new posting"
+            },
+            "returns": {
+              "type": {"name": "string"},
+              "doc": "The ID of the new posting"
+            },
+            "raises": {
+              "name": "oneof",
+              "params": {
+                "value": [
+                  { "type": {"name": "HTTPUnauthorized"},
+                    "doc": "Authenticated access is required"
+                  },
+                  { "type": {"name": "HTTPForbidden"},
+                    "doc": "The user does not have posting privileges"
+                  }
+                ]
               }
-            ],
-            "raises": [
-              { "type": "HTTPUnauthorized",
-                "id": "raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564",
-                "doc": "Authenticated access is required"
-              },
-              { "type": "HTTPForbidden",
-                "id": "raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e",
-                "doc": "The user does not have posting privileges"
-              }
-            ]
+            }
           },
           { "name": "GET",
             "id": "method-2f72657374-474554",
@@ -1889,6 +2090,66 @@ request-specific details.</p>
         "decoratedPath": "/unknown/?",
         "doc": "A dynamically generated sub-controller."
       }
+    ],
+    "types": [
+      {
+        "name": "HTTPForbidden",
+        "base": "dict",
+        "doc": "Access was denied to this resource.",
+        "params": {
+          "value": [
+            {
+              "name": "code",
+              "type": {
+                "name": "integer",
+                "params": {
+                  "constant": true,
+                  "value": 403
+                }
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "name": "string",
+                "params": {
+                  "constant": true,
+                  "value": "Forbidden"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "HTTPUnauthorized",
+        "base": "dict",
+        "doc": "This server could not verify that you are authorized to access the document you requested.  Either you supplied the wrong credentials (e.g., bad password), or your browser does not understand how to supply the credentials required.",
+        "params": {
+          "value": [
+            {
+              "name": "code",
+              "type": {
+                "name": "integer",
+                "params": {
+                  "constant": true,
+                  "value": 401
+                }
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "name": "string",
+                "params": {
+                  "constant": true,
+                  "value": "Unauthorized"
+                }
+              }
+            }
+          ]
+        }
+      }
     ]
   }
 }
@@ -1906,7 +2167,7 @@ request-specific details.</p>
        settings={
         'format.default': 'yaml',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -1937,28 +2198,29 @@ application:
           id: 'method-2f72657374-504f5354'
           doc: Creates a new entry.
           params:
-            - name: size
-              id: 'param-2f726573743f5f6d6574686f643d504f5354-73697a65'
-              type: int
-              optional: true
-              default: 4096
-              doc: The anticipated maximum size
-            - name: text
-              id: 'param-2f726573743f5f6d6574686f643d504f5354-74657874'
-              type: str
-              optional: false
-              doc: The text content for the posting
+            name: dict
+            params:
+              value:
+                - name: size
+                  type: {name: integer}
+                  params:
+                    optional: true
+                    default: 4096
+                  doc: The anticipated maximum size
+                - name: text
+                  type: {name: string}
+                  doc: The text content for the posting
           returns:
-            - type: str
-              id: 'return-2f726573743f5f6d6574686f643d504f5354-30-737472'
-              doc: The ID of the new posting
+            type: {name: string}
+            doc: The ID of the new posting
           raises:
-            - type: HTTPUnauthorized
-              id: 'raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564'
-              doc: Authenticated access is required
-            - type: HTTPForbidden
-              id: 'raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e'
-              doc: The user does not have posting privileges
+            name: oneof
+            params:
+              value:
+                - type: {name: HTTPUnauthorized}
+                  doc: Authenticated access is required
+                - type: {name: HTTPForbidden}
+                  doc: The user does not have posting privileges
         - name: GET
           id: 'method-2f72657374-474554'
           doc: Gets the current value.
@@ -1986,6 +2248,41 @@ application:
       decoratedName: unknown/?
       decoratedPath: /unknown/?
       doc: A dynamically generated sub-controller.
+  types:
+    - name: HTTPForbidden
+      base: dict
+      doc: "Access was denied to this resource."
+      params:
+        value:
+          - name: code
+            type:
+              name: integer
+              params:
+                constant: true
+                value: 403
+          - name: message
+            type:
+              name: string
+              params:
+                constant: true
+                value: Forbidden
+    - name: HTTPUnauthorized
+      base: dict
+      doc: "This server could not verify that you are authorized to access the document you requested.  Either you supplied the wrong credentials (e.g., bad password), or your browser does not understand how to supply the credentials required."
+      params:
+        value:
+          - name: code
+            type:
+              name: integer
+              params:
+                constant: true
+                value: 401
+          - name: message
+            type:
+              name: string
+              params:
+                constant: true
+                value: Unauthorized
 '''
     chk = yaml.dump(yaml.load(chk), default_flow_style=False)
     res.body = yaml.dump(yaml.load(res.body), default_flow_style=False)
@@ -2008,7 +2305,7 @@ application:
        settings={
         'format.default': 'yaml',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -2040,7 +2337,7 @@ application:
       settings={
         'format.default': 'xml',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
       })
     res = self.send(root, '/desc')
@@ -2057,21 +2354,35 @@ application:
   <doc>A RESTful entry.</doc>
   <method id="method-2f72657374-504f5354" name="POST">
    <doc>Creates a new entry.</doc>
-   <param default="4096" id="param-2f726573743f5f6d6574686f643d504f5354-73697a65" name="size" optional="True" type="int">
-    <doc>The anticipated maximum size</doc>
-   </param>
-   <param id="param-2f726573743f5f6d6574686f643d504f5354-74657874" name="text" optional="False" type="str">
-    <doc>The text content for the posting</doc>
-   </param>
-   <return id="return-2f726573743f5f6d6574686f643d504f5354-30-737472" type="str">
+   <params name="dict">
+    <params>
+     <value name="size">
+      <params default="4096" optional="true" />
+      <type name="integer" />
+      <doc>The anticipated maximum size</doc>
+     </value>
+     <value name="text">
+      <doc>The text content for the posting</doc>
+      <type name="string" />
+     </value>
+    </params>
+   </params>
+   <returns>
     <doc>The ID of the new posting</doc>
-   </return>
-   <raise id="raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564" type="HTTPUnauthorized">
-    <doc>Authenticated access is required</doc>
-   </raise>
-   <raise id="raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e" type="HTTPForbidden">
-    <doc>The user does not have posting privileges</doc>
-   </raise>
+    <type name="string" />
+   </returns>
+   <raises name="oneof">
+    <params>
+     <value>
+      <doc>Authenticated access is required</doc>
+      <type name="HTTPUnauthorized" />
+     </value>
+     <value>
+      <doc>The user does not have posting privileges</doc>
+      <type name="HTTPForbidden" />
+     </value>
+    </params>
+   </raises>
   </method>
   <method id="method-2f72657374-474554" name="GET"><doc>Gets the current value.</doc></method>
   <method id="method-2f72657374-505554" name="PUT"><doc>Updates the value.</doc></method>
@@ -2086,100 +2397,42 @@ application:
  <endpoint name="unknown" path="/unknown" decorated-name="unknown/?" decorated-path="/unknown/?" id="endpoint-2f756e6b6e6f776e">
   <doc>A dynamically generated sub-controller.</doc>
  </endpoint>
+ <type name="HTTPForbidden" base="dict">
+  <doc>Access was denied to this resource.</doc>
+  <params>
+   <value name="code">
+    <type name="integer">
+     <params constant="true" value="403"/>
+    </type>
+   </value>
+   <value name="message">
+    <type name="string">
+     <params constant="true" value="Forbidden"/>
+    </type>
+   </value>
+  </params>
+ </type>
+ <type name="HTTPUnauthorized" base="dict">
+  <doc>This server could not verify that you are authorized to access the document you requested.  Either you supplied the wrong credentials (e.g., bad password), or your browser does not understand how to supply the credentials required.</doc>
+  <params>
+   <value name="code">
+    <type name="integer">
+     <params constant="true" value="401"/>
+    </type>
+   </value>
+   <value name="message">
+    <type name="string">
+     <params constant="true" value="Unauthorized"/>
+    </type>
+   </value>
+  </params>
+ </type>
 </application>
 '''
     chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
     chk = '<?xml version="1.0" encoding="UTF-8"?>\n' + chk[chk.find('<application'):]
     self.assertResponse(res, 200, chk, xml=True)
     self.assertTrue(res.body.startswith('<?xml version="1.0" encoding="UTF-8"?>'))
-
-  #----------------------------------------------------------------------------
-  def test_format_wadl(self):
-    ## The Describer can render WADL
-    root = SimpleRoot()
-    root.desc = DescribeController(
-       root, doc='URL tree description.',
-       settings={
-        'format.default': 'wadl',
-        'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
-        'exclude': '|^/desc/.*|',
-       })
-    res = self.send(root, '/desc')
-    chk = '''
-<application
- xmlns="http://research.sun.com/wadl/2006/10"
- xmlns:xsd="http://www.w3.org/2001/XMLSchema"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns:pd="http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc"
- xsi:schemaLocation="http://research.sun.com/wadl/2006/10 wadl.xsd"
- >
- <resources base="http://localhost">
-  <resource id="endpoint-2f" path="">
-   <pd:doc>The default root.</pd:doc>
-   <method id="method-2f-474554" name="GET"/>
-  </resource>
-  <resource id="endpoint-2f64657363" path="desc">
-   <pd:doc>URL tree description.</pd:doc>
-   <method id="method-2f64657363-474554" name="GET"/>
-  </resource>
-  <resource id="endpoint-2f72657374" path="rest">
-   <pd:doc>A RESTful entry.</pd:doc>
-   <method id="method-2f72657374-504f5354" name="POST">
-    <pd:doc>Creates a new entry.</pd:doc>
-    <request>
-     <param id="param-2f726573743f5f6d6574686f643d504f5354-73697a65" name="size" type="xsd:integer" required="false" default="4096">
-      <pd:doc>The anticipated maximum size</pd:doc>
-     </param>
-     <param id="param-2f726573743f5f6d6574686f643d504f5354-74657874" name="text" type="xsd:string" required="true">
-      <pd:doc>The text content for the posting</pd:doc>
-     </param>
-    </request>
-    <response>
-     <representation id="return-2f726573743f5f6d6574686f643d504f5354-30-737472" element="xsd:string">
-      <pd:doc>The ID of the new posting</pd:doc>
-     </representation>
-     <fault id="raise-2f726573743f5f6d6574686f643d504f5354-30-48545450556e617574686f72697a6564" element="HTTPUnauthorized">
-      <pd:doc>Authenticated access is required</pd:doc>
-     </fault>
-     <fault id="raise-2f726573743f5f6d6574686f643d504f5354-31-48545450466f7262696464656e" element="HTTPForbidden">
-      <pd:doc>The user does not have posting privileges</pd:doc>
-     </fault>
-    </response>
-   </method>
-   <method id="method-2f72657374-474554" name="GET">
-    <pd:doc>Gets the current value.</pd:doc>
-   </method>
-   <method id="method-2f72657374-505554" name="PUT">
-    <pd:doc>Updates the value.</pd:doc>
-   </method>
-   <method id="method-2f72657374-44454c455445" name="DELETE">
-    <pd:doc>Deletes the entry.</pd:doc>
-   </method>
-  </resource>
-  <resource id="endpoint-2f7375622f6d6574686f64" path="sub/method">
-   <pd:doc>This method outputs a JSON list.</pd:doc>
-   <method id="method-2f7375622f6d6574686f64-474554" name="GET"/>
-  </resource>
-  <resource id="endpoint-2f737769" path="swi">
-   <pd:doc>A sub-controller providing only an index.</pd:doc>
-   <method id="method-2f737769-474554" name="GET"/>
-  </resource>
-  <resource id="endpoint-2f756e6b6e6f776e" path="unknown">
-   <pd:doc>A dynamically generated sub-controller.</pd:doc>
-   <method id="method-2f756e6b6e6f776e-474554" name="GET"/>
-  </resource>
- </resources>
-</application>
-'''
-    # todo: what to do about mediaType, status, and namespaces?...
-    # <representation mediaType="application/xml" element="yn:ResultSet"/>
-    # <fault status="400" mediaType="application/xml" element="ya:Error"/>
-    def roundtrip(xml):
-      return ET.tostring(ET.fromstring(xml), 'UTF-8')
-    chk = ET.tostring(ET.fromstring(re.sub('>\s*<', '><', chk, flags=re.MULTILINE)), 'UTF-8')
-    res.body = roundtrip(res.body)
-    self.assertResponse(res, 200, chk, xml=True)
 
   #----------------------------------------------------------------------------
   @extrafeature('pdf')
@@ -2191,7 +2444,7 @@ application:
        settings={
          'format.default': 'pdf',
          'index-redirect': 'false',
-         'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+         'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
          'exclude': '|^/desc/.*|',
        })
     res = self.send(root, '/desc')
@@ -2225,6 +2478,20 @@ application:
     res = self.send(root, '/desc')
 
   #----------------------------------------------------------------------------
+  def assertPdfEqual(self, pdf1, pdf2):
+    # NOTE: converting to PostScript because it strips out false negatives...
+    #       *however*, then there could be false positives. ugh.
+    ps1 = psClean(pdf2ps(pdf1))
+    ps2 = psClean(pdf2ps(pdf2))
+    self.assertEqual(ps1, ps2)
+
+  #----------------------------------------------------------------------------
+  def assertPdfNotEqual(self, pdf1, pdf2):
+    ps1 = psClean(pdf2ps(pdf1))
+    ps2 = psClean(pdf2ps(pdf2))
+    self.assertNotEqual(ps1, ps2)
+
+  #----------------------------------------------------------------------------
   @extrafeature('pdf')
   def test_renderer_override(self):
     ## Format-specific rendering options can be overriden and cascaded through format chains
@@ -2234,10 +2501,10 @@ application:
        settings={
          'format.default': 'pdf',
          'index-redirect': 'false',
-         'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+         'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
          'exclude': '|^/desc/.*|',
        })
-    pdf_orig = pdfclean(self.send(root, '/desc').body)
+    pdf_orig = self.send(root, '/desc').body
     # confirm that pdf renderings stay consistent
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -2245,10 +2512,10 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
       })
-    self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
+    self.assertPdfEqual(self.send(root, '/desc').body, pdf_orig)
     # confirm that fiddling with html css rendering changes pdf
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -2256,11 +2523,11 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
       })
-    self.assertNotEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
+    self.assertPdfNotEqual(self.send(root, '/desc').body, pdf_orig)
     # confirm that fiddling with html css cascading can be controlled
     root = SimpleRoot()
     root.desc = DescribeController(
@@ -2268,12 +2535,12 @@ application:
       settings={
         'format.default': 'pdf',
         'index-redirect': 'false',
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'exclude': '|^/desc/.*|',
         'format.html.default.cssPath': None,
         'format.html+pdf.default.cssPath': 'pyramid_describe:DEFAULT',
       })
-    self.assertEqual(pdfclean(self.send(root, '/desc').body), pdf_orig)
+    self.assertPdfEqual(self.send(root, '/desc').body, pdf_orig)
 
   #----------------------------------------------------------------------------
   def test_format_rst_and_html_filters(self):
@@ -2296,7 +2563,7 @@ application:
     root.desc = DescribeController(
       root, doc='URL tree description.',
       settings={
-        'entries.parsers': 'pyramid_describe.test_describe.docsEnhancer',
+        'entry.parsers': 'pyramid_describe.test_describe.docsEnhancer',
         'index-redirect': 'false',
         'exclude': '|^/desc/.*$|',
         'format.default.showLegend': 'false',
@@ -2333,4 +2600,5 @@ application:
 
 #------------------------------------------------------------------------------
 # end of $Id$
+# $ChangeLog$
 #------------------------------------------------------------------------------

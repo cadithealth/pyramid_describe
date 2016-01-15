@@ -8,6 +8,8 @@ item_get_doc_string = 'attributes.'
 class ItemController(RestController):
 
   '''
+  @PUBLIC
+
   :doc.import:`./syntax_docref_import_abs.rst`
   :doc.import:`./syntax_docref_import_rel.rst`
   '''
@@ -15,6 +17,8 @@ class ItemController(RestController):
   @expose
   def get(self, request):
     '''
+    @PUBLIC
+
     :doc.import:`pyramid_describe.test.syntax_docref.item_get_doc_callable_abs`
     :doc.import:`.syntax_docref.item_get_doc_callable_rel`
     :doc.import:`..test.syntax_docref.item_get_doc_callable_uprel`
@@ -23,18 +27,23 @@ class ItemController(RestController):
     Returns
     -------
 
-    JSON data.
+    JSON data
+    (unspecified structure).
     '''
 
   @expose
   def put(self, request):
     '''
+    @PUBLIC
+
     Update the item's current attributes.
     '''
 
   @expose
   def post(self, request):
     '''
+    @PUBLIC
+
     Alias of :doc.link:`PUT:.`.
     '''
 

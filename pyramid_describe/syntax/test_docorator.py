@@ -20,15 +20,15 @@ class TestDocorator(test_helpers.TestHelper):
   def test_firstLine(self):
     entry = adict(
       doc = '''\
-@FOO, @BAR(0.2-z+b), @ZOG
+@FOO, @BAR(0.2-z+b), @HAS_THIS
 
-Some documentation.
+@NOT_THIS: some documentation.
 ''',
     )
     entry = docorator.parser(entry, adict())
     self.assertEqual(
       sorted(entry.classes),
-      sorted(['doc-foo', 'doc-bar', 'doc-bar-0-2-z-b', 'doc-zog']))
+      sorted(['doc-foo', 'doc-bar', 'doc-bar-0-2-z-b', 'doc-has-this']))
 
   #----------------------------------------------------------------------------
   def test_rst(self):
@@ -41,6 +41,7 @@ Some documentation.
         'index-redirect' : 'false',
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
+        'access.control' : lambda *a,**k: ['public', 'beta', 'internal'],
       })
     # TODO: remove this `warnings` fiddling when the
     #       numpydoc-not-allowing-custom-section-titles issue
@@ -62,6 +63,7 @@ Some documentation.
         'index-redirect' : 'false',
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
+        'access.control' : lambda *a,**k: ['public', 'beta', 'internal'],
       })
     # TODO: remove this `warnings` fiddling when the
     #       numpydoc-not-allowing-custom-section-titles issue

@@ -17,40 +17,52 @@ class Entry(adict):
   :Attributes:
 
   name : str
+
     The name of the entry, relative to the `parent` entry.
 
   dname : str
+
     The "decorated" version of `name`.
 
   path : str
+
     The full path to this entry.
 
   dpath : str
+
     The "decorated" version of `path`.
 
   ipath : str
+
     The python implementation resolver path, if it can be determined.
 
-  itype : { 'class', 'instance', 'method', 'function', 'unknown' }
+  itype : 'class' | 'instance' | 'method' | 'function' | 'unknown'
+
     The python implementation type, if it can be determined.
 
-  parent : { Entry, None }
+  parent : Entry | null
+
     A reference to the parent Entry, or ``None`` if this is
     the root Entry.
 
-  view : { callable, pyramid_controllers.Controller }
+  view : callable | pyramid_controllers.Controller
+
     The actual pyramid view handler referenced by this entry.
 
   method : str
+
     The name of the HTTP method for RESTful verb entries.
 
   parents : generator
+
     A generator of entry parents, starting with the closest first.
 
   rparents : generator
+
     A reversed version of `parents`, ie. starting at the root first.
 
-  doc : { str, dict }
+  doc : str | dict
+
     The documentation for this entry. During initial loading, is
     populated by the `view`'s ``__doc__`` attribute (i.e. the pydoc
     string). Parsers may extend and replace this attribute to empower
@@ -58,13 +70,16 @@ class Entry(adict):
     return values, etc.
 
   isController : bool
+
     True IFF the `view` is a Controller.
 
   isMethod : bool
+
     True IFF the `parent` is a RestController and this is
     a RESTful verb handler.
 
   isEndpoint : bool
+
     True IFF it is an endpoint that is capable of handling
     requests. this is always true if `handler` is defined,
     but not necessarily the case if `controller` is defined.
@@ -72,19 +87,23 @@ class Entry(adict):
     for the controller.
 
   isStub : bool
+
     True IFF the dispatcher will only send requests to this
     controller if it is returned from a @lookup method, i.e.
     the controller's `expose` attribute is False.
 
   isRest : bool
+
     True IFF the `view` is an instance of RestController.
 
   isDynamic : bool
+
     True IFF the `view` is not an inspectable class; i.e.  it is not
     an instantiated method, and is dynamically instantiated when
     handling a request.
 
   isIndex : bool
+
     True IFF this is a forceSlash-only endpoint (i.e. a suffixed
     '/' when sending requests to this endpoint).
 
@@ -97,63 +116,33 @@ class Entry(adict):
   they either require application-specific knowledge to determine or
   provide intrinsically custom information or decoration.
 
-  classes : list(str)
+  classes : list(str), nullable
+
     A list of classes that this entry will be decorated with using the
     reStructuredText ``class`` directive. This is especially useful in
     the HTML and PDF rendered outputs, where custom stylesheets can
     then be applied to them.
 
-  params : list(dict)
+  params : typereg.Type | typereg.TypeRef, nullable
 
-    A list of objects that represent parameters that this entry
-    accepts. The objects can have the following attributes:
+    The type of object that this entry accepts, described by a
+    `typereg.Type` or `typereg.TypeRef` instance. Note that for
+    polymorphic entries (i.e. entries that can accept different
+    kinds of input), this will be a Type.ONEOF instance.
 
-    name : str
-      The name of the parameter.
+  returns : typereg.Type | typereg.TypeRef, nullable
 
-    type : str
-      The expected type of the parameter.
+    The type of object that this entry returns, described by a
+    `typereg.Type` or `typereg.TypeRef` instance. Note that for
+    entries that can return different kinds of output, this will be a
+    Type.ONEOF instance.
 
-    optional : bool, optional, default: false
-      Whether or not this parameter is optional.
+  raises : typereg.Type | typereg.TypeRef, nullable
 
-    default : str, optional
-      The default value for this parameter, if `optional` is true.
-
-    classes : list(str), optional
-      Similar to Entry.classes, but parameter-specific.
-
-    doc : str, optional
-      Parameter-specific documentation.
-
-  returns : list(dict)
-
-    A list of objects that documents the return values that can be
-    expected from this entry. The objects can have the following
-    attributes:
-
-    type : str
-      The return type.
-
-    classes : list(str), optional
-      Similar to Entry.classes, but return value-specific.
-
-    doc : str, optional
-      Documentation about this return type.
-
-  raises : list(dict)
-
-    A list of objects that specify what exceptions/errors this entry
-    can raise. The objects can have the following attributes:
-
-    type : str
-      The exception/error type.
-
-    classes : list(str), optional
-      Similar to Entry.classes, but exception/error-specific.
-
-    doc : str, optional
-      Documentation about this exception/error type.
+    The type of object that this entry throws during an error or
+    exception state, described by a `typereg.Type` or
+    `typereg.TypeRef` instance. Note that for entries that can throw
+    different kinds of errors, this will be a Type.ONEOF instance.
   '''
 
   @property
@@ -172,7 +161,7 @@ class Entry(adict):
 
   def __eq__(self, other):
     # note: not quite sure exactly why, but the line
-    #       describer.DescriberData.tree_entries:
+    #       describer.DescriberCatalog.tree_entries:
     #         "if entry.parent and entry.parent not in fullset:"
     #       causes a 'RuntimeError: maximum recursion' error if this
     #       is not here...

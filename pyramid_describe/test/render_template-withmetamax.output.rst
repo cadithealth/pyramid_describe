@@ -36,7 +36,7 @@ General
 
 General purpose endpoints:
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f`:
 
@@ -44,15 +44,19 @@ General purpose endpoints:
 \/
 ::::::
 
+@PUBLIC
+
 Serves the homepage.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f61626f7574`:
 
 ::::::
 /about
 ::::::
+
+@PUBLIC
 
 Serves the glorious "about us" page.
 
@@ -62,7 +66,7 @@ Item
 
 Endpoints that apply to an ITEM_ID:
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f4954454d5f4944`:
 
@@ -70,15 +74,19 @@ Endpoints that apply to an ITEM_ID:
 /{ITEM_ID}
 ::::::::::
 
+@PUBLIC
+
 Provides RESTful access to the URL-specified item.
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f4954454d5f49442f737562616374696f6e`:
 
 ::::::::::::::::::::
 /{ITEM_ID}/subaction
 ::::::::::::::::::::
+
+@PUBLIC
 
 Executes a sub-action.
 
@@ -88,13 +96,15 @@ Miscellaneous
 
 Other:
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f4954454d5f49442f63686174746572`:
 
 ::::::::::::::::::
 /{ITEM_ID}/chatter
 ::::::::::::::::::
+
+@PUBLIC
 
 Generates chatter.
 

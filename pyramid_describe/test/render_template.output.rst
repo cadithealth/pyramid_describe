@@ -38,11 +38,15 @@ General purpose endpoints:
 \/
 ::::::
 
+@PUBLIC
+
 Serves the homepage.
 
 ::::::
 /about
 ::::::
+
+@PUBLIC
 
 Serves the glorious "about us" page.
 
@@ -56,11 +60,15 @@ Endpoints that apply to an ITEM_ID:
 /{ITEM_ID}
 ::::::::::
 
+@PUBLIC
+
 Provides RESTful access to the URL-specified item.
 
 ::::::::::::::::::::
 /{ITEM_ID}/subaction
 ::::::::::::::::::::
+
+@PUBLIC
 
 Executes a sub-action.
 
@@ -73,6 +81,8 @@ Other:
 ::::::::::::::::::
 /{ITEM_ID}/chatter
 ::::::::::::::::::
+
+@PUBLIC
 
 Generates chatter.
 

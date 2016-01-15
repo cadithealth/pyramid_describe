@@ -16,7 +16,7 @@ import json
 import six
 import yaml
 from six.moves import urllib
-from docutils.core import publish_doctree, publish_from_doctree
+from docutils.core import publish_from_doctree
 from pyramid.interfaces import IMultiView
 from pyramid.settings import asbool, truthy
 from pyramid.renderers import render as pyramid_render
@@ -25,8 +25,11 @@ from pyramid_controllers.restcontroller import meth2action, action2meth, HTTP_ME
 from pyramid_controllers.dispatcher import getDispatcherFromStack
 import asset
 from aadict import aadict
+import morph
 
 from .entry import Entry
+from .scope import Scope
+from .typereg import TypeRegistry
 from .util import adict, isstr, tolist, resolve, pick, reparse, runFilters, tag
 from . import rst, doctree, render
 from .i18n import _
@@ -142,14 +145,14 @@ class Describer(object):
   )
 
   content_types = {
-    'html': ('text/html', 'UTF-8'),
-    'json': ('application/json', 'UTF-8'),
-    'pdf':  ('application/pdf', 'UTF-8'),
-    'rst':  ('text/x-rst', 'UTF-8'),
-    'txt':  ('text/plain', 'UTF-8'),
-    'wadl': ('text/xml', 'UTF-8'),
-    'xml':  ('text/xml', 'UTF-8'),
-    'yaml': ('application/yaml', 'UTF-8'),
+    'html'  : ('text/html',          'UTF-8'),
+    'json'  : ('application/json',   'UTF-8'),
+    'pdf'   : ('application/pdf',    'UTF-8'),
+    'rst'   : ('text/x-rst',         'UTF-8'),
+    'txt'   : ('text/plain',         'UTF-8'),
+    'wadl'  : ('text/xml',           'UTF-8'),
+    'xml'   : ('text/xml',           'UTF-8'),
+    'yaml'  : ('application/yaml',   'UTF-8'),
   }
 
   bool_options = (
@@ -190,6 +193,11 @@ class Describer(object):
   )
 
   str_options = (
+    ('catalog.parsers',  '*'),
+    ('catalog.filters',  '*'),
+    ('entry.parsers',    '*'),
+    ('entry.filters',    '*'),
+    ('commentToken',     '##'),
     ('title',            None),
     ('endpoints.title',  None),
     ('legend.title',     None),
@@ -199,6 +207,22 @@ class Describer(object):
     ('cssPath',          'pyramid_describe:template/rst2html.css'),
     ('encoding',         'UTF-8'),
     ('rstWriter',        'pyramid_describe.writers.rst.Writer'),
+
+    ('typereg.title',    'Types'),
+    ('typereg.noDef',    'N/A'),
+    ('typereg.aliases',  None),
+    ('type.parsers',     '*'),
+    ('type.filters',     '*'),
+
+    ('access.control',            None),
+    ('access.default.endpoint',   None),
+    ('access.default.type',       None),
+    ('access.default.attribute',  'public'),
+    ('access.rank',               'public beta internal'),
+    ('access.group.public',       '@PUBLIC'),
+    ('access.group.beta',         '@BETA'),
+    ('access.group.internal',     '@INTERNAL'),
+
     ('pdfkit.options',   '''\
 {
   margin-top: 10mm,
@@ -241,16 +265,33 @@ class Describer(object):
         self.renderers[fmt] = rndr
       self.options[fmt]  = extract(self.settings, 'format.' + fmt + '.default')
       self.override[fmt] = extract(self.settings, 'format.' + fmt + '.override')
-    # and now load the entry parsers and filters
-    self.eparsers = [plug.handle for plug in asset.plugins(
-      'pyramid_describe.plugins.entries.parsers',
-      self.settings.get('entries.parsers', '*'))]
-    self.efilters = [plug.handle for plug in asset.plugins(
-      'pyramid_describe.plugins.entries.filters',
-      self.settings.get('entries.filters', '*'))]
+    # load the entry/type/catalog parsers and filters
+    stropts = dict(self.str_options)
+    self.eparsers = asset.plugins(
+      'pyramid_describe.plugins.entry.parsers',
+      self.settings.get('entry.parsers', stropts.get('entry.parsers')))
+    self.tparsers = asset.plugins(
+      'pyramid_describe.plugins.type.parsers',
+      self.settings.get('type.parsers', stropts.get('type.parsers')))
+    self.cparsers = asset.plugins(
+      'pyramid_describe.plugins.catalog.parsers',
+      self.settings.get('catalog.parsers', stropts.get('catalog.parsers')))
+    self.efilters = asset.plugins(
+      'pyramid_describe.plugins.entry.filters',
+      self.settings.get('entry.filters', stropts.get('entry.filters')))
+    self.tfilters = asset.plugins(
+      'pyramid_describe.plugins.type.filters',
+      self.settings.get('type.filters', stropts.get('type.filters')))
+    self.cfilters = asset.plugins(
+      'pyramid_describe.plugins.catalog.filters',
+      self.settings.get('catalog.filters', stropts.get('catalog.filters')))
     self.render_template = self.settings.get('render.template', None)
     self.methOrderKey = methOrderKey(
       tolist(self.settings.get('methods.order', DEFAULT_METHODS_ORDER)))
+    tropts = morph.pick(self.settings, prefix='typereg.')
+    tropts['commentToken'] = self.settings.get(
+      'commentToken', dict(self.str_options).get('commentToken'))
+    self.typereg = TypeRegistry(tropts)
 
   #----------------------------------------------------------------------------
   def describe(self, view, context=None, format=None, root=None):
@@ -262,6 +303,13 @@ class Describer(object):
     if format is None:
       format = self.defformat
     options = self._getOptions(context, [format]).update(view=view, root=root)
+    catalog = self._makeDescriberCatalog(context, view, root, options, format)
+    ctdef   = self.content_types.get(format)
+    return aadict(
+      content=self.render(catalog), content_type=ctdef[0], charset=ctdef[1])
+
+  #----------------------------------------------------------------------------
+  def _makeDescriberCatalog(self, context, view, root, options, format):
     # todo: filter legend to only those that are actually used?...
     #       => can't do that here since some renderers artificially
     #          re-inject other types.
@@ -269,16 +317,51 @@ class Describer(object):
       (key if (key.lower() + 'Format') not in options else
        options.get(key.lower() + 'Format').format(_('NAME')), desc)
       for key, desc in self.legend]
-    data = DescriberData(
+    catalog = DescriberCatalog(
+      describer = self,
       view      = view,
       root      = root,
       format    = format,
       options   = options,
-      endpoints = sorted(self.getFilteredEndpoints(options), key=lambda e: e.path),
       legend    = legend,
     )
-    ctdef = self.content_types.get(format)
-    return adict(content=self.render(data), content_type=ctdef[0], charset=ctdef[1])
+    catalog.typereg   = catalog.options.typereg #.clone()
+    # todo: further decorate `context`...
+    context = Scope(
+      catalog = catalog,
+      options = options,
+      request = options.context.request,
+    )
+    # TODO: clone endpoints once caching is enabled
+    catalog.endpoints = sorted(
+      self.getFilteredEndpoints(options, context), key=lambda e: e.path)
+    # TODO: deprecate `catalog.types` (since `catalog.typereg` will be cloned)
+    catalog.types     = filter(None, [
+      options.tfilters.filter(typ, context=context)
+      for typ in catalog.typereg.types()])
+    # TODO: re-bind `catalog.endpoints` type references...
+    # TODO: re-bind inter-type references...
+    catalog = options.cfilters.filter(catalog, context=context)
+    return catalog
+
+  #----------------------------------------------------------------------------
+  def analyze(self, view):
+    # TODO: this is a hack. it was created for unit testing the
+    #       numpydoc parsing subsystem... this entire class should be
+    #       split into three separate responsibilities:
+    #         1. the analyzer: generate a canonical representation of
+    #            all `view` endpoints
+    #         2. the filter: apply access control
+    #            ==> outputs rst? or a doctree? (to avoid round-trip
+    #                parsing to extract docorators)
+    #            ==> assume rstMax output and let the renderer remove it?
+    #         3. the renderer: convert the endpoints to a serialized
+    #            representation
+    root    = '/'
+    context = adict(request=adict())
+    options = self._getOptions(context, ['rst']).update(view=view, root=root)
+    catalog = self._makeDescriberCatalog(context, view, root, options, format)
+    return catalog
 
   #----------------------------------------------------------------------------
   def _getOptions(self, context, formatstack):
@@ -310,6 +393,7 @@ class Describer(object):
     # copy the string options
     for name, default in self.str_options:
       ret[name] = options.get(name, default)
+    ret.typereg     = self.typereg
     ret.format      = format
     ret.formatstack = formatstack
     ret.dispatcher  = getDispatcherFromStack() or Dispatcher(autoDecorate=False)
@@ -318,7 +402,11 @@ class Describer(object):
     #       onto the `options`... ugh. these need to be replaced with a more
     #       generalized `context` or `stage` parameter...
     ret.eparsers    = self.eparsers
+    ret.tparsers    = self.tparsers
+    ret.cparsers    = self.cparsers
     ret.efilters    = self.efilters
+    ret.tfilters    = self.tfilters
+    ret.cfilters    = self.cfilters
     ret['render.template'] = self.render_template
     ret.renderer    = None
     for idx in range(len(formatstack)):
@@ -328,29 +416,45 @@ class Describer(object):
     ret.context     = context
     ret.idEncoder   = tag
     ret.filters     = [resolve(e) for e in ( ret.filters or [] )]
+    # TODO: this feels like a hack...
+    for prefix in ('type.', 'typereg.', 'access.'):
+      ret.update({k: v for k, v in self.settings.items() if k.startswith(prefix)})
+    # /TODO
     return ret
 
   #----------------------------------------------------------------------------
-  def getFilteredEndpoints(self, options):
-    # todo: further decorate `context`...
-    context = aadict(options=options, request=options.context.request)
+  def getFilteredEndpoints(self, options, context):
     for entry in self.getCachedEndpoints(options):
       if entry.methods:
         entry.methods = filter(None, [
-          runFilters(options.efilters, e, context)
+          options.efilters.filter(e, context)
           for e in entry.methods])
-      entry = runFilters(options.efilters, entry, context)
+      entry = options.efilters.filter(entry, context)
       if entry:
         yield entry
 
   #----------------------------------------------------------------------------
   def getCachedEndpoints(self, options):
     # TODO: implement caching...
-    for entry in self.getEndpoints(options):
-      yield entry
+    #       *** IMPORTANT *** when caching is implemented, make sure that
+    #       the typereg and the endpoints are cloned pre filtering!...
+    # TODO: rearchitect this so that it is shared w _makeDescriberCatalog
+    context    = Scope(options=options)
+    catalog    = DescriberCatalog(
+      options    = options,
+      endpoints  = list(self.getEndpoints(options, context)),
+      typereg    = options.typereg,
+    )
+    context.catalog = options.cparsers.filter(catalog, context=context)
+    # TODO: ugh. this should really be done *before* catalog filtering,
+    #       but currently catalog filtering merges type declarations...
+    #       fix!
+    for typ in options.typereg.types():
+      options.tparsers.filter(typ, context=context)
+    return context.catalog.endpoints
 
   #----------------------------------------------------------------------------
-  def getEndpoints(self, options):
+  def getEndpoints(self, options, context):
 
     if isstr(options.view) and self.settings.config:
       # TODO: is this the "right" way?...
@@ -376,14 +480,13 @@ class Describer(object):
         log.exception('invalid target for pyramid-describe: %r', options.view)
         raise TypeError(_('the URL "{}" does not point to a pyramid_controllers.Controller', options.root))
     # todo: further decorate `context`...
-    context = aadict(options=options)
     for entry in self._walkEntries(options, None):
       if entry.methods:
         entry.methods = filter(None, [
-          runFilters(options.eparsers, e, context)
+          options.eparsers.filter(e, context)
           for e in entry.methods])
         entry.methods = sorted(entry.methods, key=self.methOrderKey)
-      entry = runFilters(options.eparsers, entry, context)
+      entry = options.eparsers.filter(entry, context)
       if entry:
         yield entry
 
@@ -612,33 +715,13 @@ class Describer(object):
     return entry
 
   #----------------------------------------------------------------------------
-  def _pick_param(self, options, value):
-    if options.showIds:
-      return pick(value, 'id', 'name', 'type', 'optional', 'default', 'doc')
-    return pick(value, 'name', 'type', 'optional', 'default', 'doc')
-
-  #----------------------------------------------------------------------------
-  def _pick_return(self, options, value):
-    if options.showIds:
-      return pick(value, 'id', 'type', 'doc')
-    return pick(value, 'type', 'doc')
-
-  #----------------------------------------------------------------------------
-  def _pick_raise(self, options, value):
-    if options.showIds:
-      return pick(value, 'id', 'type', 'doc')
-    return pick(value, 'type', 'doc')
-
-  #----------------------------------------------------------------------------
   def structure_entry(self, options, entry, dentry, dict=dict):
     if entry.params is not None:
-      dentry['params'] = [
-        dict(self._pick_param(options, e))
-        for e in entry.params]
+      dentry['params'] = entry.params.tostruct(ref=True)
     if entry.returns is not None:
-      dentry['returns'] = [dict(self._pick_return(options, e)) for e in entry.returns]
+      dentry['returns'] = entry.returns.tostruct(ref=True)
     if entry.raises is not None:
-      dentry['raises'] = [dict(self._pick_raise(options, e)) for e in entry.raises]
+      dentry['raises'] = entry.raises.tostruct(ref=True)
     if options.showExtra and entry.extra:
       try:
         for k, v in entry.extra.items():
@@ -650,36 +733,37 @@ class Describer(object):
     return dentry
 
   #----------------------------------------------------------------------------
-  def structure_render(self, data, dict=dict, includeEntry=False):
-    root = dict(application=dict(url=data.options.context.request.host_url))
+  def structure_render(self, catalog, dict=dict, includeEntry=False):
+    root = dict(application=dict(url=catalog.options.context.request.host_url))
     app = root['application']
-    app['endpoints'] = []
-    for entry in data.endpoints:
+    if catalog.endpoints:
+      app['endpoints'] = []
+    for entry in catalog.endpoints:
       endpoint = dict(path=entry.path)
-      if data.options.showIds:
+      if catalog.options.showIds:
         endpoint['id'] = entry.id
-      if data.options.showName:
+      if catalog.options.showName:
         endpoint['name'] = entry.name
-      if data.options.showDecorated:
-        if data.options.showName:
+      if catalog.options.showDecorated:
+        if catalog.options.showName:
           endpoint['decoratedName'] = entry.dname
         endpoint['decoratedPath'] = entry.dpath
       if includeEntry:
         endpoint['entry'] = entry
-      if data.options.showInfo and entry.doc:
+      if catalog.options.showInfo and entry.doc:
         endpoint['doc'] = entry.doc
-      if data.options.showMethods and entry.methods:
+      if catalog.options.showMethods and entry.methods:
         endpoint['methods'] = []
         for meth in entry.methods:
           dmeth = dict(name=meth.method)
-          if data.options.showIds and meth.id:
+          if catalog.options.showIds and meth.id:
             dmeth['id'] = meth.id
           if meth.doc:
             dmeth['doc'] = meth.doc
           if includeEntry:
             dmeth['entry'] = meth
-          endpoint['methods'].append(self.structure_entry(data.options, meth, dmeth, dict=dict))
-      if data.options.showExtra and entry.extra:
+          endpoint['methods'].append(self.structure_entry(catalog.options, meth, dmeth, dict=dict))
+      if catalog.options.showExtra and entry.extra:
         try:
           for k, v in entry.extra.items():
             if v is None:
@@ -688,6 +772,10 @@ class Describer(object):
               endpoint[k] = v
         except AttributeError: pass
       app['endpoints'].append(endpoint)
+      tnames = catalog.typereg.typeNames()
+      if tnames:
+        app['types'] = [
+          catalog.typereg.get(name).tostruct() for name in tnames]
 
     # todo: filter...
     # todo: what about formatting `doc`...
@@ -696,17 +784,17 @@ class Describer(object):
     return root
 
   #----------------------------------------------------------------------------
-  def template_render(self, data):
-    tpl = data.options.renderer \
-      or 'pyramid_describe:template/' + data.format + '.mako'
+  def template_render(self, catalog):
+    tpl = catalog.options.renderer \
+      or 'pyramid_describe:template/' + catalog.format + '.mako'
     return pyramid_render(
-      tpl, dict(data=data), request=data.options.context.request)
+      tpl, dict(data=catalog), request=catalog.options.context.request)
 
   #----------------------------------------------------------------------------
-  def doctree_render(self, data):
-    if data.options.get('render.template', None) is not None:
-      return render.render(data, data.options.get('render.template'))
-    return doctree.render(data)
+  def doctree_render(self, catalog):
+    if catalog.options.get('render.template', None) is not None:
+      return render.render(catalog, catalog.options.get('render.template'))
+    return doctree.render(catalog)
 
   #----------------------------------------------------------------------------
   def render(self, data, format=None, override_options=None):
@@ -731,21 +819,6 @@ class Describer(object):
   #----------------------------------------------------------------------------
   def render_rst(self, data):
     doc = self.doctree_render(data)
-
-    # <HACK-ALERT>
-    # TODO: remove this hack; basically, the docorator parsing is
-    #       being done here as a "post-processing" step in order to
-    #       avoid needing to parse (and thus re-render) the rST during
-    #       `entries.parsers` handling... ugh. see
-    #       .syntax.docorator.postParser for more details.
-    #       ==> one of the **MAJOR** problems with this is that it
-    #       means that the structure_render() output is not
-    #       docoratorified!...
-    from .syntax import docorator
-    if docorator.parser in ( data.options.eparsers or [] ):
-      doc = docorator.postParser(doc)
-    # </HACK-ALERT>
-
     # todo: should this runFilters be moved int doctree_render?...
     #       currently it is only being called from here, so not much
     #       of an issue, but if ever it isn't, then this behaviour might

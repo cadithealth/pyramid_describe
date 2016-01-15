@@ -29,7 +29,33 @@ class Root(Controller):
 
       The object name.
 
+      @INTERNAL: the name can be "foo" for an easter egg.
+
     admin : bool, optional, default: false, @INTERNAL
 
       Make the item visible to admins only.
+
+    shape : Shape
+
+      @BETA
+
+      A shape.
+
+      @INTERNAL: as generic as possible.
+
+      arg1 : str, @INTERNAL
+
+        first arg.
+
+      arg2 : str
+
+        @INTERNAL
+
+        second arg.
+
+      arg3 : str
+
+        third arg.
+
+        @INTERNAL: also a string.
     '''

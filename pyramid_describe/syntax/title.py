@@ -32,7 +32,7 @@ def normLines(text):
   return str(text).replace('\r\n', '\n').replace('\r', '\n')
 
 #------------------------------------------------------------------------------
-@asset.plugin('pyramid_describe.plugins.entries.parsers', 'title', after='docref')
+@asset.plugin('pyramid_describe.plugins.entry.parsers', 'title', after='docref')
 def parser(entry, options):
   '''
   This pyramid-describe entry parser plugin converts NumpyDoc

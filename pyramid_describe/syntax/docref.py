@@ -31,7 +31,7 @@ from ..doctree import walk
 #       endpoints/methods that don't exist
 
 #------------------------------------------------------------------------------
-@asset.plugin('pyramid_describe.plugins.entries.parsers', 'docref')
+@asset.plugin('pyramid_describe.plugins.entry.parsers', 'docref')
 def parser(entry, context):
   if not entry:
     return entry
@@ -152,6 +152,11 @@ def resolvePath(path, node):
   return os.path.normpath(os.path.join(curpath, path))
 
 #------------------------------------------------------------------------------
+def toTextRoleArg(text):
+  # todo: anything else need escaping?...
+  return '`' + text.replace('\\', '\\\\').replace('`', '\\`') + '`'
+
+#------------------------------------------------------------------------------
 # doc.link
 #------------------------------------------------------------------------------
 
@@ -178,9 +183,6 @@ class DocLink(object):
     self.dpath  = resolvePath(specv.pop(), node)
     self.path   = undecorate(self.dpath)
     self.method = specv.pop() if specv else None
-  def _escapeTextRoleArg(self, text):
-    # todo: anything else need escaping?...
-    return '`' + text.replace('\\', '\\\\').replace('`', '\\`') + '`'
   @property
   def args(self):
     args = [self.dpath]
@@ -188,7 +190,7 @@ class DocLink(object):
       args.insert(0, self.method)
     return args
   def __str__(self):
-    return ':' + self._name + ':' + self._escapeTextRoleArg(':'.join(self.args))
+    return ':' + self._name + ':' + toTextRoleArg(':'.join(self.args))
 def pyrdesc_doc_link_rst_visit(self, node):
   self._pushOutput()
 def pyrdesc_doc_link_rst_depart(self, node):
@@ -217,6 +219,51 @@ def pyrdesc_doc_link_html_depart(self, node):
     self.body.append('\n')
 HTMLTranslator.visit_pyrdesc_doc_link = pyrdesc_doc_link_html_visit
 HTMLTranslator.depart_pyrdesc_doc_link = pyrdesc_doc_link_html_depart
+
+#------------------------------------------------------------------------------
+# doc.type
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+class pyrdesc_doc_type(nodes.reference): pass
+textrole_doc_type = pyrdesc_doc_type
+roles.register_generic_role('doc.type', pyrdesc_doc_type)
+
+#------------------------------------------------------------------------------
+class DocType(object):
+  _name = 'doc.type'
+  def __init__(self, target, node):
+    self.target = target
+    if not target or not isinstance(target, six.string_types):
+      raise ValueError(
+        'Invalid pyramid-describe "%s" target: %r' % (self._name, target))
+  def __str__(self):
+    return ':' + self._name + ':' + toTextRoleArg(self.target)
+def pyrdesc_doc_type_rst_visit(self, node):
+  self._pushOutput()
+def pyrdesc_doc_type_rst_depart(self, node):
+  type = DocType(self._popOutput().data(), node)
+  self.output.separator()
+  self.output.append(str(type))
+  self.output.separator()
+RstTranslator.visit_pyrdesc_doc_type = pyrdesc_doc_type_rst_visit
+RstTranslator.depart_pyrdesc_doc_type = pyrdesc_doc_type_rst_depart
+
+#------------------------------------------------------------------------------
+def pyrdesc_doc_type_html_visit(self, node):
+  # todo: make this 'doc-' prefix configurable...
+  type = DocType(node.astext(), node)
+  atts = {
+    'class' : 'doc-typeref',
+    'href'  : '#typereg-type-' + tag(type.target),
+  }
+  self.body.append(self.starttag(node, 'a', '', **atts))
+def pyrdesc_doc_type_html_depart(self, node):
+  self.body.append('</a>')
+  if not isinstance(node.parent, nodes.TextElement):
+    self.body.append('\n')
+HTMLTranslator.visit_pyrdesc_doc_type = pyrdesc_doc_type_html_visit
+HTMLTranslator.depart_pyrdesc_doc_type = pyrdesc_doc_type_html_depart
 
 #------------------------------------------------------------------------------
 # end of $Id$
