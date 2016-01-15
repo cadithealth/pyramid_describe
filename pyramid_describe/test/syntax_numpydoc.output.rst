@@ -16,13 +16,15 @@ Contents of "/"
 Endpoints
 ---------
 
-.. class:: endpoint
+.. class:: doc-public endpoint
 
 .. _`endpoint-2f4954454d5f4944`:
 
 ``````````
 /{ITEM_ID}
 ``````````
+
+@PUBLIC
 
 Manages the attributes of the selected item.
 
@@ -34,7 +36,7 @@ Manages the attributes of the selected item.
 Methods
 :::::::
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-504f5354`:
 
@@ -42,15 +44,19 @@ Methods
 POST
 ''''''
 
+@PUBLIC
+
 Alias of :doc.link:`PUT:/{ITEM_ID}`.
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-474554`:
 
 ''''''
 GET
 ''''''
+
+@PUBLIC
 
 Get the current attributes.
 
@@ -78,7 +84,7 @@ code
 
 .. class:: spec
 
-str
+string
 
 The short identifier for this item.
 
@@ -90,7 +96,7 @@ displayname
 
 .. class:: spec
 
-str
+string
 
 The display name.
 
@@ -102,9 +108,19 @@ enabled
 
 .. class:: spec
 
-bool
+boolean
 
 Whether or not this item is available.
+
+.. class:: attr
+
+^^^^^^
+area
+^^^^^^
+
+.. class:: spec
+
+list(`Shape <#typereg-type-5368617065>`__)
 
 .. class:: raises
 
@@ -118,19 +134,21 @@ Raises
 
 .. _`raise-method-2f4954454d5f4944-474554-485454504e6f74466f756e64`:
 
-~~~~~~~~~~~~
-HTTPNotFound
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`HTTPNotFound <#typereg-type-485454504e6f74466f756e64>`__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The specified item ID does not exist.
 
-.. class:: method
+.. class:: doc-public method
 
 .. _`method-2f4954454d5f4944-505554`:
 
 ''''''
 PUT
 ''''''
+
+@PUBLIC
 
 Update the item's current attributes.
 
@@ -144,42 +162,102 @@ Parameters
 
 .. class:: param
 
-.. _`param-method-2f4954454d5f4944-505554-636f6465`:
+.. _`param-method-2f4954454d5f4944-505554-64696374`:
 
 ~~~~~~
-code
+dict
 ~~~~~~
+
+.. class:: attr
+
+^^^^^^
+code
+^^^^^^
 
 .. class:: spec
 
-str
+string
 
 The short identifier for this item.
 
-.. class:: param
+.. class:: attr
 
-.. _`param-method-2f4954454d5f4944-505554-646973706c61796e616d65`:
-
-~~~~~~~~~~~
+^^^^^^^^^^^
 displayname
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 .. class:: spec
 
-str
+string
 
 The display name.
 
-.. class:: param
+.. class:: attr
 
-.. _`param-method-2f4954454d5f4944-505554-656e61626c6564`:
-
-~~~~~~~
+^^^^^^^
 enabled
-~~~~~~~
+^^^^^^^
 
 .. class:: spec
 
-bool, optional, default: true
+boolean, default: ``true``
 
 Whether or not this item is available.
+
+.. class:: typereg
+
+.. _`section-typereg`:
+
+------
+Types
+------
+
+.. class:: source-pyramid-httpexceptions typereg-type
+
+.. _`typereg-type-485454504e6f74466f756e64`:
+
+````````````
+HTTPNotFound
+````````````
+
+The resource could not be found.
+
+.. class:: attr
+
+::::::
+code
+::::::
+
+.. class:: spec
+
+``404``
+
+.. class:: attr
+
+:::::::
+message
+:::::::
+
+.. class:: spec
+
+``"Not Found"``
+
+.. class:: doc-public typereg-type
+
+.. _`typereg-type-5368617065`:
+
+``````
+Shape
+``````
+
+@PUBLIC
+
+.. class:: attr
+
+::::::
+sides
+::::::
+
+.. class:: spec
+
+integer

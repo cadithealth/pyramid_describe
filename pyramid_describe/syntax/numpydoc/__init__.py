@@ -6,7 +6,7 @@
 # copy: (C) Copyright 2015-EOT Cadit Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-from .plugin import parser
+from .plugin import parser, catalog_parser
 
 #------------------------------------------------------------------------------
 # end of $Id$

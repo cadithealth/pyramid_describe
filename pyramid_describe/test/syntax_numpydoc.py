@@ -3,12 +3,16 @@ from pyramid_controllers import Controller, RestController, expose
 class Item(RestController):
 
   '''
+  @PUBLIC
+
   Manages the attributes of the selected item.
   '''
 
   @expose
   def get(self, request):
     '''
+    @PUBLIC
+
     Get the current attributes.
 
     :Returns:
@@ -27,6 +31,14 @@ class Item(RestController):
 
         Whether or not this item is available.
 
+      area : list(Shape)
+
+        Shape
+
+          @PUBLIC
+
+          sides : int
+
     :Raises:
 
     HTTPNotFound
@@ -37,6 +49,8 @@ class Item(RestController):
   @expose
   def put(self, request):
     '''
+    @PUBLIC
+
     Update the item's current attributes.
 
     :Parameters:
@@ -58,6 +72,8 @@ class Item(RestController):
   @expose
   def post(self, request):
     '''
+    @PUBLIC
+
     Alias of :doc.link:`PUT:.`.
     '''
 
