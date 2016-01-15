@@ -12,8 +12,6 @@ import inspect
 import binascii
 import types
 import json
-import collections
-import xml.etree.ElementTree as ET
 
 import six
 import yaml
@@ -49,69 +47,7 @@ except ImportError:
   pdfkit = None
 
 #------------------------------------------------------------------------------
-def ccc(name):
-  'Convert Camel Case (converts camelCase to camel-case).'
-  def repl(match):
-    return match.group(1) + '-' + match.group(2).lower()
-  return re.sub('([a-z])([A-Z])', repl, name)
-def singular(name):
-  if name.endswith('s'):
-    return name[:-1]
-  return name
-def isscalar(obj):
-  return isinstance(obj, six.string_types + (bool, int, float))
-def islist(obj):
-  if isscalar(obj) or isinstance(obj, dict):
-    return False
-  try:
-    list(obj)
-    return True
-  except TypeError:
-    return False
-
-#------------------------------------------------------------------------------
-def add2node(obj, node):
-  if obj is None:
-    return
-  if isscalar(obj):
-    node.text = ( node.text or '' ) + str(obj)
-    return
-  if isinstance(obj, dict):
-    for k, v in obj.items():
-      if v is None:
-        continue
-      if isscalar(v):
-        node.set(ccc(k), str(v))
-        continue
-      if islist(v):
-        # todo: this 'singularization' should probably be in render_xml...
-        k = singular(k)
-        for el in v:
-          node.append(dict2node(dict([(k,el)])))
-        continue
-      node.append(dict2node(dict([(k,v)])))
-    return
-  raise NotImplementedError()
-
-#------------------------------------------------------------------------------
-def dict2node(d):
-  if len(d) != 1:
-    node = ET.Element('element')
-    for k, v in d.items():
-      node.append(dict2node(dict([(k, v)])))
-    return node
-  node = ET.Element(ccc(d.keys()[0]))
-  add2node(d.values()[0], node)
-  return node
-
-#------------------------------------------------------------------------------
-def et2str(data):
-  return ET.tostring(data, 'UTF-8').replace(
-    '<?xml version=\'1.0\' encoding=\'UTF-8\'?>',
-    '<?xml version="1.0" encoding="UTF-8"?>')
-
-#------------------------------------------------------------------------------
-class DescriberData(adict):
+class DescriberCatalog(adict):
   @property
   def tree_entries(self):
     # todo: make this a bit more "rigorous"...
@@ -185,20 +121,6 @@ def methOrderKey(methods):
 
 #------------------------------------------------------------------------------
 class Describer(object):
-
-  xmlns = dict(
-    wadl = 'http://research.sun.com/wadl/2006/10',
-    xsd  = 'http://www.w3.org/2001/XMLSchema',
-    xsi  = 'http://www.w3.org/2001/XMLSchema-instance',
-    doc  = 'http://pythonhosted.org/pyramid_describer/xmlns/0.1/doc',
-  )
-
-  wadl_type_remap = {
-    'bool':  'xsd:boolean',
-    'int':   'xsd:integer',
-    'float': 'xsd:float',
-    'str':   'xsd:string',
-  }
 
   legend = (
     ('STUB',
@@ -869,127 +791,24 @@ class Describer(object):
     return yaml.dump(self.structure_render(data))
 
   #----------------------------------------------------------------------------
-  def render_xml(self, data):
-    data = self.structure_render(data, dict=collections.OrderedDict)
-    # force 'doc' attribute into a list, which causes dict2node to
-    # make it into a node instead of an attribute
-    def doc2list(node):
-      if isscalar(node) or node is None:
-        return
-      if islist(node):
-        for sub in node:
-          doc2list(sub)
-        return
-      if 'doc' in node:
-        node['doc'] = [node['doc']]
-      for value in node.values():
-        doc2list(value)
-    doc2list(data)
-    return et2str(dict2node(data))
+  def render_xml(self, catalog):
+    # todo: move to asset.plugin-oriented format loading and handling... ie:
+    #   in __init__:
+    #     self.renderers = asset.plugins(
+    #       'pyramid_describe.plugins.renderers',
+    #       self.settings.get('renderers', '*'))
+    #   then here:
+    #     return self.renderers.select('xml').handle(data)
+    from .renderer import xml
+    return xml.render(catalog)
 
   #----------------------------------------------------------------------------
-  def et2wadl(self, options, root):
-    for ns, uri in self.xmlns.items():
-      if ns == 'wadl':
-        root.set('xmlns', uri)
-      else:
-        root.set('xmlns:' + ns, uri)
-    root.set('xsi:schemaLocation', self.xmlns['wadl'] + ' wadl.xsd')
-    rename = {
-      'doc':       'doc:doc',
-      'endpoint':  'resource',
-      'return':    'representation',
-      'raise':     'fault',
-    }
-    resources = ET.Element('resources')
-    for elem in list(root):
-      root.remove(elem)
-      resources.append(elem)
-    root.append(resources)
-    appUrl = None
-    for elem in root.iter():
-      if elem.tag in rename:
-        elem.tag = rename[elem.tag]
-      if elem.tag == 'application' and 'url' in elem.attrib:
-        appUrl = elem.attrib.pop('url')
-      if elem.tag == 'resources' and appUrl:
-        elem.set('base', appUrl)
-      elem.attrib.pop('decorated-name', None)
-      elem.attrib.pop('decorated-path', None)
-      if 'path' in elem.attrib and elem.attrib.get('path').startswith('/'):
-        elem.attrib['path'] = elem.attrib.get('path')[1:]
-      if elem.tag == 'resource':
-        elem.attrib.pop('name', None)
-      if elem.tag == 'method':
-        reqnodes = []
-        resnodes = []
-        for child in list(elem):
-          if child.tag in ('param',):
-            reqnodes.append(child)
-            elem.remove(child)
-          elif child.tag in ('return', 'raise'):
-            resnodes.append(child)
-            elem.remove(child)
-        if reqnodes:
-          req = ET.SubElement(elem, 'request')
-          req.extend(reqnodes)
-        if resnodes:
-          res = ET.SubElement(elem, 'response')
-          res.extend(resnodes)
-      if elem.tag == 'representation':
-        if 'type' in elem.attrib:
-          val = elem.attrib.pop('type')
-          elem.attrib['element'] = self.wadl_type_remap.get(val, val)
-        if 'doc' in elem.attrib:
-          doc = elem.attrib.pop('doc')
-          ET.SubElement(elem, 'doc:doc').text = doc
-      if elem.tag == 'param':
-        if 'optional' in elem.attrib:
-          opt = asbool(elem.attrib.pop('optional'))
-          elem.attrib['required'] = 'true' if not opt else 'false'
-        if 'type' in elem.attrib:
-          val = elem.attrib['type']
-          if val in self.wadl_type_remap:
-            elem.attrib['type'] = self.wadl_type_remap[val]
-        if 'doc' in elem.attrib:
-          doc = elem.attrib.pop('doc')
-          ET.SubElement(elem, 'doc:doc').text = doc
-      if elem.tag == 'fault':
-        doc = elem.attrib.pop('doc', None)
-        if doc:
-          ET.SubElement(elem, 'doc:doc').text = doc
-        if 'type' in elem.attrib:
-          val = elem.attrib.pop('type')
-          elem.attrib['element'] = self.wadl_type_remap.get(val, val)
-    return root
+  def render_wadl(self, catalog):
+    # todo: see `render_xml`, then:
+    #   return self.renderers.select('wadl').handle(data)
+    from .renderer import wadl
+    return wadl.render(catalog)
 
-  #----------------------------------------------------------------------------
-  def render_wadl(self, data):
-    options = data.options
-    data = self.structure_render(data, dict=collections.OrderedDict)
-    # force 'doc' attribute into a list, which causes dict2node to
-    # make it into a node instead of an attribute
-    def doc2list(node):
-      if isscalar(node) or node is None:
-        return
-      if islist(node):
-        for sub in node:
-          doc2list(sub)
-        return
-      if 'doc' in node:
-        node['doc'] = [node['doc']]
-      for value in node.values():
-        doc2list(value)
-    doc2list(data)
-    # force all endpoints to have at least a 'GET' method
-    for endpoint in data['application']['endpoints']:
-      if not endpoint.get('methods'):
-        endpoint['methods'] = [dict(
-          id='method-{}-{}'.format(tag(endpoint['path']), tag('GET')),
-          name='GET')]
-    data = dict2node(data)
-    data = self.et2wadl(options, data)
-    return et2str(data)
 
 #------------------------------------------------------------------------------
 # end of $Id$
