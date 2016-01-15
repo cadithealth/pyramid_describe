@@ -148,7 +148,7 @@ here:
   describe.formats                       = html json pdf
   describe.format.default.title          = My Application
   describe.format.html.default.cssPath   = myapp:static/doc.css
-  describe.entries.filters               = myapp.describe.entry_filter
+  describe.entry.filters                 = myapp.describe.entry_filter
 
 Note that multiple describers, each with different configurations, can
 be added via pyramid inclusion by using the `describe.prefixes`
@@ -191,7 +191,7 @@ Example:
       'formats'                       : ['html', 'json', 'pdf'],
       'format.default.title'          : 'My Application',
       'format.html.default.cssPath'   : 'myapp:static/doc.css',
-      'entries.filters'               : 'myapp.describe.entry_filter',
+      'entry.filters'                 : 'myapp.describe.entry_filter',
     }
 
     config.add_controller('MyAppDescriber', '/doc', DescribeController(settings))
@@ -235,7 +235,7 @@ Example:
       'formats'                       : ['html', 'json', 'pdf'],
       'format.default.title'          : 'My Application',
       'format.html.default.cssPath'   : 'myapp:static/doc.css',
-      'entries.filters'               : 'myapp.describe.entry_filter',
+      'entry.filters'                 : 'myapp.describe.entry_filter',
     }
 
     describer = Describer(settings=settings)
@@ -262,7 +262,7 @@ pydocs is parsed and converted using:
 * Inter-endpoint linking and referencing
 
 This behavior can be disabled or extended by setting the
-`entries.parsers` setting (see Options_). Here is an example that
+`entry.parsers` setting (see Options_). Here is an example that
 employs each of these functions (see below for an in-depth
 explanation):
 
@@ -500,7 +500,7 @@ plugin-oriented architecture, which uses setuptools' "entrypoints"
 mechanism to register a plugin. The following entrypoint groups are
 currently supported:
 
-* ``pyramid_describe.plugins.entries.parsers``
+* ``pyramid_describe.plugins.entry.parsers``
 
   These plugins receive an Entry object and are intended to augment
   its documentation in some way. For example, formal syntax
@@ -508,13 +508,14 @@ currently supported:
   special short-hand syntax can be converted to standard
   reStructuredText format.
 
-  The default `entries.parsers` plugins, which implement the
+  The default `entry.parsers` plugins, which implement the
   `Documentation Conventions`_, are loaded in the following order:
 
   #. docref : resolves documentation linking, e.g. ``:doc.link:`{TARGET}```
   #. title : converts ``:{TITLE}:`` style NumpyDoc titles to reStructuredText
-  #. numpydoc : extracts NumpyDoc-formatted documentation to structured data
-  #. docorator : extracts ``@{LABEL}`` style documentation enhancement classes
+  #. numpydoc : extracts NumpyDoc-formatted documentation to structured info
+  #. docorator : extracts ``@{LABEL}`` style documentation enhancement
+     classes
 
   Each entry that is selected for inclusion for rendering is first
   passed through each parser and replaced by the return value from the
@@ -537,17 +538,36 @@ currently supported:
   The result of a parser operation is expected to be cacheable; this
   means that it should only be sensitive to the data in the actual
   entry itself, not the current request. For that, see the
-  `pyramid_describe.plugins.entries.filters` plugins.
+  `pyramid_describe.plugins.entry.filters` plugins.
 
   TODO: although the `context.options` object currently includes a
   reference to the current `request`, this should *NOT* be used! It
   will eventually be removed, as entry parsing (but not rendering) may
   be done pro-actively at some point (i.e. when there is no request).
 
-* ``pyramid_describe.plugins.entries.filters``
+* ``pyramid_describe.plugins.catalog.parsers``
+
+  After all entries have been found and parsed, this set of plugins
+  are invoked on the accumulated `DescriberCatalog` to do any
+  finalization or preparation of the catalog. This is an opportunity
+  to finish up anything that the entry parsers may have done that
+  may require visibility of all endpoints.
+
+  The default `catalog.parsers` plugins are:
+
+  #. numpydoc : performs post-parsing merging and resolution of any
+     structured types into the type registry.
+  #. docorator : extracts ``@{LABEL}`` style documentation enhancement
+     classes
+
+  The describer passes the catalog and a context as arguments, and
+  expects the result of the plugins to be a describer catalog and to
+  be a cacheable structure.
+
+* ``pyramid_describe.plugins.entry.filters``
 
   These plugins are identical in API to the
-  `pyramid_describe.plugins.entries.parsers` plugins, is called with
+  `pyramid_describe.plugins.entry.parsers` plugins, is called with
   the same parameters, and is expected to have the same return type,
   with the following critical differences:
 
@@ -563,6 +583,22 @@ currently supported:
   Note that parser and filter plugins typically work together in this
   respect by, for example, having the parser decorate the entry with
   classes that the filter then inspects.
+
+* ``pyramid_describe.plugins.catalog.filters``
+
+  Once all of the `entry.filters` plugins have been invoked on the
+  individual endpoints, the entire catalog is passed through the
+  `catalog.filters` for a final pass before rendering the output.
+
+  The same "critical differences" in `entry.filters` applies here.
+
+* ``pyramid_describe.plugins.formats.rst.filters``
+* ``pyramid_describe.plugins.formats.txt.filters``
+* ``pyramid_describe.plugins.formats.json.filters``
+* ``pyramid_describe.plugins.formats.wadl.filters``
+* ``pyramid_describe.plugins.formats.yaml.filters``
+* ``pyramid_describe.plugins.formats.xml.filters``
+* ``pyramid_describe.plugins.formats.pdf.filters``
 
 All plugins are loaded using the plugins loading mechanism from `asset
 <https://pypi.python.org/pypi/asset>`__ -- see the `plugin
@@ -715,31 +751,31 @@ constructors, the prefix is left off. The following options exist:
 
   The inverse of the `include` option -- see `include` for details.
 
-* ``{PREFIX}.entries.parsers`` : list(resolve-spec), default: '*'
+* ``{PREFIX}.entry.parsers`` : list(resolve-spec), default: '*'
 
   This option overrides the default entry parser plugin loading, which
   loads all registered plugins for the
-  ``pyramid_describe.plugins.entries.parsers`` entrypoint group.
+  ``pyramid_describe.plugins.entry.parsers`` entrypoint group.
   Typically, this is used to add a custom entry parser to the
   registered set, e.g.:
 
   .. code:: ini
 
-    describe.entries.parsers = +package.module.custom_parser
+    describe.entry.parsers = +package.module.custom_parser
 
   See the `Plugin Architecture`_ section for details.
 
-* ``{PREFIX}.entries.filters`` : list(resolve-spec), default: '*'
+* ``{PREFIX}.entry.filters`` : list(resolve-spec), default: '*'
 
   This option overrides the default entry filter plugin loading, which
   loads all registered plugins for the
-  ``pyramid_describe.plugins.entries.filters`` entrypoint group.
+  ``pyramid_describe.plugins.entry.filters`` entrypoint group.
   Typically, this is used to add a custom entry filter to the
   registered set, e.g.:
 
   .. code:: ini
 
-    describe.entries.filters = +package.module.custom_filter
+    describe.entry.filters = +package.module.custom_filter
 
   See the `Plugin Architecture`_ section for details.
 
@@ -850,7 +886,9 @@ constructors, the prefix is left off. The following options exist:
   Note that the "pdf" and "yaml" formats require that optional python
   package dependencies be installed (respectively `pdfkit` and
   `PyYAML`), and that pdfkit_ furthermore requires that the
-  wkhtmltopdf_ program be available.
+  wkhtmltopdf_ program be available. It is highly recommended that the
+  "QT-patched version" of wkhtmltopdf be used, version 0.12.2.1 or
+  better.
 
 * ``{PREFIX}.format.default`` : str, default: first format listed in `{PREFIX}.formats`
 
@@ -1041,7 +1079,7 @@ Format Options
 
 * ``filters`` : list(resolve-spec), default: null
 
-  Unlike the top-level `entries.filters` setting which filters
+  Unlike the top-level `entry.filters` setting which filters
   individual entries as they get selected for rendering, the
   format-specific `filters` option is called on the entire data object
   before final rendering, and is very format-specific in what is made
