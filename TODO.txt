@@ -1,6 +1,154 @@
+- handle case where an anonymous dict param/return/raise has no
+  keys after filtration. eg. an endpoint takes a single parameter,
+  "all", but that is marked internal. thus public users won't see
+  the parameter, but a "dict" still will be taken as input...
+
+- use pygments to syntax-highlight code blocks!
+
+- when merging two docorated types that have local documentation, the
+  location of the docorators is a bit "annoying"... eg:
+
+    :Parameters:
+
+    Shape
+
+      Provided a shape.
+
+      @PUBLIC
+
+      a shape!
+
+      ...
+
+    :Returns:
+
+    Shape
+
+      This is returned.
+
+      @PUBLIC
+
+      a shape!
+
+      ...
+
+- rename `entry.filters` to `endpoint.filters`...
+  **OR** actually move toward entry-based filtering
+  (which is prolly better)
+
+- when rendering long parameter attribute values, add ability to
+  collapse it somehow...
+
+- parse rst-literals as constants too, eg:
+
+    foo : ( string | ``45.45`` )
+
+  ==> the content must be YAML-parseable, and can be *any*
+      YAML... cool.
+
+- make the /describe/ root URL return an HTML page with all
+  available options & formats (instead of redirecting to the
+  default location)...
+
+- type registry improvements:
+  - how to specify additional aliases in config? in documentation?
+  - how to specify that some types are "undocumented"? eg. HTTPNotFound
+  - class aliasing... eg CampaignPutSchema & CampaignGetSchema => Campaign
+
+- maybe create a UI to control all the options?...
+  eg. /api/describe/ui
+  which then let's you specify `showImpl`, `rstMax`, etc
+
+- support RAML? http://raml.org/
+  swagger? https://en.wikipedia.org/wiki/Swagger_%28software%29
+
+- support complex type aliassing, eg:
+
+  GenderType : ( 'm' | 'f' | 'o' )
+
+  Person
+
+    gender : GenderType
+
+- list type must support being specified as:
+
+  - list
+  - list(Foo)
+  - list( Foo | Bar )
+  - list( "male" | "female" | "other" | null )
+
 - migrate from `adict` to `aadict`
 
-- make the Entry object in entries.parsers support the mode where it
+- support type definition and option promotion/demotion
+
+  attr : X
+
+    param1 : Y
+
+  attr : X[!param2]
+
+    param2 : Z
+
+  ==> current text roles/directives:
+    * doc.link
+    * doc.copy
+    * doc.import
+    * doc.endpoint
+      - regex
+      - unmatched
+      - link
+  ==> new text roles/directives:
+    * doc.type
+      - regex
+      - unmatched
+      - link
+    * doc.legend
+    * doc.meta
+
+  - naming rules:
+    - initial-lowercase => primitive type
+    - initial-uppercase => complex type
+  - available options:
+    - optional
+    - required
+    - r / read
+    - w / write
+    - c / create
+    - ro / read-only
+    - wo / write-only
+    - co / create-only
+    - nullable
+    - default
+    - default-to
+  - merge all attributes from all same-name definitions
+    => warn/error on collision
+  - create ability to define types outside of endpoints
+  - type aliases, eg `epoch` := `float`
+
+  - support "special" "limits" section
+
+  - if a complex type has read-only properties, how to
+    specify in the PUT WADL that it should only document
+    writeable props? possibilities:
+
+    :Parameters:
+
+    object : Object(w)
+
+    object : Object(!wo)
+
+    object : Object, w
+
+    object : Object, !wo
+
+    object : Object[!wo]
+
+    object : Object/w
+
+    ==> or just assume PUT/POST are "write" mode?
+
+
+- make the Entry object in entry.parsers support the mode where it
   has both a plain-text `.doc` and an rST `.rstdoc`, and it
   dynamically converts on demand (and expunges on `set`)... that way
   whatever you need is available...
@@ -30,8 +178,6 @@
   ==> the value should be either True/False or the parameter in parenthesis
       if parenthesized.
   ==> make these go back and forth between Entry.classes prefixed with `doc-`...
-
-- add ``nullable`` as known flag to parameters
 
 - make the Dispatcher.walk() use generators instead of recursion...
   ==> reduces stack
