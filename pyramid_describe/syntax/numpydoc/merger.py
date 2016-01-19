@@ -25,11 +25,11 @@ CHANNEL_ALL             = 'all'
 class MergeError(Exception): pass
 
 #------------------------------------------------------------------------------
-def registerTypes(entry, context, channel, typ):
+def resolveTypes(entry, context, channel, typ):
   '''
-  Registers the type definition `typ` into the current context state.
-  The `channel` defines how the type is being defined and can be one
-  of:
+  Resolves the unbound type definition `typ` into the current context
+  state. The `channel` defines how the type is being defined and can
+  be one of:
 
   * ``'input'`` : it describes an input parameter
   * ``'output'`` : it describes an output parameter
@@ -48,7 +48,9 @@ def registerTypes(entry, context, channel, typ):
     return typ
 
   if 'numpydoc' not in context:
-    context.numpydoc = dict()
+    context.numpydoc = aadict()
+  if 'types' not in context.numpydoc:
+    context.numpydoc.types = dict()
 
   if channel is None:
     mode = CHANNEL_ALL
@@ -65,12 +67,12 @@ def registerTypes(entry, context, channel, typ):
     mode = ACCESS_R
 
   def _register(typ, ref):
-    if typ.name not in context.numpydoc:
-      context.numpydoc[typ.name] = {}
-    if mode not in context.numpydoc[typ.name]:
-      context.numpydoc[typ.name][mode] = []
+    if typ.name not in context.numpydoc.types:
+      context.numpydoc.types[typ.name] = {}
+    if mode not in context.numpydoc.types[typ.name]:
+      context.numpydoc.types[typ.name][mode] = []
     refonly = not ( typ.doc or typ.value )
-    context.numpydoc[typ.name][mode].append(
+    context.numpydoc.types[typ.name][mode].append(
       aadict(type=typ, ref=ref, refonly=refonly, mode=mode, entry=entry))
 
   def _walk(typ):
@@ -80,7 +82,13 @@ def registerTypes(entry, context, channel, typ):
     else:
       if typ.base == Type.DICT:
         ref = TypeRef(type=typ)
+
+    # todo: this is a wholly unsatisfactory implementation...
+    #       - should it genericize aliasing to all types?
+    #       - perhaps resolution should be done during parsing on-the-fly?
+
     if typ.base == Type.DICT:
+      typ.name = context.options.typereg.resolveAliases(typ.name)
       _register(typ, ref)
       if typ.value:
         typ.value = [_walk(t) for t in typ.value]
@@ -90,13 +98,19 @@ def registerTypes(entry, context, channel, typ):
     elif typ.base == Type.COMPOUND and typ.name in (Type.LIST, Type.REF):
       if typ.value:
         typ.value = _walk(typ.value)
+    elif typ.base == Type.UNKNOWN:
+      ref.type = context.options.typereg.get(typ.name)
+      if not ref.type:
+        raise ValueError(
+          'invalid reference to unknown/undefined type "%s"' % (typ.name,))
     return ref
 
   return _walk(typ)
 
 #------------------------------------------------------------------------------
 def mergeTypes(catalog, context):
-  for name, decls in (context.numpydoc or {}).items():
+  types = context.get('numpydoc', {}).get('types', {})
+  for name, decls in types.items():
     try:
       typ = _mergeType(context, name, decls)
     except Exception as err:
@@ -112,7 +126,7 @@ def mergeTypes(catalog, context):
     catalog.typereg.registerType(typ)
   _dereferenceCatalog(catalog)
   # release the cache!
-  context.numpydoc = None
+  types.clear()
 
 #------------------------------------------------------------------------------
 def _mergeType(context, typname, regset):
