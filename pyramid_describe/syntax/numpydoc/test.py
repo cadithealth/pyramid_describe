@@ -25,266 +25,7 @@ class TestNumpydoc(test_helpers.TestHelper):
       commentToken=self.typereg.options.commentToken, typereg=self.typereg))
 
   #----------------------------------------------------------------------------
-  def test_FixedNumpyDocString_preserves_empty_lines(self):
-    from .extractor import FixedNumpyDocString
-    src = '''\
-Returns
--------
-A paragraph.
-
-A multi-line
-paragraph.'''
-    self.assertMultiLineEqual(str(FixedNumpyDocString(src)), src)
-
-  #----------------------------------------------------------------------------
-  def test_extract_unexpected_sections(self):
-    from .extractor import extract
-    with self.assertRaises(ValueError) as cm:
-      extract(self.context, 'foo\n\nParameters\n----------\n\n(invalid)', '##')
-    self.assertEqual(
-      str(cm.exception),
-      "unexpected/invalid nested section(s): 'Parameters'")
-
-  #----------------------------------------------------------------------------
-  def test_extract_dict_one_attribute(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, 'prelude\nk1 : s1\n\n', '##'),
-      dict(doc='prelude', spec='dict', value=[dict(name='k1', spec='s1')]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_dict_two_attributes(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, 'prelude\nk1 : s1\nk2 : s2\n', '##'),
-      dict(doc='prelude', spec='dict', value=[
-        dict(name='k1', spec='s1'),
-        dict(name='k2', spec='s2'),
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_whitespace_extra(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, 'prelude\nk1\t :  s1 \nk2  : s2\n', '##'),
-      dict(doc='prelude', spec='dict', value=[
-        dict(name='k1', spec='s1'),
-        dict(name='k2', spec='s2'),
-      ]))
-
-  # TODO: enable this when supported...
-  # #----------------------------------------------------------------------------
-  # def test_extract_whitespace_agnostic(self):
-  #   from .extractor import extract
-  #   self.assertEqual(
-  #     extract(self.context, 'prelude\nk1\t: s1\nk2\t: s2\n', '##'),
-  #     dict(doc='prelude', spec='dict', value=[
-  #       dict(name='k1', spec='s1'),
-  #       dict(name='k2', spec='s2'),
-  #     ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_single_toplevel_anonymous_implicit(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-k1 : s1
-  d1
-k2 : s2
-k3 : s3
-  d3
-''', '##'),
-      dict(doc='the prelude', spec='dict', value=[
-        dict(name='k1', spec='s1', doc='d1'),
-        dict(name='k2', spec='s2'),
-        dict(name='k3', spec='s3', doc='d3'),
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_single_toplevel_anonymous_explicit(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-dict
-  inner prelude
-  k1 : s1
-    d1
-  k2 : s2
-  k3 : s3
-    d3
-''', '##'),
-      dict(doc='the prelude', spec='oneof', value=[
-        dict(spec='dict', doc='inner prelude', value=[
-          dict(name='k1', spec='s1', doc='d1'),
-          dict(name='k2', spec='s2'),
-          dict(name='k3', spec='s3', doc='d3'),
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_single_toplevel_declarative(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-KeyMap
-  inner prelude
-  k1 : s1
-    d1
-  k2 : s2
-  k3 : s3
-    d3
-''', '##'),
-      dict(doc='the prelude', spec='oneof', value=[
-        dict(spec='KeyMap', doc='inner prelude', value=[
-          dict(name='k1', spec='s1', doc='d1'),
-          dict(name='k2', spec='s2'),
-          dict(name='k3', spec='s3', doc='d3'),
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_single_namespaced_anonymous(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-keymap : dict
-  inner prelude
-  k1 : s1
-    d1
-  k2 : s2
-  k3 : s3
-    d3
-''', '##'),
-      dict(doc='the prelude', spec='dict', value=[
-        dict(name='keymap', spec='dict', doc='inner prelude', value=[
-          dict(name='k1', spec='s1', doc='d1'),
-          dict(name='k2', spec='s2'),
-          dict(name='k3', spec='s3', doc='d3'),
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_single_namespaced_declarative(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-keymap : KeyMap
-  inner prelude
-  k1 : s1
-    d1
-  k2 : s2
-  k3 : s3
-    d3
-''', '##'),
-      dict(doc='the prelude', spec='dict', value=[
-        dict(name='keymap', spec='KeyMap', doc='inner prelude', value=[
-          dict(name='k1', spec='s1', doc='d1'),
-          dict(name='k2', spec='s2'),
-          dict(name='k3', spec='s3', doc='d3'),
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_dual_namespaced_declarative(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude
-dict
-  inner prelude a
-  keymap : KeyMap
-    inner prelude a.2
-    k1 : s1
-      d1
-    k2 : s2
-    k3 : s3
-      d3
-dict
-  inner prelude b
-  othermap : OtherMap
-    inner prelude b.2
-    k1 : s1
-''', '##'),
-      dict(doc='the prelude', spec='oneof', value=[
-        dict(spec='dict', doc='inner prelude a', value=[
-          dict(name='keymap', spec='KeyMap', doc='inner prelude a.2', value=[
-            dict(name='k1', spec='s1', doc='d1'),
-            dict(name='k2', spec='s2'),
-            dict(name='k3', spec='s3', doc='d3'),
-          ])]),
-        dict(spec='dict', doc='inner prelude b', value=[
-          dict(name='othermap', spec='OtherMap', doc='inner prelude b.2', value=[
-            dict(name='k1', spec='s1'),
-          ])
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_recursive(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-the prelude 1
-dict
-  inner prelude 2
-  keymap : KeyMap
-    inner prelude 3
-    k3 : s3
-      inner prelude 4
-      k4 : s4
-''', '##'),
-      dict(doc='the prelude 1', spec='oneof', value=[
-        dict(spec='dict', doc='inner prelude 2', value=[
-          dict(name='keymap', spec='KeyMap', doc='inner prelude 3', value=[
-            dict(name='k3', spec='s3', doc='inner prelude 4', value=[
-              dict(name='k4', spec='s4')
-            ])
-          ])
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_rst_and_attributes(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-a preamble
-with a list:
-  * one: 1
-  * two
-k1 : v1
-  d1
-''', '##'),
-      dict(doc='a preamble\nwith a list:\n    * one: 1\n    * two', spec='dict', value=[
-        dict(name='k1', spec='v1', doc='d1'),
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_rst_and_oneof(self):
-    from .extractor import extract
-    self.assertEqual(
-      extract(self.context, '''\
-a preamble
-with a list:
-  * one: 1
-  * two
-dict
-  inner prelude 2
-  k1 : v1
-''', '##'),
-      dict(doc='a preamble\nwith a list:\n    * one: 1\n    * two', spec='oneof', value=[
-        dict(spec='dict', doc='inner prelude 2', value=[
-          dict(name='k1', spec='v1'),
-        ])
-      ]))
-
-  #----------------------------------------------------------------------------
-  def test_extract_httpalias(self):
+  def test_parse_httpalias(self):
     from ...typereg import Type, TypeRef
     from .extractor import numpy2type
     self.assertEqual(
@@ -301,7 +42,7 @@ dict
   #----------------------------------------------------------------------------
   def test_extract_entry_doc(self):
     from ...typereg import Type, TypeRef
-    from .plugin import parser
+    from .plugin import entry_parser
     entry = aadict(doc='''
 
 Some entry documentation.
@@ -330,7 +71,7 @@ HTTPForbidden
   not authorized.
 ''')
     self.assertEqual(
-      dict(parser(entry, self.context)),
+      dict(entry_parser(entry, self.context)),
       dict(
         doc='''\
 Some entry documentation.
@@ -360,7 +101,7 @@ All the standard stuff.''',
   #----------------------------------------------------------------------------
   def test_extract_nested(self):
     from ...typereg import Type, TypeRef
-    from .plugin import parser
+    from .plugin import entry_parser
     entry = aadict(doc=textwrap.dedent('''
       Returns
       -------
@@ -374,7 +115,7 @@ All the standard stuff.''',
             The URI.
     '''))
     self.assertEqual(
-      dict(parser(entry, self.context)),
+      dict(entry_parser(entry, self.context)),
       dict(
         doc='',
         params=None,
@@ -394,7 +135,7 @@ All the standard stuff.''',
   #----------------------------------------------------------------------------
   def test_extract_typerefWithParam(self):
     from ...typereg import Type, TypeRef
-    from .plugin import parser
+    from .plugin import entry_parser
     entry = aadict(doc=textwrap.dedent('''
       Returns
       -------
@@ -403,7 +144,7 @@ All the standard stuff.''',
         sides : int
     '''))
     self.assertEqual(
-      dict(parser(entry, self.context)),
+      dict(entry_parser(entry, self.context)),
       dict(
         doc='',
         params=None,
@@ -416,9 +157,39 @@ All the standard stuff.''',
       ))
 
   #----------------------------------------------------------------------------
+  def test_extract_list_with_schema_without_attribute_comments(self):
+    from ...typereg import Type, TypeRef
+    from .plugin import entry_parser
+    entry = aadict(doc=textwrap.dedent('''
+      Returns
+      -------
+      shape : list(Shape), default: null
+        Shape
+          A shape.
+          sides : int
+    '''))
+    self.assertEqual(
+      dict(entry_parser(entry, self.context)),
+      dict(
+        doc='',
+        params=None,
+        returns=Type(base='compound', name='dict', value=[
+          TypeRef(name='shape', params=dict(default=None, optional=True), type=
+            Type(base='compound', name='list', value=
+              # note: this is a TypeRef *only* because the `resolveTypes`
+              #       call in `parser` converts Types to TypeRefs (so it
+              #       can be de-referenced later during merging.
+              TypeRef(type=
+                Type(base='dict', name='Shape', doc='A shape.', value=[
+                  TypeRef(name='sides', type=Type(base='scalar', name='integer'))
+                ]))))]),
+        raises=None,
+      ))
+
+  #----------------------------------------------------------------------------
   def test_extract_list_with_schema_and_attribute_comments(self):
     from ...typereg import Type, TypeRef
-    from .plugin import parser
+    from .plugin import entry_parser
     entry = aadict(doc=textwrap.dedent('''
       Returns
       -------
@@ -429,7 +200,7 @@ All the standard stuff.''',
           sides : int
     '''))
     self.assertEqual(
-      dict(parser(entry, self.context)),
+      dict(entry_parser(entry, self.context)),
       dict(
         doc='',
         params=None,
@@ -437,7 +208,7 @@ All the standard stuff.''',
           TypeRef(name='shape', params=dict(default=None, optional=True),
                   doc='A kind of shape.', type=
             Type(base='compound', name='list', value=
-              # note: this is a TypeRef *only* because the `registerTypes`
+              # note: this is a TypeRef *only* because the `resolveTypes`
               #       call in `parser` converts Types to TypeRefs (so it
               #       can be de-referenced later during merging.
               TypeRef(type=
@@ -446,81 +217,6 @@ All the standard stuff.''',
                 ]))))]),
         raises=None,
       ))
-
-  # TODO: implement support for this...
-  # #----------------------------------------------------------------------------
-  # def test_extract_list_with_schema_and_no_attribute_comments(self):
-  #   from ...typereg import Type, TypeRef
-  #   from .plugin import parser
-  #   entry = aadict(doc=textwrap.dedent('''
-  #     Returns
-  #     -------
-  #     shape : list(Shape), default: null
-  #       Shape
-  #         A shape.
-  #         sides : int
-  #   '''))
-  #   self.assertEqual(
-  #     dict(parser(entry, self.context)),
-  #     dict(
-  #       doc='',
-  #       params=None,
-  #       returns=Type(base='compound', name='dict', value=[
-  #         TypeRef(name='shape', params=dict(default=None, optional=True),
-  #                 type=
-  #           Type(base='compound', name='list', value=
-  #             # note: this is a TypeRef *only* because the `registerTypes`
-  #             #       call in `parser` converts Types to TypeRefs (so it
-  #             #       can be de-referenced later during merging.
-  #             TypeRef(type=
-  #               Type(base='dict', name='Shape', doc='A shape.', value=[
-  #                 TypeRef(name='sides', type=Type(base='scalar', name='integer'))
-  #               ]))))]),
-  #       raises=None,
-  #     ))
-
-  #----------------------------------------------------------------------------
-  def test_multiextract(self):
-    from ...typereg import Type, TypeRef
-    from .extractor import extractMultiType
-    src = '''
-this is doc1.
-Type1
-  type1 doc.
-  foo : int
-  bar : Shape
-    a shape??
-    sides : int
-shortstr : str, max: 255
-  short string must be short.
-evenint : int, limit: even numbers only
-  even integral numbers only.
-doc2
-Type2
-  type-dos!
-  three : Shape
-    a triangle.
-'''
-    self.assertEqual(
-      list(extractMultiType(self.context, src, '##')),
-      [
-        ('this is doc1.',
-         Type(base='dict', name='Type1', doc='type1 doc.', value=[
-           TypeRef(name='foo', type=Type(base='scalar', name='integer')),
-           TypeRef(name='bar', type=
-             Type(base='dict', name='Shape', doc='a shape??', value=[
-               TypeRef(name='sides', type=Type(base='scalar', name='integer'))]))])),
-        (None,
-         Type(base=Type.EXTENSION, name='shortstr', doc='short string must be short.', value=
-           TypeRef(type=Type(base='scalar', name='string'), params={'max': 255}))),
-        (None,
-         Type(base=Type.EXTENSION, name='evenint', doc='even integral numbers only.', value=
-           TypeRef(type=Type(base='scalar', name='integer'),
-                   params={'limit': 'even numbers only'}))),
-        ('doc2',
-         Type(base='dict', name='Type2', doc='type-dos!', value=[
-           TypeRef(name='three', type=Type(base='dict', name='Shape'), doc='a triangle.')])),
-      ])
 
   #----------------------------------------------------------------------------
   def test_describer_params_scalars(self):
@@ -1365,14 +1061,9 @@ is this root solid?
         'exclude'        : ('|^/desc(/.*)?$|'),
         'format.request' : 'true',
       })
-    #&showRest=false&showInfo=false
-    #&showMeta=false
-
-    self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false')
-
-    # self.assertResponse(
-    #   self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'),
-    #   200, self.loadTestData('syntax_numpydoc.output.rst'))
+    self.assertResponse(
+      self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'),
+      200, self.loadTestData('syntax_numpydoc.output.rst'))
 
 #------------------------------------------------------------------------------
 # end of $Id$
