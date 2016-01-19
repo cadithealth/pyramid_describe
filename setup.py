@@ -52,10 +52,10 @@ entrypoints = {
     'rst2rst.py         = pyramid_describe.writers.tools_rst2rst:main',
   ],
   'pyramid_describe.plugins.entry.parsers': [
-    'docref             = pyramid_describe.syntax.docref:parser',
-    'title              = pyramid_describe.syntax.title:parser',
+    'docref             = pyramid_describe.syntax.docref:entry_parser',
+    'title              = pyramid_describe.syntax.title:entry_parser',
     'numpydoc           = pyramid_describe.syntax.numpydoc:entry_parser',
-    'docorator          = pyramid_describe.syntax.docorator:parser',
+    'docorator          = pyramid_describe.syntax.docorator:entry_parser',
   ],
   'pyramid_describe.plugins.type.parsers': [
   ],

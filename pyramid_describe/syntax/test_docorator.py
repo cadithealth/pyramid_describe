@@ -25,7 +25,7 @@ class TestDocorator(test_helpers.TestHelper):
 @NOT_THIS: some documentation.
 ''',
     )
-    entry = docorator.parser(entry, adict())
+    entry = docorator.entry_parser(entry, adict())
     self.assertEqual(
       sorted(entry.classes),
       sorted(['doc-foo', 'doc-bar', 'doc-bar-0-2-z-b', 'doc-has-this']))

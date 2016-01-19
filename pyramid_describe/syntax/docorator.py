@@ -50,7 +50,7 @@ def extract(text, raw=False):
 
 #------------------------------------------------------------------------------
 @asset.plugin('pyramid_describe.plugins.entry.parsers', 'docorator', after='numpydoc')
-def parser(entry, context):
+def entry_parser(entry, context):
   '''
   This pyramid-describe entry parser plugin extracts so-called
   "docorators" (documentation decorators, get it? ;-) from the

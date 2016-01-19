@@ -31,7 +31,7 @@ Parameters
 ----------
 
 Dict of supported parameters.'''
-    out = title.parser(adict(doc=src), adict()).doc
+    out = title.entry_parser(adict(doc=src), adict()).doc
     self.assertMultiLineEqual(out, chk)
 
   #----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ Returns
 -------
 
 List of returnable items.'''
-    out = title.parser(adict(doc=src), adict()).doc
+    out = title.entry_parser(adict(doc=src), adict()).doc
     self.assertMultiLineEqual(out, chk)
 
   #----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ A description.
 
 Returns
 -------'''
-    out = title.parser(adict(doc=src), adict()).doc
+    out = title.entry_parser(adict(doc=src), adict()).doc
     self.assertMultiLineEqual(out, chk)
 
 #------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ from ..doctree import walk
 
 #------------------------------------------------------------------------------
 @asset.plugin('pyramid_describe.plugins.entry.parsers', 'docref')
-def parser(entry, context):
+def entry_parser(entry, context):
   if not entry:
     return entry
   entry.doc = resolveImports(entry.doc, entry, context)

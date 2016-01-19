@@ -33,7 +33,7 @@ def normLines(text):
 
 #------------------------------------------------------------------------------
 @asset.plugin('pyramid_describe.plugins.entry.parsers', 'title', after='docref')
-def parser(entry, options):
+def entry_parser(entry, options):
   '''
   This pyramid-describe entry parser plugin converts NumpyDoc
   section titles in ``:Title:`` format into reStructuredText
