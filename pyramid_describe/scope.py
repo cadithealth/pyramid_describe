@@ -79,6 +79,12 @@ class Scope(object):
   def __delitem__(self, key):         return self.__delattr__(key)
 
   #----------------------------------------------------------------------------
+  def get(self, key, default=None):
+    if not self.__contains__(key):
+      return default
+    return self.__getattr__(key)
+
+  #----------------------------------------------------------------------------
   def keys(self):
     ret = []
     if self.__dict__['_parent']:
