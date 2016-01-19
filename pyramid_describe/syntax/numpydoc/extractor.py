@@ -19,7 +19,6 @@ import logging
 from numpydoc.docscrape import NumpyDocString, Reader
 
 from ...typereg import TypeRegistry, Type, TypeRef
-from . import parser
 
 #------------------------------------------------------------------------------
 
@@ -166,6 +165,7 @@ def _convert_numpy_lines(context, nlines, commentToken):
       [sline.rstrip() for sline in nline[2]],
     )
     for nline in nlines]
+
   # first, check to make sure all attributes are the same style
   # (i.e. all key-value pairs or all keywords-only).
   base = (bool(nlines[0][0]), bool(nlines[0][1]))
@@ -234,7 +234,8 @@ def _crunchType(typ, **kw):
 
 #------------------------------------------------------------------------------
 def _convert_type(context, ityp):
-  # TODO: make `extractor.py` do this...
+  from . import parser
+  # TODO: make `extractor.py` do this on the fly...
 
   if not ityp:
     return None
