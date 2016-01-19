@@ -54,7 +54,7 @@ entrypoints = {
   'pyramid_describe.plugins.entry.parsers': [
     'docref             = pyramid_describe.syntax.docref:parser',
     'title              = pyramid_describe.syntax.title:parser',
-    'numpydoc           = pyramid_describe.syntax.numpydoc:parser',
+    'numpydoc           = pyramid_describe.syntax.numpydoc:entry_parser',
     'docorator          = pyramid_describe.syntax.docorator:parser',
   ],
   'pyramid_describe.plugins.type.parsers': [
