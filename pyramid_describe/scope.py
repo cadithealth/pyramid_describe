@@ -16,11 +16,11 @@ class Scope(object):
 
   #----------------------------------------------------------------------------
   def __init__(self, *args, **kw):
-    self.__dict__['parent']  = None
-    self.__dict__['values']  = dict()
-    self.__dict__['deletes'] = []
+    self.__dict__['_parent']  = None
+    self.__dict__['_values']  = dict()
+    self.__dict__['_deletes'] = []
     if len(args) > 0:
-      self.__dict__['parent'] = args[0]
+      self.__dict__['_parent'] = args[0]
       args = args[1:]
     self.update(*args, **kw)
 
@@ -38,39 +38,39 @@ class Scope(object):
 
   #----------------------------------------------------------------------------
   def __contains__(self, key):
-    if key in self.__dict__['deletes']:
+    if key in self.__dict__['_deletes']:
       return False
-    if key in self.__dict__['values']:
+    if key in self.__dict__['_values']:
       return True
-    if self.__dict__['parent']:
-      return key in self.__dict__['parent']
+    if self.__dict__['_parent']:
+      return key in self.__dict__['_parent']
     return False
 
   #----------------------------------------------------------------------------
   def __getattr__(self, key):
-    if key in self.__dict__['deletes']:
+    if key in self.__dict__['_deletes']:
       return None
-    if key in self.__dict__['values']:
-      return self.__dict__['values'][key]
-    if self.__dict__['parent']:
-      return getattr(self.__dict__['parent'], key)
+    if key in self.__dict__['_values']:
+      return self.__dict__['_values'][key]
+    if self.__dict__['_parent']:
+      return getattr(self.__dict__['_parent'], key)
     return None
 
   #----------------------------------------------------------------------------
   def __setattr__(self, key, value):
-    if key in self.__dict__['deletes']:
-      self.__dict__['deletes'].remove(key)
-    self.__dict__['values'][key] = value
+    if key in self.__dict__['_deletes']:
+      self.__dict__['_deletes'].remove(key)
+    self.__dict__['_values'][key] = value
     return self
 
   #----------------------------------------------------------------------------
   def __delattr__(self, key):
-    if key in self.__dict__['deletes']:
+    if key in self.__dict__['_deletes']:
       return self
-    if key in self.__dict__['values']:
-      self.__dict__['values'].pop(key)
-    if self.__dict__['parent'] and key in self.__dict__['parent']:
-      self.__dict__['deletes'].append(key)
+    if key in self.__dict__['_values']:
+      self.__dict__['_values'].pop(key)
+    if self.__dict__['_parent'] and key in self.__dict__['_parent']:
+      self.__dict__['_deletes'].append(key)
     return self
 
   #----------------------------------------------------------------------------
@@ -80,24 +80,24 @@ class Scope(object):
 
   #----------------------------------------------------------------------------
   def keys(self):
-    if self.__dict__['parent']:
-      for key in self.__dict__['parent'].keys():
+    ret = []
+    if self.__dict__['_parent']:
+      for key in self.__dict__['_parent'].keys():
         if key in self:
-          yield key
-    for key in self.__dict__['values']:
-      if key in (self.__dict__['parent'] or []):
+          ret.append(key)
+    for key in self.__dict__['_values']:
+      if key in (self.__dict__['_parent'] or []):
         continue
-      yield key
+      ret.append(key)
+    return ret
 
   #----------------------------------------------------------------------------
   def items(self):
-    for key in self.keys():
-      yield (key, getattr(self, key))
+    return [(key, getattr(self, key)) for key in self.keys()]
 
   #----------------------------------------------------------------------------
   def values(self):
-    for key in self.keys():
-      yield getattr(self, key)
+    return [getattr(self, key) for key in self.keys()]
 
   #----------------------------------------------------------------------------
   def update(self, *args, **kw):
