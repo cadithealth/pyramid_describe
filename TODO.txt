@@ -1,3 +1,28 @@
+- test that mixing of channel type defs and docs works, eg:
+
+    Returns
+    -------
+
+    some text.
+
+    HTTPForbidden
+      not allowed
+
+    HTTPBadRequest
+      bad data
+
+  ==> this gets *parsed* correctly, but does it get reassembled
+      correctly during doctree generation??? check!
+
+- the type registry needs to be revamped... some issues:
+  - rename "scalar" to "primitive"
+  - have immutable primitive singletons
+  - manage unknown types better...
+  - do dereferencing better...
+  - get rid of "auto" types... and move to reference counting?
+    or some other (better!) strategy for only rendering types
+    that are referenced...
+
 - handle case where an anonymous dict param/return/raise has no
   keys after filtration. eg. an endpoint takes a single parameter,
   "all", but that is marked internal. thus public users won't see
