@@ -8,6 +8,7 @@
 
 import unittest
 import json
+import textwrap
 
 import six
 from aadict import aadict
@@ -292,6 +293,83 @@ class TestTypeRegistry(TestHelper, pxml.XmlTestMixin):
       Type(name='foo', meta={'x': 'y'}) == Type(name='foo'))
 
   #----------------------------------------------------------------------------
+  def test_extensions_with_comments(self):
+    # todo: this should really be moved into:
+    #         pyramid_describe/syntax/numpydoc/test_parser.py
+    #       since it is really a test of commenting...
+    ext = '''\
+      ## this is a comment
+      this is ignored documentation.
+      epoch : num
+        seconds since 1970/1/1.
+      ## isodate : (str|epoch), format: YYYY-MM-DDTHH:MM:SS[.MMM]Z
+      ##   a timestamp.
+      ## Shape
+      ##   a regular polygon.
+      ##   sides : int, min: 3
+    '''
+    from .typereg import TypeRegistry, Type, TypeRef
+    treg = TypeRegistry(options=aadict(aliases={}))
+    self.assertEqual(treg._autotypes, {})
+    treg.loadExtensionString(ext)
+    self.assertEqual(treg._autotypes, {
+      'epoch' : Type(
+        base='extension', name='epoch', doc='seconds since 1970/1/1.',
+        value=TypeRef(type=Type(base='scalar', name='number'))),
+    })
+
+  #----------------------------------------------------------------------------
+  def test_extensions_load_multiple(self):
+    ext = '''\
+      ## this is a comment
+      this is ignored documentation.
+      epoch : num
+        seconds since 1970/1/1.
+      isodate : (str|epoch), format: YYYY-MM-DDTHH:MM:SS[.MMM]Z
+        a timestamp.
+      Shape
+        a regular polygon.
+        sides : int, min: 3
+    '''
+    from .typereg import TypeRegistry, Type, TypeRef
+    treg = TypeRegistry(options=aadict(aliases={}))
+    self.assertEqual(treg._autotypes, {})
+    treg.loadExtensionString(ext)
+    self.assertEqual(treg._autotypes, {
+      'epoch' : Type(
+        base='extension', name='epoch', doc='seconds since 1970/1/1.',
+        value=TypeRef(type=Type(base='scalar', name='number'))),
+      'isodate' : Type(
+        base='extension', name='isodate', doc='a timestamp.',
+        value=TypeRef(type=Type(base='compound', name='oneof', value=[
+            Type(base='scalar', name='string'),
+            Type(
+              base='extension', name='epoch', doc='seconds since 1970/1/1.',
+              value=TypeRef(type=Type(base='scalar', name='number'))),
+          ]), params=dict(format='YYYY-MM-DDTHH:MM:SS[.MMM]Z'))),
+      'Shape' : Type(
+        base='dict', name='Shape', doc='a regular polygon.', value=[
+          TypeRef(
+            name='sides', type=Type(base='scalar', name='integer'),
+            params=dict(min=3))
+        ]),
+    })
+
+  #----------------------------------------------------------------------------
+  def test_extensions_invalid_reference(self):
+    ext = '''\
+      isodate : (str|epoch)
+        a timestamp.
+    '''
+    from .typereg import TypeRegistry, Type, TypeRef
+    treg = TypeRegistry(options=aadict(aliases={}))
+    with self.assertRaises(ValueError) as cm:
+      treg.loadExtensionString(ext)
+    self.assertEqual(
+      str(cm.exception),
+      'invalid reference to unknown/undefined type "epoch"')
+
+  #----------------------------------------------------------------------------
   def test_extensions_load_only_referenced(self):
     from pyramid_controllers import RestController, expose
     from .describer import Describer
@@ -320,16 +398,20 @@ class TestTypeRegistry(TestHelper, pxml.XmlTestMixin):
         # todo: this params(scale=6) should really be json-parsed
         # so that it becomes a true int...
         params   = {'scale': 6}),
-      doc      = '''\
-An `epoch` is a timestamp that is defined as being the number of
-seconds since January 1, 1970 at 00:00:00 UTC. Although the value
-can be any positive or negative decimal number, precision beyond
-nanoseconds may be truncated and/or ignored.''')
+      doc      = textwrap.dedent('''\
+        An `epoch` is a timestamp that is defined as being the number of
+        seconds since January 1, 1970 at 00:00:00 UTC. Although the value
+        can be any positive or negative decimal number, precision beyond
+        nanoseconds may be truncated and/or ignored.'''))
     self.assertEqual(desc.typereg._types.keys(), ['epoch'])
     self.assertEqual(desc.typereg._autotypes.keys(), ['epoch', 'isodate'])
     chk = Type(base='compound', name='dict', value=[
       TypeRef(name='created', type=epochchk)])
     self.assertEqual(desc.endpoints[0].methods[0].returns, chk)
+
+# <Type compound:dict value=[<TypeRef created=<Type unknown:epoch>>]>
+# <Type compound:dict value=[<TypeRef created=<Type extension:epoch value=<TypeRef <Type scalar:number> params={'scale': 6}> doc='An `epoch` is a timestamp that is defined as being the number of\nseconds since January 1, 1970 at 00:00:00 UTC. Although the value\ncan be any positive or negative decimal number, precision beyond\nnanoseconds may be truncated and/or ignored.'>>]>
+
 
   #----------------------------------------------------------------------------
   def test_clone(self):

@@ -186,8 +186,30 @@ class Type(_aadict):
       return
 
   #----------------------------------------------------------------------------
+  def is_dict(self):
+    return self.base == Type.COMPOUND and self.name == Type.DICT \
+      or self.base == Type.DICT
+
+  #----------------------------------------------------------------------------
+  def is_list(self):
+    return self.base == Type.COMPOUND and self.name == Type.LIST \
+      or self.base == Type.LIST
+
+  #----------------------------------------------------------------------------
+  def is_constant(self):
+    return self.base == Type.CONSTANT
+
+  #----------------------------------------------------------------------------
+  def is_scalar(self):
+    return self.base == Type.SCALAR
+
+  #----------------------------------------------------------------------------
   # todo: why does this not get called??? __setattr__ is called instead. ugh.
   #       hence the reason that it is overridden here... fix!
+  #       ugh. solve this `.children` thing...:
+  #         a) using generators seems to cause more problems than
+  #            it is worth... move .children to return a list.
+  #         b) make setting `.children` work.
   @children.setter
   def children(self, value):
     self.setChildren(value)
@@ -199,6 +221,7 @@ class Type(_aadict):
     if not value:
       self.value = None
       return self
+    value = list(value)
     if self.base == Type.EXTENSION \
         or ( self.base == Type.COMPOUND and self.name in (Type.LIST, Type.REF) ) \
         or ( self.base in (Type.LIST, Type.REF) ):
@@ -333,6 +356,12 @@ class TypeRef(_aadict):
     yield self.type
 
   #----------------------------------------------------------------------------
+  def is_dict(self):         return False
+  def is_list(self):         return False
+  def is_constant(self):     return False
+  def is_scalar(self):       return False
+
+  #----------------------------------------------------------------------------
   def tostruct(self, ref=False):
     ret = dict(type=self.type.tostruct(ref=True))
     if self.params:
@@ -440,7 +469,8 @@ class TypeRegistry(object):
     'closure_close'       : ')',
     'oneof_sep'           : '|',
     'union_sep'           : '&',
-    'customTypeRE'        : r'^([a-zA-Z_][a-zA-Z0-9_]*\.)*[A-Z][a-zA-Z0-9_]*$',
+    'customDictTypeRE'    : r'^([a-zA-Z_][a-zA-Z0-9_]*\.)*[A-Z][a-zA-Z0-9_]*$',
+    'unknownTypeRE'       : r'^([a-zA-Z_][a-zA-Z0-9_]*\.)*[a-zA-Z0-9_]+$',
   }
 
   DEFAULT_ALIASES = {
@@ -472,7 +502,8 @@ class TypeRegistry(object):
     self._types     = dict()
     self._autotypes = dict()
     self._aliases   = dict()
-    self._customType_cre = re.compile(self.options.customTypeRE)
+    self._dictType_cre    = re.compile(self.options.customDictTypeRE)
+    self._unknownType_cre = re.compile(self.options.unknownTypeRE)
     aliases = aliases or self.options.aliases
     self.addAliases(self.DEFAULT_ALIASES if aliases is None else aliases)
     if aliases is None:
@@ -491,7 +522,8 @@ class TypeRegistry(object):
     '''
     ret = TypeRegistry(_hack=True)
     ret.options          = aadict(self.options)
-    ret._customType_cre  = self._customType_cre
+    ret._dictType_cre    = self._dictType_cre
+    ret._unknownType_cre = self._unknownType_cre
     ret._aliases         = {k : set(v) for k, v in self._aliases.items()}
     ret._types           = {k : v.clone() for k, v in self._types.items()}
     ret._autotypes       = {k : v.clone() for k, v in self._autotypes.items()}
@@ -581,10 +613,16 @@ class TypeRegistry(object):
 
   #----------------------------------------------------------------------------
   def loadExtensionString(self, text, source=None):
-    from .syntax.numpydoc.extractor import extractMultiType
-    for doc, typ in extractMultiType(
-        Scope(options=aadict(typereg=self)),
-        text, commentToken=self.options.commentToken):
+    from .syntax.numpydoc.parser import Parser
+    parser = Parser(comment=self.options.commentToken)
+    for doc, typ in parser.parseMulti(text):
+      if doc:
+        log.debug('ignoring unbound extension documentation text: %r', doc)
+      if not typ:
+        continue
+      if isinstance(typ, TypeRef):
+        typ = Type(base=Type.EXTENSION, name=typ.name, doc=typ.doc, value=
+          TypeRef(type=typ.type, params=typ.params))
       if source:
         typ.meta.source = source
       log.debug('registering extension type "%s"', typ.name)
@@ -594,13 +632,41 @@ class TypeRegistry(object):
   def registerType(self, type):
     if not type.doc and not type.value:
       type = self.getAuto(type.name) or type
+    else:
+      type = self.dereference(type)
     # todo: should this check for collision?...
     self._types[type.name] = type
+    return type
 
   #----------------------------------------------------------------------------
   def registerAutoType(self, type):
+    type = self.dereference(type, auto=True)    
     # todo: should this check for collision?...
     self._autotypes[type.name] = type
+    return type
+
+  #----------------------------------------------------------------------------
+  def dereference(self, type, auto=False):
+    # TODO: in the end, this is just resolving `unknown` types, but
+    #       should really do a more "complete" deref. the core problem
+    #       is that `pyramid_describe/syntax/numpydoc/merger.py` needs
+    #       to "work well" with this... and it currently does not.
+    if isinstance(type, TypeRef):
+      if type.type:
+        type.type = self.dereference(type.type, auto=auto)
+      return type
+    if type.is_constant() or type.is_scalar():
+      return type
+    if type.base == Type.UNKNOWN:
+      typ = self.getAuto(type.name) if auto else self.get(type.name)
+      if not typ:
+        raise ValueError(
+          'invalid reference to unknown/undefined type "%s"' % (type.name,))
+      type = typ
+      return type
+    type.setChildren(
+      self.dereference(typ, auto=auto) for typ in type.children)
+    return type
 
   #----------------------------------------------------------------------------
   def resolveAliases(self, symbol):
@@ -613,6 +679,8 @@ class TypeRegistry(object):
   def get(self, symbol):
     symbol = self.resolveAliases(symbol)
     if symbol not in self._types and symbol in self._autotypes:
+      # TODO: what about promoting other auto types that are
+      #       referenced by self._autotypes[symbol]???
       self._types[symbol] = self._autotypes[symbol]
     return self._types.get(symbol)
 
@@ -751,6 +819,9 @@ class TypeRegistry(object):
     typ = self._parseType_custom(source, token)
     if typ:
       return typ
+    typ = self._parseType_unknown(source, token)
+    if typ:
+      return typ
     return None
 
   #----------------------------------------------------------------------------
@@ -881,6 +952,14 @@ class TypeRegistry(object):
     return Type(base=Type.COMPOUND, name=Type.REF, value=value)
 
   #----------------------------------------------------------------------------
+  def _parseType_compound_dict(self, source, token, value):
+    for val in value or []:
+      if not isinstance(val, TypeRef) or not val.name:
+        raise ValueError(
+          'dict-type children must be named type references, not %r' % (val,))
+    return Type(base=Type.COMPOUND, name=Type.DICT, value=value)
+
+  #----------------------------------------------------------------------------
   def _parseType_registered(self, source, token):
     target = self.resolveAliases(token)
     target = self._types.get(target) or self._autotypes.get(target)
@@ -891,12 +970,23 @@ class TypeRegistry(object):
 
   #----------------------------------------------------------------------------
   def _parseType_custom(self, source, token):
-    if not self.isCustomType(token):
+    if not self.isCustomDictType(token):
       return None
     source.read(len(token))
     # todo: how to detect non-dict custom types?...
+    #       perhaps simple: NOT the parser's job.
     token = self.resolveAliases(token)
     return Type(base=Type.DICT, name=token)
+
+  #----------------------------------------------------------------------------
+  def _parseType_unknown(self, source, token):
+    if not self.isUnknownType(token):
+      return None
+    source.read(len(token))
+    # todo: how to detect invalid types?...
+    #       perhaps simple: NOT the parser's job.
+    token = self.resolveAliases(token)
+    return Type(base=Type.UNKNOWN, name=token)
 
   #----------------------------------------------------------------------------
   def isType(self, name):
@@ -907,15 +997,17 @@ class TypeRegistry(object):
     match = symbol_cre.match(name)
     if match and match.group(0) == name:
       return True
-    return self.isCustomType(name)
+    if self.isCustomDictType(name):
+      return True
+    return self.isUnknownType(name)
 
   #----------------------------------------------------------------------------
-  def isCustomType(self, name):
-    # todo: this is a hack to allow sharing of the regex used to
-    #       determine whether or not a symbol is an acceptable
-    #       type in pyramid_describe/syntax/numpydoc/extractor.py
-    #       fix!
-    return self._customType_cre.match(name)
+  def isCustomDictType(self, name):
+    return bool(self._dictType_cre.match(name))
+
+  #----------------------------------------------------------------------------
+  def isUnknownType(self, name):
+    return bool(self._unknownType_cre.match(name))
 
 
 #------------------------------------------------------------------------------
