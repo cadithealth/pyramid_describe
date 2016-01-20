@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.5.1
+======
+
+* Revamped type parsing and extraction to support several new
+  constructs/combinations, including specifying type definitions
+  within list(Type) contexts
+
+
 v0.5.0
 ======
 
