@@ -370,38 +370,6 @@ class TestParsere(unittest.TestCase):
           TypeRef(name='k1', type=Type(base='unknown', name='v1')),
         ])))
 
-#   # TODO: implement support for this...
-#   # #----------------------------------------------------------------------------
-#   # def test_parse_list_with_schema_and_no_attribute_comments(self):
-#   #   from ...typereg import Type, TypeRef
-#   #   from .plugin import parser
-#   #   entry = aadict(doc=textwrap.dedent('''
-#   #     Returns
-#   #     -------
-#   #     shape : list(Shape), default: null
-#   #       Shape
-#   #         A shape.
-#   #         sides : int
-#   #   '''))
-#   #   self.assertEqual(
-#   #     dict(parser(entry, self.context)),
-#   #     dict(
-#   #       doc='',
-#   #       params=None,
-#   #       returns=Type(base='compound', name='dict', value=[
-#   #         TypeRef(name='shape', params=dict(default=None, optional=True),
-#   #                 type=
-#   #           Type(base='compound', name='list', value=
-#   #             # note: this is a TypeRef *only* because the `resolveTypes`
-#   #             #       call in `parser` converts Types to TypeRefs (so it
-#   #             #       can be de-referenced later during merging.
-#   #             TypeRef(type=
-#   #               Type(base='dict', name='Shape', doc='A shape.', value=[
-#   #                 TypeRef(name='sides', type=Type(base='scalar', name='integer'))
-#   #               ]))))]),
-#   #       raises=None,
-#   #     ))
-
   #----------------------------------------------------------------------------
   def test_api_for_extensions(self):
     from ...typereg import Type, TypeRef
