@@ -367,6 +367,53 @@ All the standard stuff.''',
       ]))
 
   #----------------------------------------------------------------------------
+  def test_describer_params_list_of_ref(self):
+    from pyramid_controllers import RestController, expose
+    from ...describer import Describer
+    from ...typereg import Type, TypeRef
+    class Root(RestController):
+      @expose
+      def get(self, request):
+        '''
+        @PUBLIC
+
+        Parameters
+        ----------
+
+        An entity.
+
+        owner : Person
+          A human.
+          name : str
+        related : list(ref)
+          open-ended.
+        users : list(ref(Person))
+          persons only.
+        '''
+    desc = Describer(settings=dict({'access.control': '*'})).analyze(Root())
+    self.assertEqual(
+      desc.typereg.types(),
+      [
+        Type(base='dict', name='Person', doc='A human.', value=[
+          TypeRef(name='name', type=Type(base='scalar', name='string')),
+        ]),
+      ])
+    person = desc.typereg.get('Person')
+    self.assertEqual(
+      desc.endpoints[0].methods[0].params,
+      Type(base='compound', name='dict', value=[
+        TypeRef(name='owner', type=person),
+        TypeRef(name='related', doc='open-ended.', type=
+          Type(base='compound', name='list', value=
+            Type(base='compound', name='ref')
+          )),
+        TypeRef(name='users', doc='persons only.', type=
+          Type(base='compound', name='list', value=
+            Type(base='compound', name='ref', value=person)
+          )),
+      ]))
+
+  #----------------------------------------------------------------------------
   def test_merge_doc(self):
     from pyramid_controllers import RestController, expose
     from ...describer import Describer
@@ -1050,7 +1097,7 @@ is this root solid?
 ''')
 
   #----------------------------------------------------------------------------
-  def test_rst(self):
+  def test_rst_noref(self):
     from ...test.syntax_numpydoc import Root
     root = Root()
     root.desc = DescribeController(
@@ -1064,6 +1111,23 @@ is this root solid?
     self.assertResponse(
       self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'),
       200, self.loadTestData('syntax_numpydoc.output.rst'))
+
+  #----------------------------------------------------------------------------
+  def test_rst_ref(self):
+    from ...test.syntax_numpydoc_ref import Root
+    root = Root()
+    root.desc = DescribeController(
+      root, doc='URL tree description.',
+      settings={
+        'formats'        : 'rst',
+        'index-redirect' : 'false',
+        'exclude'        : ('|^/desc(/.*)?$|'),
+        'format.request' : 'true',
+        'access.control' : '*'
+      })
+    self.assertResponse(
+      self.send(root, '/desc?showLegend=false&rstMax=true&showMeta=false'),
+      200, self.loadTestData('syntax_numpydoc_ref.output.rst'))
 
 #------------------------------------------------------------------------------
 # end of $Id$
