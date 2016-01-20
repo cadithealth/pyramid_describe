@@ -25,21 +25,6 @@ class TestNumpydoc(test_helpers.TestHelper):
       commentToken=self.typereg.options.commentToken, typereg=self.typereg))
 
   #----------------------------------------------------------------------------
-  def test_parse_httpalias(self):
-    from ...typereg import Type, TypeRef
-    from .extractor import numpy2type
-    self.assertEqual(
-      numpy2type(self.context, [
-        ('pyramid.httpexceptions.HTTPBadRequest', '', ['', '', 'Invalid request data.'])]),
-      ([], TypeRef(doc='Invalid request data.',
-                     type=Type(base='dict', name='pyramid.httpexceptions.HTTPBadRequest'))))
-    self.assertEqual(
-      numpy2type(self.context, [
-        ('HTTPBadRequest', '', ['', '', 'Invalid request data.'])]),
-      ([], TypeRef(doc='Invalid request data.',
-                     type=Type(base='dict', name='HTTPBadRequest'))))
-
-  #----------------------------------------------------------------------------
   def test_extract_entry_doc(self):
     from ...typereg import Type, TypeRef
     from .plugin import entry_parser
