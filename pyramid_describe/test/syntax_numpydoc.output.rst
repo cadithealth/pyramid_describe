@@ -122,6 +122,30 @@ area
 
 list(`Shape <#typereg-type-5368617065>`__)
 
+.. class:: attr
+
+^^^^^^^
+related
+^^^^^^^
+
+.. class:: spec
+
+list(ref)
+
+Related objects.
+
+.. class:: attr
+
+^^^^^^
+refs
+^^^^^^
+
+.. class:: spec
+
+list(ref(`Shape <#typereg-type-5368617065>`__))
+
+Shapes that reference this item.
+
 .. class:: raises
 
 .. _`raises-method-2f4954454d5f4944-474554`:

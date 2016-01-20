@@ -39,6 +39,14 @@ class Item(RestController):
 
           sides : int
 
+      related : list(ref)
+
+        Related objects.
+
+      refs : list(ref(Shape))
+
+        Shapes that reference this item.
+
     :Raises:
 
     HTTPNotFound
