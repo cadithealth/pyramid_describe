@@ -227,7 +227,10 @@ class Type(_aadict):
         or ( self.base in (Type.LIST, Type.REF) ):
       if len(value) > 1:
         raise TypeError('type %r only supports one child' % (self,))
-      self.value = value[0]
+      if len(value) < 1:
+        self.value = None
+      else:
+        self.value = value[0]
       return self
     elif ( self.base == Type.COMPOUND and self.name in (Type.ONEOF, Type.UNION, Type.DICT) )\
         or ( self.base in (Type.ONEOF, Type.UNION, Type.DICT) ):
