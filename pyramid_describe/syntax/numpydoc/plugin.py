@@ -110,17 +110,7 @@ def _spliceType(ndoc, entry, context, channel):
 
   try:
     typ = _spliceTypeFromNumpy(ndoc, entry, context, section)
-
-    # if typ and typ.name == 'dict' and len(typ.value) >= 4 \
-    #     and typ.value[3].name == 'area':
-    #   print 'AREA:',repr(typ.value[3])
-    #   print 'LIST:',repr(typ.value[3].type)
-    #   print '>'*70
-    #   print 'SHAPE:',repr(typ.value[3].type.value)
-    #   print '<'*70
-
     return resolveTypes(entry, context, channel, typ)
-
   except Exception as err:
     msg = 'failed extracting types from "%s" channel of "%s"' % (
       channel, entry.dpath)
