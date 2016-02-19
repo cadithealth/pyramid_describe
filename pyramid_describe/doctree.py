@@ -413,9 +413,15 @@ def render_type(data, typ, link=True):
       if value is None:
         continue
       spec.append(rtext(': '))
-      if key == 'default':
+      if key == params.a2q(params.ATTR_DEFAULT):
         # todo: this will *NOT* be round-trip parseable... fix!
         spec.append(rliteral(value))
+      elif key == params.a2q(params.ATTR_EXAMPLES):
+        # todo: this will *NOT* be round-trip parseable... fix!
+        for idx, item in enumerate(value):
+          if idx > 0:
+            spec.append(rtext(' ' + data.typereg.options.oneof_sep + ' '))
+          spec.append(rliteral(item))
       else:
         spec.append(rtext(value))
 
