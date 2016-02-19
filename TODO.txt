@@ -108,21 +108,6 @@
 - support RAML? http://raml.org/
   swagger? https://en.wikipedia.org/wiki/Swagger_%28software%29
 
-- support complex type aliassing, eg:
-
-  GenderType : ( 'm' | 'f' | 'o' )
-
-  Person
-
-    gender : GenderType
-
-- list type must support being specified as:
-
-  - list
-  - list(Foo)
-  - list( Foo | Bar )
-  - list( "male" | "female" | "other" | null )
-
 - migrate from `adict` to `aadict`
 
 - support type definition and option promotion/demotion
@@ -172,26 +157,6 @@
   - type aliases, eg `epoch` := `float`
 
   - support "special" "limits" section
-
-  - if a complex type has read-only properties, how to
-    specify in the PUT WADL that it should only document
-    writeable props? possibilities:
-
-    :Parameters:
-
-    object : Object(w)
-
-    object : Object(!wo)
-
-    object : Object, w
-
-    object : Object, !wo
-
-    object : Object[!wo]
-
-    object : Object/w
-
-    ==> or just assume PUT/POST are "write" mode?
 
 
 - make the Entry object in entry.parsers support the mode where it
