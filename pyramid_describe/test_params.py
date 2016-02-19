@@ -12,6 +12,13 @@ import unittest
 class TestParams(unittest.TestCase):
 
   #----------------------------------------------------------------------------
+  def test_qualifier_ordering(self):
+    from .params import attrkeycmp
+    keys = ['foo', 'default', 'required', 'min', 'example', 'max', 'default_to', 'examples']
+    chk  = ['required', 'foo', 'max', 'min', 'example', 'examples', 'default_to', 'default']
+    self.assertEqual(sorted(keys, cmp=attrkeycmp), chk)
+
+  #----------------------------------------------------------------------------
   def test_parse_simple(self):
     from .params import parse
     self.assertEqual(
@@ -41,13 +48,6 @@ class TestParams(unittest.TestCase):
       'both "default" and "default-to" qualifiers specified')
 
   #----------------------------------------------------------------------------
-  def test_qualifier_ordering(self):
-    from .params import attrkeycmp
-    keys = ['foo', 'default', 'required', 'min', 'example', 'max', 'default_to', 'examples']
-    chk  = ['required', 'foo', 'max', 'min', 'example', 'examples', 'default_to', 'default']
-    self.assertEqual(sorted(keys, cmp=attrkeycmp), chk)
-
-  #----------------------------------------------------------------------------
   def test_parse_example_multiple(self):
     from .params import parse
     self.assertEqual(
@@ -61,8 +61,39 @@ class TestParams(unittest.TestCase):
       parse('examples: "foo"'),
       {'examples': ['foo']})
     self.assertEqual(
-      parse('examples: "foo" | "bar"'),
-      {'examples': ['foo', 'bar']})
+      parse('examples: "foo" | 6 | \'bar\''),
+      {'examples': ['foo', 6, 'bar']})
+
+  #----------------------------------------------------------------------------
+  def test_parse_example_autoconvert(self):
+    from .params import parse
+    self.assertEqual(
+      parse('example: "foo", example: "bar", example: 6'),
+      {'examples': ['foo', 'bar', 6]})
+    self.assertEqual(
+      parse('example: foo, example: "bar", example: 6'),
+      {'example': ['foo', 'bar', 6]})
+    # todo: re-enable this when the side-effect of changing order is removed...
+    # self.assertEqual(
+    #   parse('example: "foo", example: bar, example: 6'),
+    #   {'example': ['foo', 'bar', 6]})
+
+  #----------------------------------------------------------------------------
+  def test_parse_default_json(self):
+    from .params import parse
+    self.assertEqual(parse('default: 6'),     {'default': 6,     'optional': True})
+    self.assertEqual(parse('default: true'),  {'default': True,  'optional': True})
+    self.assertEqual(parse('default: "foo"'), {'default': 'foo', 'optional': True})
+
+  #----------------------------------------------------------------------------
+  def test_parse_default_fallback(self):
+    from .params import parse
+    self.assertEqual(parse("default: foo"),   {'default_to': 'foo', 'optional': True})
+
+  #----------------------------------------------------------------------------
+  def test_parse_default_yaml(self):
+    from .params import parse
+    self.assertEqual(parse("default: 'foo'"), {'default': 'foo', 'optional': True})
 
   #----------------------------------------------------------------------------
   def test_value_codec(self):

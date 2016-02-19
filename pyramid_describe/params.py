@@ -11,12 +11,16 @@ import json
 
 import morph
 
+from . import constant
+
 # TODO: handle encoding & decoding of commas in param values...
 # todo: i18n?...
 
 #------------------------------------------------------------------------------
 
 log = logging.getLogger(__name__)
+
+ONEOF_SEP               = '|'
 
 ACCESS_C                = 'create'
 ACCESS_R                = 'read'
@@ -28,10 +32,30 @@ ATTR_READ               = ACCESS_R
 ATTR_WRITE              = ACCESS_W
 ATTR_REQUIRED           = 'required'
 ATTR_OPTIONAL           = 'optional'
-ATTR_DEFAULT            = 'default'
-ATTR_DEFAULT_TO         = 'default_to'
 ATTR_NULLABLE           = 'nullable'
 ATTR_CLASS              = 'class'
+ATTR_EXAMPLE            = 'example'
+ATTR_EXAMPLES           = 'examples'
+ATTR_DEFAULT_TO         = 'default_to'
+ATTR_DEFAULT            = 'default'
+
+# todo: it would be great if this could auto-magically use the same
+# order as the python declaration order... (not sure how the None
+# entry would be injected then...
+ATTRORDER               = [
+  ATTR_CREATE,
+  ATTR_READ,
+  ATTR_WRITE,
+  ATTR_REQUIRED,
+  ATTR_OPTIONAL,
+  ATTR_NULLABLE,
+  None,
+  ATTR_CLASS,
+  ATTR_EXAMPLE,
+  ATTR_EXAMPLES,
+  ATTR_DEFAULT_TO,
+  ATTR_DEFAULT,
+]
 
 # note: these are not ATTR_* because they are aliases only (and should
 # always be auto-converted to their respective attributes)
@@ -70,6 +94,14 @@ def a2q(name):
   return name.replace('_', '-')
 
 #------------------------------------------------------------------------------
+def attrkeycmp(a, b):
+  if a not in ATTRORDER and b not in ATTRORDER:
+    return cmp(a, b)
+  a = ATTRORDER.index(a if a in ATTRORDER else None)
+  b = ATTRORDER.index(b if b in ATTRORDER else None)
+  return cmp(a, b)
+
+#------------------------------------------------------------------------------
 def prepare(params, exclude_params=(ATTR_CLASS,)):
   '''
   Generates (key, value) pairs for all parameters defined in `type`
@@ -90,7 +122,12 @@ def prepare(params, exclude_params=(ATTR_CLASS,)):
 
   * defaults come last
 
-  * examples come last or before defaults
+  * examples come just before defaults
+
+  * free-form examples are iterated individually
+
+  * non-free-form examples are returned as a list with JSONified
+    values
   '''
 
   # todo: some ideas on improvements:
@@ -106,7 +143,8 @@ def prepare(params, exclude_params=(ATTR_CLASS,)):
   #       log.debug('ignoring armorspec parameter %r', key)
   #       continue
 
-  params = dict(params or {})
+  params = normParams(params) or {}
+
   if ATTR_REQUIRED in params:
     params[ATTR_OPTIONAL] = not params.pop(ATTR_REQUIRED)
   if not params.get(ATTR_OPTIONAL):
@@ -134,21 +172,30 @@ def prepare(params, exclude_params=(ATTR_CLASS,)):
   }
   for sym in accessMap[mode]:
     yield sym, None
-  for key in sorted(params.keys()):
-    if key in (ATTR_DEFAULT, ATTR_DEFAULT_TO, ATTR_READ, ATTR_WRITE, ATTR_CREATE):
+  for key in sorted(params.keys(), cmp=attrkeycmp):
+    if key in (ATTR_READ, ATTR_WRITE, ATTR_CREATE):
       continue
     if exclude_params and key in exclude_params:
       continue
     val = params.get(key)
-    key = a2q(key)
-    if val is True:
-      yield key, None
+    qkey = a2q(key)
+    if key == ATTR_EXAMPLE:
+      if not morph.isseq(val):
+        val = [val]
+      for item in val:
+        yield qkey, paramValueEncode(item)
+    elif key == ATTR_EXAMPLES:
+      if not morph.isseq(val):
+        val = [val]
+      yield qkey, [json.dumps(item) for item in val]
+    elif key == ATTR_DEFAULT_TO:
+      yield qkey, str(val)
+    elif key == ATTR_DEFAULT:
+      yield qkey, json.dumps(val)
+    elif val is True:
+      yield qkey, None
     else:
-      yield key, paramValueEncode(val)
-  if ATTR_DEFAULT_TO in params:
-    yield a2q(ATTR_DEFAULT_TO), str(params[ATTR_DEFAULT_TO])
-  if ATTR_DEFAULT in params:
-    yield a2q(ATTR_DEFAULT), json.dumps(params[ATTR_DEFAULT])
+      yield qkey, paramValueEncode(val)
 
 #------------------------------------------------------------------------------
 def render(params, *args, **kw):
@@ -170,8 +217,9 @@ def parse(spec):
   #         - use a lexer to parse the line!
   #         - use more powerful param mapping technology...
   #         - param defaults should depend on type, mode, and channel!!..
-  parts  = [part.strip() for part in spec.split(',')]
-  ret    = dict()
+  parts    = [part.strip() for part in spec.split(',')]
+  ret      = dict()
+  pkeys    = []
   for part in parts:
     key = part
     if ':' in part:
@@ -180,22 +228,51 @@ def parse(spec):
       key, val = [x.strip() for x in part.split('=', 1)]
     else:
       val = True
+    pkeys.append(key)
     okey = key
     key  = q2a(key)
-    if okey == ATTR_DEFAULT:
+    if key == ATTR_DEFAULT:
       try:
-        val = json.loads(val)
+        val = constant.parse(val)
       except ValueError:
         log.warning(
-          'non-JSON default value in armor spec: %r (moved to "%s")',
-          spec, a2q(ATTR_DEFAULT_TO))
+          'non-JSON value in "%s": %r (moved to "%s")',
+          okey, spec, a2q(ATTR_DEFAULT_TO))
         key = ATTR_DEFAULT_TO
+    elif key == ATTR_EXAMPLES:
+      try:
+        # todo: how to make `ONEOF_SEP` configurable?...
+        val = constant.parseMulti(val, ONEOF_SEP)
+      except ValueError:
+        log.warning(
+          'non-JSON value in "%s": %r (moved to "%s")',
+          okey, spec, a2q(ATTR_EXAMPLE))
+        key = ATTR_EXAMPLE
+    elif key == ATTR_EXAMPLE and ATTR_EXAMPLE not in ret:
+      try:
+        val = [constant.parse(val)]
+        key = ATTR_EXAMPLES
+      except ValueError:
+        val = paramValueDecode(val)
     else:
       val = paramValueDecode(val)
+    if key in (ATTR_EXAMPLE, ATTR_EXAMPLES):
+      val = list(val) if morph.isseq(val) else [val]
     if key in ret and val != ret[key]:
-      raise ValueError(
-        'qualifier "%s" collision (%r != %r)' % (okey, ret[key], val))
+      if key in (ATTR_EXAMPLE, ATTR_EXAMPLES):
+        val = ret[key] + val
+      else:
+        raise ValueError(
+          'qualifier "%s" collision (%r != %r)' % (okey, ret[key], val))
     ret[key] = val
+
+  if ATTR_EXAMPLE in ret and ATTR_EXAMPLES in ret and ATTR_EXAMPLES not in pkeys:
+    # some but not all `example` qualifiers were converted to
+    # `examples`... revert them all.
+    # todo: the problem here, though, is that the examples will get
+    #       sorted differenctly than they were specified... ugh. fix.
+    ret[ATTR_EXAMPLE] = ret[ATTR_EXAMPLE] + ret.pop(ATTR_EXAMPLES)
+
   return normParams(ret)
 
 #------------------------------------------------------------------------------
@@ -273,6 +350,16 @@ def normParams(params):
     if ATTR_OPTIONAL in params and not params[ATTR_OPTIONAL]:
       raise ValueError('conflicting qualifiers: required vs. default value')
     params[ATTR_OPTIONAL] = True
+
+  if ATTR_DEFAULT in params and ATTR_DEFAULT_TO in params:
+    raise ValueError(
+      'both "%s" and "%s" qualifiers specified'
+      % (a2q(ATTR_DEFAULT), a2q(ATTR_DEFAULT_TO)))
+
+  if ATTR_EXAMPLE in params and ATTR_EXAMPLES in params:
+    raise ValueError(
+      'both "%s" and "%s" qualifiers specified'
+      % (a2q(ATTR_EXAMPLE), a2q(ATTR_EXAMPLES)))
 
   return params
 
