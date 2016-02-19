@@ -2,6 +2,25 @@
   - type to datatype
   - datatype "params" to "qualifiers"
 
+- for non-REST controllers, extract method from @expose decorator...
+  ==> what about non-pyramid_controllers?
+
+- implement controller-to-method access inheritance, ie:
+
+    class Controller(RestController):
+      '@PUBLIC'
+      @expose
+      def get(): pass
+      @expose
+      def delete():
+        '@INTERNAL'
+        pass
+
+    ==> the `GET` method should be public, but the `DELETE`
+        method should be internal
+
+    ==> what about inheritance to non-REST methods?
+
 - test that mixing of channel type defs and docs works, eg:
 
     Returns
@@ -78,15 +97,13 @@
 - make the /describe/ root URL return an HTML page with all
   available options & formats (instead of redirecting to the
   default location)...
+  maybe make it a sub-path? eg. /api/describe/ui
+  which then let's you specify `showImpl`, `rstMax`, etc
 
 - type registry improvements:
   - how to specify additional aliases in config? in documentation?
   - how to specify that some types are "undocumented"? eg. HTTPNotFound
   - class aliasing... eg CampaignPutSchema & CampaignGetSchema => Campaign
-
-- maybe create a UI to control all the options?...
-  eg. /api/describe/ui
-  which then let's you specify `showImpl`, `rstMax`, etc
 
 - support RAML? http://raml.org/
   swagger? https://en.wikipedia.org/wiki/Swagger_%28software%29
