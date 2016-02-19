@@ -13,7 +13,6 @@ import yaml
 
 #------------------------------------------------------------------------------
 
-constant_cre    = re.compile(r'[0-9"\'-{\\[]')
 hex_cre         = re.compile(r'([a-f0-9][a-f0-9])+', re.IGNORECASE)
 
 #------------------------------------------------------------------------------
@@ -63,21 +62,14 @@ def parsePartial(value):
   '''
   if not value or not value.strip():
     raise ValueError('invalid constant: %r' % (value,))
-  try:
-    return ( json.loads(value), '' )
-  except ValueError:
-    pass
   value = value.lstrip()
-  if not constant_cre.match(value):
-    raise ValueError('invalid constant: %r' % (value,))
   if value.startswith('0x'):
     return _hex(value)
   if value[0] in '01234567890-':
     return _num(value)
   if value[0] in '\'"{[':
     return _yaml(value)
-  # todo: wha?... the constant_cre should not have matched...
-  raise ValueError('invalid constant: %r' % (value,))
+  return _json(value)
 
 #------------------------------------------------------------------------------
 def _hex(value):
@@ -94,6 +86,10 @@ def _num(value):
   # NOTE: using json, not yaml, because yaml is far too lenient.
   # for example ``78 !foo~`` would be interpreted as the entire
   # *string* "78 !foo~", not the number 78 + plus extra stuff...
+  return _json(value)
+
+#------------------------------------------------------------------------------
+def _json(value):
   try:
     return ( json.loads(value), '' )
   except ValueError as exc:

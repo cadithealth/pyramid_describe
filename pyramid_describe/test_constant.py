@@ -20,7 +20,7 @@ class TestConstant(unittest.TestCase):
         ('0x',          "invalid constant (tried hex): '0x'"),
         ('-x',          "No JSON object could be decoded"),
         ('- 1',         "No JSON object could be decoded"),
-        ('no',          "invalid constant: 'no'"),
+        ('no',          "No JSON object could be decoded"),
         ('"no',         "invalid constant (tried yaml): '\"no'"),
       ]:
       with self.assertRaises(ValueError) as cm:
@@ -40,6 +40,7 @@ class TestConstant(unittest.TestCase):
   #----------------------------------------------------------------------------
   def test_null(self):
     self.assertEqual(constant.parse('null'),  None)
+    self.assertEqual(constant.parse(' null '),  None)
 
   #----------------------------------------------------------------------------
   def test_num(self):
@@ -64,6 +65,7 @@ class TestConstant(unittest.TestCase):
   def test_multi(self):
     self.assertEqual(constant.parseMulti('"foo"', '|'), ['foo'])
     self.assertEqual(constant.parseMulti('"foo" |6|0x61 ', '|'), ['foo', 6, 'a'])
+    self.assertEqual(constant.parseMulti(' null | 6|0x61 ', '|'), [None, 6, 'a'])
 
 
 #------------------------------------------------------------------------------
