@@ -29,6 +29,16 @@ class TestParams(unittest.TestCase):
     self.assertEqual(
       str(cm.exception),
       'qualifier "not-empty" collision (True != False)')
+    with self.assertRaises(ValueError) as cm:
+      parse('example: foo, examples: "bar"')
+    self.assertEqual(
+      str(cm.exception),
+      'both "example" and "examples" qualifiers specified')
+    with self.assertRaises(ValueError) as cm:
+      parse('default-to: foo, default: "bar"')
+    self.assertEqual(
+      str(cm.exception),
+      'both "default" and "default-to" qualifiers specified')
 
   #----------------------------------------------------------------------------
   def test_qualifier_ordering(self):
@@ -36,6 +46,23 @@ class TestParams(unittest.TestCase):
     keys = ['foo', 'default', 'required', 'min', 'example', 'max', 'default_to', 'examples']
     chk  = ['required', 'foo', 'max', 'min', 'example', 'examples', 'default_to', 'default']
     self.assertEqual(sorted(keys, cmp=attrkeycmp), chk)
+
+  #----------------------------------------------------------------------------
+  def test_parse_example_multiple(self):
+    from .params import parse
+    self.assertEqual(
+      parse('example: foo, example: bar'),
+      {'example': ['foo', 'bar']})
+
+  #----------------------------------------------------------------------------
+  def test_parse_examples(self):
+    from .params import parse
+    self.assertEqual(
+      parse('examples: "foo"'),
+      {'examples': ['foo']})
+    self.assertEqual(
+      parse('examples: "foo" | "bar"'),
+      {'examples': ['foo', 'bar']})
 
   #----------------------------------------------------------------------------
   def test_value_codec(self):
