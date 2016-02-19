@@ -852,6 +852,9 @@ class TypeRegistry(object):
 
   #----------------------------------------------------------------------------
   def _parseType_constant(self, source):
+    # TODO: convert this to use constant.parse()!...
+    #       (the issue is that constant.parse auto-converts hex values,
+    #       which i want to detect somehow to set the type to BYTE or BYTES)
     if source.startswith('0x'):
       return self._parseType_constant_hex(source)
     if source.peek() in '01234567890-':
