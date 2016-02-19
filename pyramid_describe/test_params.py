@@ -31,6 +31,13 @@ class TestParams(unittest.TestCase):
       'qualifier "not-empty" collision (True != False)')
 
   #----------------------------------------------------------------------------
+  def test_qualifier_ordering(self):
+    from .params import attrkeycmp
+    keys = ['foo', 'default', 'required', 'min', 'example', 'max', 'default_to', 'examples']
+    chk  = ['required', 'foo', 'max', 'min', 'example', 'examples', 'default_to', 'default']
+    self.assertEqual(sorted(keys, cmp=attrkeycmp), chk)
+
+  #----------------------------------------------------------------------------
   def test_value_codec(self):
     from .params import render, parse
     src = {
