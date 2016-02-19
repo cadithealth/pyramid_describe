@@ -60,6 +60,11 @@ class TestConstant(unittest.TestCase):
   def test_dict(self):
     self.assertEqual(constant.parse('{a: 10, "b": foo}'), dict(a=10, b='foo'))
 
+  #----------------------------------------------------------------------------
+  def test_multi(self):
+    self.assertEqual(constant.parseMulti('"foo"', '|'), ['foo'])
+    self.assertEqual(constant.parseMulti('"foo" |6|0x61 ', '|'), ['foo', 6, 'a'])
+
 
 #------------------------------------------------------------------------------
 # end of $Id$

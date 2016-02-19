@@ -18,7 +18,21 @@ hex_cre         = re.compile(r'([a-f0-9][a-f0-9])+', re.IGNORECASE)
 
 #------------------------------------------------------------------------------
 def parseMulti(value, sep):
-  return parse(value)
+  ret = []
+  rem = value
+  while True:
+    cur, rem = parsePartial(rem)
+    ret.append(cur)
+    if not rem or not rem.strip():
+      return ret
+    rem = rem.lstrip()
+    if not rem.startswith(sep):
+      raise ValueError(
+        'dangling content %r in multi-constant: %r' % (rem, value))
+    rem = rem[len(sep) : ].lstrip()
+    if not rem:
+      raise ValueError(
+        'dangling separator %r in multi-constant: %r' % (sep, value))
 
 #------------------------------------------------------------------------------
 def parse(value, entirety=True):
@@ -31,7 +45,7 @@ def parse(value, entirety=True):
   is whatever couldn't be parsed, IFF some portion of `value` could be
   parsed into a constant.
   '''
-  ret, rem = parseSome(value)
+  ret, rem = parsePartial(value)
   if rem:
     rem = rem.lstrip()
   if entirety:
@@ -43,7 +57,7 @@ def parse(value, entirety=True):
   return ( ret, rem )
 
 #------------------------------------------------------------------------------
-def parseSome(value):
+def parsePartial(value):
   '''
   Same as :func:`parse`, but with `entirety` set to false.
   '''
