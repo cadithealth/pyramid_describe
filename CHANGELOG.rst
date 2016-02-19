@@ -9,6 +9,7 @@ v0.5.2
 * Added awareness of example qualifiers
 * Improved parsing of example and default qualifiers
 * Corrected rendering of inline dict declarations in type registry
+* Added initial type registry documentation
 
 
 v0.5.1
