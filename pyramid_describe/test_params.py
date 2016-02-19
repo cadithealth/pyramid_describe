@@ -19,6 +19,18 @@ class TestParams(unittest.TestCase):
       {'not_empty': True, 'optional': True, '@PUBLIC': True, 'default': 'zoo'})
 
   #----------------------------------------------------------------------------
+  def test_parse_collision(self):
+    from .params import parse
+    self.assertEqual(
+      parse('not-empty, not-empty: true'),
+      {'not_empty': True})
+    with self.assertRaises(ValueError) as cm:
+      parse('not-empty, not-empty: false')
+    self.assertEqual(
+      str(cm.exception),
+      'qualifier "not-empty" collision (True != False)')
+
+  #----------------------------------------------------------------------------
   def test_value_codec(self):
     from .params import render, parse
     src = {
@@ -28,7 +40,6 @@ class TestParams(unittest.TestCase):
     }
     self.assertEqual(render(src), 'i1: 6, s1: a string, s2: "6"')
     self.assertEqual(parse(render(src)), src)
-
 
   # TODO: add access parameter unit tests...
 
