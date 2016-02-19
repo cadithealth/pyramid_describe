@@ -425,10 +425,6 @@ def render_type(data, typ, link=True):
       else:
         spec.append(rtext(value))
 
-
-      # if key != 'default' and value is True:
-      #   continue
-
     if typ.name:
       node = rsect(typ.name)
       if data.options.rstMax:
@@ -440,6 +436,15 @@ def render_type(data, typ, link=True):
       node = rsect(spec)
 
     node.extend(rst2fragments(typ.doc))
+
+    # TODO: this *really* feels like a hack...
+    # todo: is this a bit too precise?... what about lists, unions,
+    #       refs, oneofs, etc?
+    if typ.type and typ.type.base == Type.COMPOUND and typ.type.name == Type.DICT:
+      for sub in typ.type.children:
+        node.append(render_type(data, sub))
+    # /TODO
+
     return node
 
   else:

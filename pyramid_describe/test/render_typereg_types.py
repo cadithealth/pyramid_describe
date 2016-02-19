@@ -77,12 +77,8 @@ class Root(RestController):
       equilateral : bool, default: true
         Whether or not the sides of this triangle
         are the same length.
-      str : str, example: 'foo', example: 'bar'
-      stuff : any, examples: null|32 |-0.57 |'foo'|false
+      examples : dict
+        Just some examples of using parameter examples.
+        str : str, example: 'foo', example: 'bar'
+        stuff : any, examples: null|32 |-0.57 |'foo'|false
     '''
-    # TODO: this `dict` is currently not rendering correctly!...
-    #   examples : dict
-    #     Just some examples of using parameter examples.
-    #     str : str, example: 'foo', example: 'bar'
-    #     stuff : any, examples: null|32 |-0.57 |'foo'|false
-    # '''

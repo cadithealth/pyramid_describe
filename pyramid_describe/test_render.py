@@ -101,7 +101,7 @@ class TestRender(test_helpers.TestHelper):
       self.loadTestData('render_typereg_base.output.rst'))
 
   #----------------------------------------------------------------------------
-  def test_typereg_types(self):
+  def test_typereg_types_base(self):
     from .test.render_typereg_types import Root
     root = Root()
     root.desc = DescribeController(

@@ -144,14 +144,22 @@ boolean, default: ``true``
 
 Whether or not the sides of this triangle are the same length.
 
-::::::
+::::::::
+examples
+::::::::
+
+dict
+
+Just some examples of using parameter examples.
+
+''''''
 str
-::::::
+''''''
 
 string, examples: ``"foo"`` | ``"bar"``
 
-::::::
+''''''
 stuff
-::::::
+''''''
 
 any, examples: ``null`` | ``32`` | ``-0.57`` | ``"foo"`` | ``false``
