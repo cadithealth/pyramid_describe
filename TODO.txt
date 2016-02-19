@@ -1,3 +1,7 @@
+- typereg renames:
+  - type to datatype
+  - datatype "params" to "qualifiers"
+
 - test that mixing of channel type defs and docs works, eg:
 
     Returns
