@@ -9,7 +9,10 @@
 import logging
 import json
 
+import morph
+
 # TODO: handle encoding & decoding of commas in param values...
+# todo: i18n?...
 
 #------------------------------------------------------------------------------
 
@@ -19,6 +22,25 @@ ACCESS_C                = 'create'
 ACCESS_R                = 'read'
 ACCESS_W                = 'write'
 ACCESS_ALL              = [ACCESS_C, ACCESS_R, ACCESS_W]
+
+ATTR_CREATE             = ACCESS_C
+ATTR_READ               = ACCESS_R
+ATTR_WRITE              = ACCESS_W
+ATTR_REQUIRED           = 'required'
+ATTR_OPTIONAL           = 'optional'
+ATTR_DEFAULT            = 'default'
+ATTR_DEFAULT_TO         = 'default_to'
+ATTR_NULLABLE           = 'nullable'
+ATTR_CLASS              = 'class'
+
+# note: these are not ATTR_* because they are aliases only (and should
+# always be auto-converted to their respective attributes)
+QUAL_UPDATE             = 'update'
+QUAL_UPDATE_ONLY        = 'update-only'
+QUAL_CREATE_ONLY        = 'create-only'
+QUAL_READ_ONLY          = 'read-only'
+QUAL_WRITE_ONLY         = 'write-only'
+QUAL_READ_WRITE         = 'read-write'
 
 #------------------------------------------------------------------------------
 def paramValueEncode(value):
@@ -35,7 +57,20 @@ def paramValueDecode(text):
     return text
 
 #------------------------------------------------------------------------------
-def prepare(params, exclude_params=('class',)):
+def q2a(name):
+  '''
+  Converts a qualifier name to an attribute name,
+  e.g. ``default-to`` => ``default_to``.
+  '''
+  return name.replace('-', '_')
+
+#------------------------------------------------------------------------------
+def a2q(name):
+  '''Inverse of `q2a`.'''
+  return name.replace('_', '-')
+
+#------------------------------------------------------------------------------
+def prepare(params, exclude_params=(ATTR_CLASS,)):
   '''
   Generates (key, value) pairs for all parameters defined in `type`
   adjusted for relevance, redundancy, and ordering for the context
@@ -45,11 +80,17 @@ def prepare(params, exclude_params=('class',)):
   The following rules are applied:
 
   * access control parameters (read/write/create) come first
+
   * 'optional' and 'nullable' are removed if they can be inferred
     (e.g. there is a default that is set to null)
+
   * parameters listed in `exclude_params` are squelched
+
   * `required` overrides and is merged into `optional`
+
   * defaults come last
+
+  * examples come last or before defaults
   '''
 
   # todo: some ideas on improvements:
@@ -66,48 +107,48 @@ def prepare(params, exclude_params=('class',)):
   #       continue
 
   params = dict(params or {})
-  if 'required' in params:
-    params['optional'] = not params.pop('required')
-  if not params.get('optional'):
-    params.pop('optional', None)
-  if 'default' in params or 'default_to' in params:
-    params.pop('optional', None)
-  if 'default' in params and params['default'] is None:
-    params.pop('nullable', None)
+  if ATTR_REQUIRED in params:
+    params[ATTR_OPTIONAL] = not params.pop(ATTR_REQUIRED)
+  if not params.get(ATTR_OPTIONAL):
+    params.pop(ATTR_OPTIONAL, None)
+  if ATTR_DEFAULT in params or ATTR_DEFAULT_TO in params:
+    params.pop(ATTR_OPTIONAL, None)
+  if ATTR_DEFAULT in params and params[ATTR_DEFAULT] is None:
+    params.pop(ATTR_NULLABLE, None)
 
   if not params:
     return
 
-  mode = ( 'r' if 'read' in params else '' ) \
-    + ( 'w' if 'write' in params else '' ) \
-    + ( 'c' if 'create' in params else '' )
+  mode = ( 'r' if params.get(ATTR_READ,   False) else '' ) \
+    +    ( 'w' if params.get(ATTR_WRITE,  False) else '' ) \
+    +    ( 'c' if params.get(ATTR_CREATE, False) else '' )
   accessMap = {
     'rwc' : [],
-    'rw'  : ['read', 'write'],    # todo: warn nonsense since no `create`?
-    'rc'  : ['read', 'create'],
-    'r'   : ['read-only'],
-    'wc'  : ['write-only'],
-    'w'   : ['write-only'],       # todo: warn nonsense since no `create`?
-    'c'   : ['create-only'],
+    'rw'  : [a2q(ATTR_READ), a2q(ATTR_WRITE)],    # todo: warn nonsense since no `create`?
+    'rc'  : [a2q(ATTR_READ), a2q(ATTR_CREATE)],
+    'r'   : [QUAL_READ_ONLY],
+    'wc'  : [QUAL_WRITE_ONLY],
+    'w'   : [QUAL_WRITE_ONLY],       # todo: warn nonsense since no `create`?
+    'c'   : [QUAL_CREATE_ONLY],
     ''    : [],                   # todo: warn nonsense since nothing?
   }
   for sym in accessMap[mode]:
     yield sym, None
   for key in sorted(params.keys()):
-    if key in ('default', 'default_to', 'read', 'write', 'create'):
+    if key in (ATTR_DEFAULT, ATTR_DEFAULT_TO, ATTR_READ, ATTR_WRITE, ATTR_CREATE):
       continue
     if exclude_params and key in exclude_params:
       continue
     val = params.get(key)
-    key = key.replace('_', '-')
+    key = a2q(key)
     if val is True:
       yield key, None
     else:
       yield key, paramValueEncode(val)
-  if 'default_to' in params:
-    yield 'default-to', str(params['default_to'])
-  if 'default' in params:
-    yield 'default', json.dumps(params['default'])
+  if ATTR_DEFAULT_TO in params:
+    yield a2q(ATTR_DEFAULT_TO), str(params[ATTR_DEFAULT_TO])
+  if ATTR_DEFAULT in params:
+    yield a2q(ATTR_DEFAULT), json.dumps(params[ATTR_DEFAULT])
 
 #------------------------------------------------------------------------------
 def render(params, *args, **kw):
@@ -139,17 +180,21 @@ def parse(spec):
       key, val = [x.strip() for x in part.split('=', 1)]
     else:
       val = True
-    key = key.replace('-', '_')
-    if key == 'default':
+    okey = key
+    key  = q2a(key)
+    if okey == ATTR_DEFAULT:
       try:
         val = json.loads(val)
       except ValueError:
         log.warning(
-          'non-JSON default value in armor spec: %r (moved to "default-to")',
-          spec)
-        key = 'default_to'
+          'non-JSON default value in armor spec: %r (moved to "%s")',
+          spec, a2q(ATTR_DEFAULT_TO))
+        key = ATTR_DEFAULT_TO
     else:
       val = paramValueDecode(val)
+    if key in ret and val != ret[key]:
+      raise ValueError(
+        'qualifier "%s" collision (%r != %r)' % (okey, ret[key], val))
     ret[key] = val
   return normParams(ret)
 
@@ -175,20 +220,20 @@ def normParams(params):
 
   # todo: i18n?...
   paramAliases = {
-    ACCESS_R      : ['r'],
-    'read_only'   : ['ro'],
-    ACCESS_W      : ['w', 'u', 'update'],
-    'write_only'  : ['wo', 'uo', 'update_only'],
-    ACCESS_C      : ['c'],
-    'create_only' : ['co'],
-    'read_write'  : ['rw'],
+    ATTR_READ             : ['r'],
+    q2a(QUAL_READ_ONLY)   : ['ro'],
+    ATTR_WRITE            : ['w', 'u', q2a(QUAL_UPDATE)],
+    q2a(QUAL_WRITE_ONLY)  : ['wo', 'uo', q2a(QUAL_UPDATE_ONLY)],
+    ATTR_CREATE           : ['c'],
+    q2a(QUAL_CREATE_ONLY) : ['co'],
+    q2a(QUAL_READ_WRITE)  : ['rw'],
   }
   paramMap = {
-    'read_only'   : {ACCESS_R: True,  ACCESS_W: False, ACCESS_C: False},
-    'write_only'  : {ACCESS_R: False, ACCESS_W: True,  ACCESS_C: True },
-    'create_only' : {ACCESS_R: False, ACCESS_W: False, ACCESS_C: True },
-    'read_write'  : {ACCESS_R: True,  ACCESS_W: True,  ACCESS_C: True },
-    'required'    : {'optional': False},
+    q2a(QUAL_READ_ONLY)   : {ATTR_READ: True,  ATTR_WRITE: False, ATTR_CREATE: False},
+    q2a(QUAL_WRITE_ONLY)  : {ATTR_READ: False, ATTR_WRITE: True,  ATTR_CREATE: True },
+    q2a(QUAL_CREATE_ONLY) : {ATTR_READ: False, ATTR_WRITE: False, ATTR_CREATE: True },
+    q2a(QUAL_READ_WRITE)  : {ATTR_READ: True,  ATTR_WRITE: True,  ATTR_CREATE: True },
+    ATTR_REQUIRED         : {ATTR_OPTIONAL: False},
   }
 
   for key in paramAliases.keys():
@@ -196,7 +241,7 @@ def normParams(params):
       try:
         params[key] = tobool(params[key])
       except Exception as err:
-        raise ValueError('invalid value for parameter %r: %s' % (key, err))
+        raise ValueError('invalid value for qualifier %r: %s' % (key, err))
 
   for key, aliases in paramAliases.items():
     for alias in aliases:
@@ -204,30 +249,30 @@ def normParams(params):
         try:
           params[alias] = tobool(params[alias])
         except Exception as err:
-          raise ValueError('invalid value for parameter %r: %s' % (alias, err))
+          raise ValueError('invalid value for qualifier %r: %s' % (alias, err))
         if key in params and params[key] != params[alias]:
-          raise ValueError('conflicting values for parameter %r' % (key,))
+          raise ValueError('conflicting values for qualifier %r' % (key,))
         params[key] = params.pop(alias)
 
   for key, values in paramMap.items():
     if key not in params:
       continue
     if not params[key]:
-      raise ValueError('parameter %r must be true or not specified' % (key,))
+      raise ValueError('qualifier %r must be true or not specified' % (key,))
     for vkey, vval in values.items():
       if vkey in params and params[vkey] != vval:
         raise ValueError(
-          'conflicting values for parameter %r and %r' % (key, vkey))
+          'conflicting values for qualifier %r and %r' % (key, vkey))
       params[vkey] = vval
     params.pop(key)
 
   if ACCESS_W in params and ACCESS_C not in params:
     params[ACCESS_C] = params[ACCESS_W]
 
-  if 'default' in params or 'default_to' in params:
-    if 'optional' in params and not params['optional']:
-      raise ValueError('conflicting "optional" state with default value')
-    params['optional'] = True
+  if ATTR_DEFAULT in params or ATTR_DEFAULT_TO in params:
+    if ATTR_OPTIONAL in params and not params[ATTR_OPTIONAL]:
+      raise ValueError('conflicting qualifiers: required vs. default value')
+    params[ATTR_OPTIONAL] = True
 
   return params
 
