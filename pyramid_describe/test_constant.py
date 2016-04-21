@@ -50,8 +50,9 @@ class TestConstant(unittest.TestCase):
 
   #----------------------------------------------------------------------------
   def test_str(self):
-    self.assertEqual(constant.parse('"foo"'),   'foo')
-    self.assertEqual(constant.parse("'foo'"),   'foo')
+    self.assertEqual(constant.parse('"foo"'),    'foo')
+    self.assertEqual(constant.parse("'foo'"),    'foo')
+    self.assertEqual(constant.parse('0x666f6f'), 'foo')
 
   #----------------------------------------------------------------------------
   def test_list(self):
