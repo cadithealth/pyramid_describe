@@ -22,6 +22,7 @@ import morph
 
 from .scope import Scope
 from .i18n import _
+from . import util
 
 #------------------------------------------------------------------------------
 
@@ -404,7 +405,7 @@ hex_cre         = re.compile(r'([a-f0-9][a-f0-9])+', re.IGNORECASE)
 constant_cre    = re.compile(r'[0-9"\'-{\\[]')
 # todo: move this into TypeRegistry as a configurable option...
 #       ==> and make it depend on declared aliases, etc...
-symbol_cre      = re.compile(r'[a-z_]([a-z0-9_.]*)?', re.IGNORECASE)
+symbol_cre      = re.compile(r'[a-z_][a-z0-9_.]*', re.IGNORECASE)
 
 #------------------------------------------------------------------------------
 class StringWalker(object):
@@ -902,17 +903,9 @@ class TypeRegistry(object):
     # NOTE: using json, not yaml, because yaml is far too lenient.
     # for example ``78 !foo~`` would be interpreted as the entire
     # *string* "78 !foo~", not the number 78 + plus extra stuff...
-    try:
-      ret = json.loads(source.string)
-      source.read(source.length)
-      return self._parseType_native(ret)
-    except ValueError as exc:
-      if not str(exc).startswith('Extra data: line 1 column '):
-        raise
-      idx = int(str(exc).split()[5]) - 1
-      ret = json.loads(source.string[:idx])
-      source.read(idx)
-      return self._parseType_native(ret)
+    ret, rem = util.jsonParse(source.string, partial=True)
+    source.read(source.length - len(rem))
+    return self._parseType_native(ret)
 
   #----------------------------------------------------------------------------
   _yaml_error_cre = re.compile(

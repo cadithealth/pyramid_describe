@@ -11,6 +11,8 @@ import json
 
 import yaml
 
+from . import util
+
 #------------------------------------------------------------------------------
 
 hex_cre         = re.compile(r'([a-f0-9][a-f0-9])+', re.IGNORECASE)
@@ -69,7 +71,7 @@ def parsePartial(value):
     return _num(value)
   if value[0] in '\'"{[':
     return _yaml(value)
-  return _json(value)
+  return util.jsonParse(value, partial=True)
 
 #------------------------------------------------------------------------------
 def _hex(value):
@@ -86,17 +88,7 @@ def _num(value):
   # NOTE: using json, not yaml, because yaml is far too lenient.
   # for example ``78 !foo~`` would be interpreted as the entire
   # *string* "78 !foo~", not the number 78 + plus extra stuff...
-  return _json(value)
-
-#------------------------------------------------------------------------------
-def _json(value):
-  try:
-    return ( json.loads(value), '' )
-  except ValueError as exc:
-    if not str(exc).startswith('Extra data: line 1 column '):
-      raise
-    idx = int(str(exc).split()[5]) - 1
-    return ( json.loads(value[:idx]), value[idx:] )
+  return util.jsonParse(value, partial=True)
 
 #------------------------------------------------------------------------------
 _yaml_error_cre = re.compile(
