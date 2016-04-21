@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.5.3
+======
+
+* Added backward-compatibility fixes for Python 2.7.3
+
+
 v0.5.2
 ======
 
